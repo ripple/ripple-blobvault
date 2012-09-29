@@ -8,5 +8,8 @@ USE blob_vault;
 CREATE TABLE blobs (
   k char(64) NOT NULL,
   v varchar(4096) NOT NULL,
+  created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated TIMESTAMP NOT NULL,
+  ip_last_updated_from INT UNSIGNED NOT NULL,
   UNIQUE KEY k (k)
 ) ENGINE=InnoDB;

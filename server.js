@@ -38,8 +38,11 @@ app.post('/:key', function (req, res) {
   });
   
   c.query(
-     "INSERT INTO blobs SET ? ON DUPLICATE KEY UPDATE v=VALUES(v)",
-     { k: req.params.key, v: req.body.blob }
+    "INSERT INTO blobs(k, v, updated, ip_last_updated_from) VALUES (?, ?, NOW(), INET_ATON(?)) \
+      ON DUPLICATE KEY UPDATE v = VALUES(v), \
+                              updated = NOW(), \
+                              ip_last_updated_from = VALUES(ip_last_updated_from)",
+    [req.params.key, req.body.blob, req.ip]
   );
   
   res.send();
