@@ -62,7 +62,7 @@ app.post('/:key', function (req, res) {
     [req.params.key],
     function (err, qres) {
       if (qres.length && qres[0].pub_key) {
-        verifies(qres[0].pub_key, req.body.sig, req.body.blob)) && insert_blob(req);
+        verifies(qres[0].pub_key, req.body.sig, req.body.blob) && insert_blob(req);
       } else {
         insert_blob(req);
       }
