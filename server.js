@@ -44,10 +44,10 @@ function insert_blob(req) {
   c.query(
     "INSERT INTO blobs(k, v, pub_key, updated, ip_last_updated_from) VALUES (?, ?, ?, NOW(), INET_ATON(?)) \
       ON DUPLICATE KEY UPDATE v = VALUES(v), \
-                              new_pub = VALUES(new_pub), \
+                              pub_key = VALUES(pub_key), \
                               updated = NOW(), \
                               ip_last_updated_from = VALUES(ip_last_updated_from)",
-    [req.params.key, req.body.blob, req.body.new_pub, req.ip]
+    [req.params.key, req.body.blob, req.body.new_pub || "", req.ip]
   );
 }
 
