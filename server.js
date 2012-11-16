@@ -13,6 +13,8 @@ var app = express();
 app.use(express.bodyParser());
 
 app.get('/:key', function (req, res) {
+	console.log("app.get");
+	
 	try{
   res.set({
     'Content-Type': 'text/plain',
@@ -26,7 +28,11 @@ app.get('/:key', function (req, res) {
       res.send(qres.length ? qres[0].v : "");
     }
   );
-	}catch(e){ }
+	}catch(e)
+	{
+		console.log("Exception: "+e);
+		c.connect(); 
+	}
   
 });
 
@@ -72,7 +78,11 @@ app.post('/:key', function (req, res) {
       res.send();
     }
   )
-	}catch(e){ }
+	}catch(e)
+	{
+		console.log("Exception: "+e);
+		c.connect(); 
+	}
 });
 
 app.listen(80);
