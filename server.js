@@ -13,6 +13,7 @@ var app = express();
 app.use(express.bodyParser());
 
 app.get('/:key', function (req, res) {
+	try{
   res.set({
     'Content-Type': 'text/plain',
     'Access-Control-Allow-Origin': '*'
@@ -25,19 +26,20 @@ app.get('/:key', function (req, res) {
       res.send(qres.length ? qres[0].v : "");
     }
   );
+	}catch(e){ }
   
 });
 
 var sjcl = require('sjcl');
 function verifies(pubKey, sig, data) {
-  try {
+ 
     var curve = sjcl.ecc.curves.c192,
         pubBits = sjcl.codec.base64.toBits(pubKey),
         pubKey = new sjcl.ecc.ecdsa.publicKey(curve, pubBits),
         sigBits = sjcl.codec.base64.toBits(sig);
 
     return pubKey.verify(sjcl.hash.sha256.hash(data), sigBits);
-  } catch (e) { }
+ 
 }
 
 function insert_blob(req) {
@@ -52,6 +54,7 @@ function insert_blob(req) {
 }
 
 app.post('/:key', function (req, res) {
+	try{
   res.set({
     'Content-Type': 'text/plain',
     'Access-Control-Allow-Origin': '*'
@@ -69,6 +72,7 @@ app.post('/:key', function (req, res) {
       res.send();
     }
   )
+	}catch(e){ }
 });
 
 app.listen(80);
