@@ -1,4 +1,8 @@
+var https = require('https');
+var fs = require('fs');
 var mysql = require('mysql');
+var express = require('express');
+
 var c = mysql.createConnection({
   host: 'localhost',
   port: '3306',
@@ -8,7 +12,6 @@ var c = mysql.createConnection({
 });
 c.connect();
 
-var express = require('express');
 var app = express();
 app.use(express.bodyParser());
 
@@ -65,7 +68,7 @@ app.post('/:key', function (req, res) {
     'Content-Type': 'text/plain',
     'Access-Control-Allow-Origin': '*'
   });
-  
+
   c.query(
     "SELECT pub_key FROM blobs WHERE k = ? LIMIT 1",
     [req.params.key],
@@ -86,3 +89,14 @@ app.post('/:key', function (req, res) {
 });
 
 app.listen(80);
+
+try {
+  var https = https.createServer({
+    key: fs.readFileSync(__dirname + '/blobvault.key'),
+    ca: fs.readFileSync(__dirname + '/intermediate.crt'),
+    cert: fs.readFileSync(__dirname + '/blobvault.crt')
+  }, app);
+  https.listen(443);
+} catch (e) {
+  console.log("Could not launch SSL server: " + (e.stack ? e.stack : e.toString()));
+}
