@@ -16,9 +16,9 @@ var app = express();
 app.use(express.bodyParser());
 
 app.get('/:key', function (req, res) {
-	console.log("app.get");
-	
-	try{
+  console.log("app.get");
+  
+  try{
   res.set({
     'Content-Type': 'text/plain',
     'Access-Control-Allow-Origin': '*'
@@ -31,11 +31,10 @@ app.get('/:key', function (req, res) {
       res.send(qres.length ? qres[0].v : "");
     }
   );
-	}catch(e)
-	{
-		console.log("Exception: "+e);
-		c.connect(); 
-	}
+  } catch(e) {
+    console.log("Exception: "+e);
+    c.connect(); 
+  }
   
 });
 
@@ -63,7 +62,7 @@ function insert_blob(req) {
 }
 
 app.post('/:key', function (req, res) {
-	try{
+  try{
   res.set({
     'Content-Type': 'text/plain',
     'Access-Control-Allow-Origin': '*'
@@ -81,11 +80,10 @@ app.post('/:key', function (req, res) {
       res.send();
     }
   )
-	}catch(e)
-	{
-		console.log("Exception: "+e);
-		c.connect(); 
-	}
+  } catch(e)  {
+    console.log("Exception: "+e);
+    c.connect(); 
+  }
 });
 
 app.listen(80);
