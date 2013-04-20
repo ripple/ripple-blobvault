@@ -3,8 +3,8 @@ sudo apt-get install mysql-server
 
 sudo apt-get install node
 sudo apt-get install npm
-npm install mysql@2.0.0-alpha3
-npm install express@3.0.0rc4
+npm install mysql@2.0.0-alpha7
+npm install express@3.2.0
 
 mkdir ~/code
 cd code
