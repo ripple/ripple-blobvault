@@ -4,12 +4,12 @@ A tiny REST-ful datastore for blobs using Node.js and MySQL. When storing a blob
 send an ECDSA public key to protect it from being modified.
 
 
-## GET /<key> 
+## GET /\<key\> 
 
 Looks up a key and returns it, or an empty response if nothing is there.
 
 
-## POST /<key>
+## POST /\<key\>
 
 Sets key, checking sig if it already exists and has a pub_key set.
 
