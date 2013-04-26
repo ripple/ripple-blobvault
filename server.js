@@ -1,3 +1,5 @@
+var config = require('./config');
+
 var https = require('https');
 var fs = require('fs');
 var mysql = require('mysql');
@@ -52,13 +54,14 @@ function verifies(pubKey, sig, data) {
 }
 
 function insert_blob(req) {
+  var ip = (config.is_proxy ? req.headers['X-Client'] : null) || req.ip;
   c.query(
     "INSERT INTO blobs(k, v, pub_key, updated, ip_last_updated_from) VALUES (?, ?, ?, NOW(), INET_ATON(?)) \
       ON DUPLICATE KEY UPDATE v = VALUES(v), \
                               pub_key = VALUES(pub_key), \
                               updated = NOW(), \
                               ip_last_updated_from = VALUES(ip_last_updated_from)",
-    [req.params.key, req.body.blob, req.body.new_pub || "", req.ip]
+    [req.params.key, req.body.blob, req.body.new_pub || "", ip]
   );
 }
 
@@ -88,7 +91,7 @@ app.post('/:key', function (req, res) {
 	}
 });
 
-app.listen(80);
+app.listen(80, config.host);
 
 try {
   var https = https.createServer({
@@ -96,7 +99,7 @@ try {
     ca: fs.readFileSync(__dirname + '/intermediate.crt'),
     cert: fs.readFileSync(__dirname + '/blobvault.crt')
   }, app);
-  https.listen(443);
+  https.listen(443, config.host);
 } catch (e) {
   console.log("Could not launch SSL server: " + (e.stack ? e.stack : e.toString()));
 }
