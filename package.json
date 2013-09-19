@@ -1,0 +1,32 @@
+{
+  "name": "ripple-blobvault",
+  "version": "0.2.0",
+  "description": "",
+  "main": "server.js",
+  "dependencies": {
+    "mysql": "~2.0.0-alpha9",
+    "express": "~3.4.0"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/ripple/ripple-blobvault.git"
+  },
+  "keywords": [
+    "blob",
+    "store",
+    "private",
+    "data",
+    "persistence",
+    "ripple"
+  ],
+  "author": "OpenCoin Inc.",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/ripple/ripple-blobvault/issues"
+  }
+}
