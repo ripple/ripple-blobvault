@@ -1,16 +1,33 @@
 CREATE USER 'blobby'@'localhost' IDENTIFIED BY '57umtSMG4Fyv5ary';
 GRANT USAGE ON *.* TO 'blobby'@'localhost' IDENTIFIED BY '57umtSMG4Fyv5ary';
-GRANT ALL PRIVILEGES ON blob_vault.* TO 'blobby'@'localhost';
+GRANT ALL PRIVILEGES ON blobvault.* TO 'blobby'@'localhost';
 
-CREATE DATABASE blob_vault;
-USE blob_vault;
+CREATE DATABASE blobvault;
+USE blobvault;
 
-CREATE TABLE blobs (
-  k char(64) NOT NULL,
-  v varchar(32768) NOT NULL,
-  pub_key varchar(64) NOT NULL,
-  ip_last_updated_from INT UNSIGNED NOT NULL,
-  created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  updated TIMESTAMP NOT NULL,
-  UNIQUE KEY k (k)
-) ENGINE=InnoDB;
+--
+-- Table structure for table `blob`
+--
+
+CREATE TABLE IF NOT EXISTS `blob` (
+  `id` char(64) NOT NULL,
+  `address` varchar(50) NOT NULL,
+  `auth_secret` char(64) NOT NULL,
+  `revision` int(10) unsigned NOT NULL,
+  `data` longblob NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `blob_log`
+--
+
+CREATE TABLE IF NOT EXISTS `blob_log` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `blob_id` char(64) NOT NULL,
+  `revision` int(10) unsigned NOT NULL,
+  `data` longblob NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
