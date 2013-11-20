@@ -13,7 +13,7 @@ var app = express();
 app.use(express.bodyParser());
 
 app.get('/:key', function (req, res) {
-	console.log("app.get");
+	console.log("app.get : " + req.ip + " : " + req.url);
 
 	try {
     res.set({
