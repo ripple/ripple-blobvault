@@ -63,6 +63,13 @@ app.post('/:key', function (req, res) {
       'Access-Control-Allow-Origin': '*'
     });
 
+    /* user did not give us a blob to store, the req. is invalid */
+    if(!req.body.blob){
+      res.statusCode = 400;
+      res.end();
+      return;
+    };
+
     c.query(
       "SELECT pub_key FROM blobs WHERE k = ? LIMIT 1",
       [req.params.key],
