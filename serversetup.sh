@@ -10,7 +10,7 @@ mkdir ~/code
 cd code
 git clone https://github.com/ripple/ripple-blobvault.git
 # enter user name and password
-cd Blob-Vault
+cd ripple-blobvault
 
 mysql -u root -p PASSWORD < dbsetup.sql
 
