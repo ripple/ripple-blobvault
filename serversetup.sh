@@ -8,7 +8,7 @@ npm install express@3.0.0rc4
 
 mkdir ~/code
 cd code
-git clone https://github.com/jedmccaleb/Blob-Vault.git
+git clone https://github.com/ripple/ripple-blobvault.git
 # enter user name and password
 cd Blob-Vault
 
