@@ -83,7 +83,7 @@ app.post('/blob/patch', function (req, res) {
     // XXX Check quota
 
     c.query(
-      "SELECT FROM `blob` WHERE `id` = ?",
+      "SELECT `id`, `revision` FROM `blob` WHERE `id` = ?",
       [req.body.blob_id],
       function (err, rows) {
         if (err) {
@@ -96,8 +96,8 @@ app.post('/blob/patch', function (req, res) {
         var blob = rows[0];
 
         c.query(
-          "SELECT revision FROM `blob_patches` WHERE `blob_id` = ?" +
-          "ORDER BY `revision` DESC" +
+          "SELECT `revision` FROM `blob_patches` WHERE `blob_id` = ? " +
+          "ORDER BY `revision` DESC " +
           "LIMIT 0,1",
           [req.body.blob_id],
           function (err, rows) {
@@ -106,11 +106,13 @@ app.post('/blob/patch', function (req, res) {
               return;
             }
 
-            var lastRevision = rows.length ? rows[0].revision : blob.revision;
+            // XXX Race condition: another revision might get added at same time
+
+            var lastRevision = +(rows.length ? rows[0].revision : blob.revision);
 
             c.query(
               "INSERT INTO `blob_patches` (`blob_id`, `revision`, `data`) " +
-                "  VALUES (?, ?, ?)",
+              "  VALUES (?, ?, ?)",
               [req.body.blob_id, lastRevision + 1, req.body.patch],
               function (err) {
                 if (err) {
@@ -119,7 +121,8 @@ app.post('/blob/patch', function (req, res) {
                 }
 
                 res.json({
-                  result: 'success'
+                  result: 'success',
+                  revision: lastRevision + 1
                 });
               }
             );
