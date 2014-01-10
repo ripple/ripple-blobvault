@@ -6,6 +6,8 @@ var fs = require('fs');
 var mysql = require('mysql');
 var express = require('express');
 
+var AUTHINFO_VERSION = 3;
+
 config.mysql.multipleStatements = true;
 
 var c = mysql.createConnection(config.mysql);
@@ -28,6 +30,57 @@ function verifyHmac(reqBody, secret, sig) {
   
 }
 
+function getUserInfo(username, res)
+{
+  try {
+    res.set({
+      'Content-Type': 'text/plain',
+      'Access-Control-Allow-Origin': '*'
+    });
+
+    c.query(
+      "SELECT `username` FROM `blob` WHERE `username` = ?",
+      [username],
+      function (err, rows) {
+        if (err) {
+          handleException(res, err);
+          return;
+        }
+
+        if (rows.length) {
+          var row = rows[0];
+          res.json({
+            username: row.username,
+            exists: true,
+            version: AUTHINFO_VERSION,
+            blobvault: config.url,
+            pakdf: config.defaultPakdfSetting
+          });
+        } else {
+          res.json({
+            username: username,
+            exists: false,
+            // We still need to return the information the client needs to
+            // register this user
+            version: AUTHINFO_VERSION,
+            blobvault: config.url,
+            pakdf: config.defaultPakdfSetting
+          });
+        }
+      });
+	} catch (e) {
+    handleException(res, e);
+	}
+}
+
+app.get('/authinfo', function (req, res) {
+  getUserInfo(req.query.user, res);
+});
+
+app.get('/user/:username', function (req, res) {
+  getUserInfo(req.params.username, res);
+});
+
 app.post('/blob/create', function (req, res) {
 	try {
     res.set({
@@ -35,7 +88,32 @@ app.post('/blob/create', function (req, res) {
       'Access-Control-Allow-Origin': '*'
     });
 
-    // XXX Ensure blob_id is a 32-byte hex
+    var blobId = req.body.blob_id;
+    if ("string" !== typeof blobId) {
+      handleException(res, new Error("No blob ID given."));
+      return;
+    }
+    blobId = blobId.toLowerCase();
+    if (!/^[0-9a-f]{64}$/.exec(blobId)) {
+      handleException(res, new Error("Blob ID must be 32 bytes hex."));
+      return;
+    }
+
+    var username = req.body.username;
+    if ("string" !== typeof username) {
+      handleException(res, new Error("No username given."));
+      return;
+    }
+    if (!/^[a-zA-Z0-9][a-zA-Z0-9-]{0,13}[a-zA-Z0-9]$/.exec(username)) {
+      handleException(res, new Error("Username must be between 2 and 15 alphanumeric"
+                                     + " characters or hyphen (-)."
+                                     + " Can not start or end with a hyphen."));
+      return;
+    }
+    if (/--/.exec(username)) {
+      handleException(res, new Error("Username cannot contain two consecutive hyphens."));
+      return;
+    }
 
     // XXX Ensure blob does not exist yet
 
@@ -45,14 +123,13 @@ app.post('/blob/create', function (req, res) {
 
     // XXX Check signature
 
-    // XXX Convert blob from base64 to binary
-
+    // Convert blob from base64 to binary
     var data = new Buffer(req.body.data, 'base64');
 
     c.query(
-      "INSERT INTO `blob` (`id`, `address`, `auth_secret`, `data`) " +
-      "VALUES (?, ?, ?, ?)",
-      [req.body.blob_id, req.body.address, req.body.auth_secret, data],
+      "INSERT INTO `blob` (`id`, `username`, `address`, `auth_secret`, `data`) " +
+      "VALUES (?, ?, ?, ?, ?)",
+      [blobId, username, req.body.address, req.body.auth_secret, data],
       function (err, rows) {
         if (err) {
           handleException(res, err);
@@ -110,10 +187,14 @@ app.post('/blob/patch', function (req, res) {
 
             var lastRevision = +(rows.length ? rows[0].revision : blob.revision);
 
+            // XXX Handle invalid base64
+
+            var patch = new Buffer(req.body.patch, 'base64');
+
             c.query(
               "INSERT INTO `blob_patches` (`blob_id`, `revision`, `data`) " +
               "  VALUES (?, ?, ?)",
-              [req.body.blob_id, lastRevision + 1, req.body.patch],
+              [req.body.blob_id, lastRevision + 1, patch],
               function (err) {
                 if (err) {
                   handleException(res, err);
@@ -149,12 +230,14 @@ app.post('/blob/consolidate', function (req, res) {
 
     // XXX Check quota
 
+    var data = new Buffer(req.body.data, 'base64');
+
     c.query(
       "START TRANSACTION;" +
-      "UPDATE `blob` SET `data` = ?, `revision` = ?;" +
+      "UPDATE `blob` SET `data` = ?, `revision` = ? WHERE `id` = ?;" +
       "DELETE FROM `blob_patches` WHERE `blob_id` = ? AND `revision` <= ?;" +
       "COMMIT;",
-      [req.body.data, req.body.revision,
+      [data, req.body.revision, req.body.blob_id,
        req.body.blob_id, req.body.revision],
       function (err) {
         if (err) {
@@ -245,7 +328,9 @@ app.get('/blob/:blob_id', function (req, res) {
                 result: 'success',
                 blob: blob.data.toString('base64'),
                 revision: blob.revision,
-                patches: rows // XXX Convert to base64
+                patches: rows.map(function (patch) {
+                  return patch.data.toString('base64');
+                })
               });
             }
           );
