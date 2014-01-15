@@ -47,25 +47,26 @@ function getUserInfo(username, res)
           return;
         }
 
+        var response = {
+          username: username,
+          version: AUTHINFO_VERSION,
+          blobvault: config.url,
+          pakdf: config.defaultPakdfSetting
+        };
+
         if (rows.length) {
           var row = rows[0];
-          res.json({
-            username: row.username,
-            exists: true,
-            version: AUTHINFO_VERSION,
-            blobvault: config.url,
-            pakdf: config.defaultPakdfSetting
-          });
+          response.username = row.username;
+          response.exists = true;
+          res.json(response);
+        } else if (config.reserved[username.toLowerCase()]) {
+          response.exists = false;
+          response.reserved = config.reserved[username.toLowerCase()];
+          res.json(response);
         } else {
-          res.json({
-            username: username,
-            exists: false,
-            // We still need to return the information the client needs to
-            // register this user
-            version: AUTHINFO_VERSION,
-            blobvault: config.url,
-            pakdf: config.defaultPakdfSetting
-          });
+          response.exists = false;
+          response.reserved = false;
+          res.json(response);
         }
       });
 	} catch (e) {
@@ -112,6 +113,12 @@ app.post('/blob/create', function (req, res) {
     }
     if (/--/.exec(username)) {
       handleException(res, new Error("Username cannot contain two consecutive hyphens."));
+      return;
+    }
+
+    if (config.reserved[username.toLowerCase()]) {
+      handleException(res, new Error("This username is reserved for "+
+                                     config.reserved[username.toLowerCase()]+'.'));
       return;
     }
 
