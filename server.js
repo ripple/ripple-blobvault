@@ -14,7 +14,8 @@ var c = mysql.createConnection(config.mysql);
 c.connect();
 
 var app = express();
-app.use(express.bodyParser());
+app.use(express.json());
+app.use(express.urlencoded());
 
 // Handle an exception and post an error response
 function handleException(res, err) {
