@@ -6,6 +6,10 @@ var AUTHINFO_VERSION = 3;
 
 function getUserInfo(username, res) {
   try {
+    if ("string" !== typeof username) {
+      handleException(new Error("Username is required"));
+      return;
+    }
     res.set({
       'Content-Type': 'text/plain',
       'Access-Control-Allow-Origin': '*'

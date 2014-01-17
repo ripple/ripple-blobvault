@@ -45,3 +45,12 @@ exports.defaultPakdfSetting = {
 // You can import the list externally:
 //   exports.reserved = require('./names.json');
 exports.reserved = {};
+
+// If this blobvault is behind a reverse proxy, enter the url prefix that proxy
+// is using.
+//
+// E.g. if the rediret is this:
+// https://example.com/ripple-blobvault -> http://localhost:8080/
+// Then this option should be set to this:
+// exports.urlPrefix = '/ripple-blobvault';
+exports.urlPrefix = '';

@@ -42,6 +42,17 @@ exports.create = function (req, res) {
       return;
     }
 
+    var authSecret = req.body.auth_secret;
+    if ("string" !== typeof blobId) {
+      handleException(res, new Error("No auth secret given."));
+      return;
+    }
+    authSecret = authSecret.toLowerCase();
+    if (!/^[0-9a-f]{64}$/.exec(authSecret)) {
+      handleException(res, new Error("Auth secret must be 32 bytes hex."));
+      return;
+    }
+
     // XXX Ensure blob does not exist yet
 
     // XXX Check account "address" exists
@@ -56,7 +67,7 @@ exports.create = function (req, res) {
     db.query(
       "INSERT INTO `blob` (`id`, `username`, `address`, `auth_secret`, `data`) " +
       "VALUES (?, ?, ?, ?, ?)",
-      [blobId, username, req.body.address, req.body.auth_secret, data],
+      [blobId, username, req.body.address, authSecret, data],
       function (err, rows) {
         if (err) {
           handleException(res, err);
