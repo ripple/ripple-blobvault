@@ -15,13 +15,7 @@ exports.ssl = false;
 exports.is_proxy = false;
 
 // Database settings
-exports.mysql = {
-  host: 'localhost',
-  port: '3306',
-  database: 'blob_vault',
-  user: 'blobby',
-  password: '57umtSMG4Fyv5ary'
-};
+exports.databaseUrl = 'mysql://blobby:57umtSMG4Fyv5ary@localhost:3306/blobvault';
 
 // PAKDF server setting
 exports.defaultPakdfSetting = {

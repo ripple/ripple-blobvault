@@ -16,9 +16,10 @@ function getUserInfo(username, res) {
     });
 
     db.query(
-      "SELECT `username` FROM `blob` WHERE `username` = ?",
-      [username],
-      function (err, rows) {
+      "SELECT `username` FROM `blob` WHERE `username` = ?", null,
+      { raw: true }, [username]
+    )
+    .complete(function (err, rows) {
         if (err) {
           handleException(res, err);
           return;

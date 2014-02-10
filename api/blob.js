@@ -66,9 +66,10 @@ exports.create = function (req, res) {
 
     db.query(
       "INSERT INTO `blob` (`id`, `username`, `address`, `auth_secret`, `data`) " +
-      "VALUES (?, ?, ?, ?, ?)",
-      [blobId, username, req.body.address, authSecret, data],
-      function (err, rows) {
+      "VALUES (?, ?, ?, ?, ?)", null,
+      { raw: true }, [blobId, username, req.body.address, authSecret, data]
+    )
+      .complete(function (err, rows) {
         if (err) {
           handleException(res, err);
           return;
@@ -98,9 +99,10 @@ exports.patch = function (req, res) {
     // XXX Check quota
 
     db.query(
-      "SELECT `id`, `revision` FROM `blob` WHERE `id` = ?",
-      [req.body.blob_id],
-      function (err, rows) {
+      "SELECT `id`, `revision` FROM `blob` WHERE `id` = ?", null,
+      { raw: true }, [req.body.blob_id]
+    )
+      .complete(function (err, rows) {
         if (err) {
           handleException(res, err);
           return;
@@ -113,9 +115,10 @@ exports.patch = function (req, res) {
         db.query(
           "SELECT `revision` FROM `blob_patches` WHERE `blob_id` = ? " +
           "ORDER BY `revision` DESC " +
-          "LIMIT 0,1",
-          [req.body.blob_id],
-          function (err, rows) {
+          "LIMIT 0,1", null,
+          { raw: true }, [req.body.blob_id]
+        )
+          .complete(function (err, rows) {
             if (err) {
               handleException(res, err);
               return;
@@ -131,9 +134,9 @@ exports.patch = function (req, res) {
 
             db.query(
               "INSERT INTO `blob_patches` (`blob_id`, `revision`, `data`) " +
-              "  VALUES (?, ?, ?)",
-              [req.body.blob_id, lastRevision + 1, patch],
-              function (err) {
+              "  VALUES (?, ?, ?)", null,
+              { raw: true }, [req.body.blob_id, lastRevision + 1, patch])
+              .complete(function (err) {
                 if (err) {
                   handleException(res, err);
                   return;
@@ -174,10 +177,10 @@ exports.consolidate = function (req, res) {
       "START TRANSACTION;" +
       "UPDATE `blob` SET `data` = ?, `revision` = ? WHERE `id` = ?;" +
       "DELETE FROM `blob_patches` WHERE `blob_id` = ? AND `revision` <= ?;" +
-      "COMMIT;",
-      [data, req.body.revision, req.body.blob_id,
-       req.body.blob_id, req.body.revision],
-      function (err) {
+      "COMMIT;", null,
+      { raw: true }, [data, req.body.revision, req.body.blob_id,
+                      req.body.blob_id, req.body.revision])
+      .complete(function (err) {
         if (err) {
           handleException(res, err);
           return;
@@ -209,9 +212,9 @@ exports.delete = function (req, res) {
       "START TRANSACTION;" +
       "DELETE FROM `blob` WHERE `id` = ?;" +
       "DELETE FROM `blob_patches` WHERE `blob_id` = ?;" +
-      "COMMIT;",
-      [req.body.blob_id, req.body.blob_id],
-      function (err) {
+      "COMMIT;", null,
+      { raw: true }, [req.body.blob_id, req.body.blob_id])
+      .complete(function (err) {
         if (err) {
           handleException(res, err);
           return;
@@ -240,9 +243,9 @@ exports.get = function (req, res) {
     // XXX Check HMAC
 
     db.query(
-      "SELECT data, revision FROM `blob` WHERE `id` = ?",
-      [req.params.blob_id],
-      function (err, rows) {
+      "SELECT data, revision FROM `blob` WHERE `id` = ?", null,
+      { raw: true }, [req.params.blob_id])
+      .complete(function (err, rows) {
         if (err) {
           handleException(res, err);
           return;
@@ -252,9 +255,9 @@ exports.get = function (req, res) {
           var blob = rows[0];
           db.query(
             "SELECT `data` FROM `blob_patches` WHERE `blob_id` = ?" +
-            "  ORDER BY `revision` ASC",
-            [req.params.blob_id],
-            function (err, rows) {
+            "  ORDER BY `revision` ASC", null,
+            { raw: true }, [req.params.blob_id])
+            .complete(function (err, rows) {
               if (err) {
                 handleException(res, err);
                 return;
@@ -296,9 +299,10 @@ exports.getPatch = function (req, res) {
     // XXX Check HMAC
 
     db.query(
-      "SELECT `data` FROM `blob_patches` WHERE `blob_id` = ? AND `revision` = ?",
-      [req.params.blob_id, req.params.patch_id],
-      function (err, result) {
+      "SELECT `data` FROM `blob_patches`" +
+      "WHERE `blob_id` = ? AND `revision` = ?", null,
+      { raw: true }, [req.params.blob_id, req.params.patch_id])
+      .complete(function (err, result) {
         if (err) {
           handleException(res, err);
           return;
