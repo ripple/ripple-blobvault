@@ -16,7 +16,7 @@ function getUserInfo(username, res) {
     });
 
     db.query(
-      "SELECT `username` FROM `blob` WHERE `username` = ?", null,
+      "SELECT `username`, `address` FROM `blob` WHERE `username` = ?", null,
       { raw: true }, [username]
     )
     .complete(function (err, rows) {
@@ -35,6 +35,7 @@ function getUserInfo(username, res) {
         if (rows.length) {
           var row = rows[0];
           response.username = row.username;
+          response.address = row.address;
           response.exists = true;
           res.json(response);
         } else if (config.reserved[username.toLowerCase()]) {
