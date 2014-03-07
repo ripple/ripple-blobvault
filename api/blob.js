@@ -254,7 +254,7 @@ exports.get = function (req, res) {
         if (rows.length) {
           var blob = rows[0];
           db.query(
-            "SELECT `data` FROM `blob_patches` WHERE `blob_id` = ?" +
+            "SELECT `data` FROM `blob_log` WHERE `blob_id` = ?" +
             "  ORDER BY `revision` ASC", null,
             { raw: true }, [req.params.blob_id])
             .complete(function (err, rows) {
