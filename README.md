@@ -14,6 +14,12 @@
   by editing the appropriate configuration line in fig.yml. Think carefully before doing this
   the default password for the root account is blank. This database is *not* meant to be exposed.
 
+* In order to set up the database or to refresh the schema execute
+```bash
+fig run blobvault ./env/dev-env/build-db.sh
+```
+Note that this will drop and clear any tables in the current database.
+
 ### Production
 
 * Use chef cookbooks at env/chef/cookbooks to configure and deploy the blobvault application
