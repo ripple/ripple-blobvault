@@ -8,7 +8,7 @@ blobvault:
   build: .
   volumes:
     - .:/srv/ripple/blobvault
-  command: supervisor server.js
+  command: supervisor -n exit server.js
   ports:
     - "23042:23042"
   links:
