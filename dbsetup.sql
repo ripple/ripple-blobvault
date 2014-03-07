@@ -1,5 +1,5 @@
-CREATE USER 'blobby'@'localhost' IDENTIFIED BY '57umtSMG4Fyv5ary';
-GRANT USAGE ON *.* TO 'blobby'@'localhost' IDENTIFIED BY '57umtSMG4Fyv5ary';
+CREATE USER 'blobby'@'%' IDENTIFIED BY '57umtSMG4Fyv5ary';
+GRANT USAGE ON *.* TO 'blobby'@'%' IDENTIFIED BY '57umtSMG4Fyv5ary';
 GRANT ALL PRIVILEGES ON blobvault.* TO 'blobby'@'localhost';
 
 CREATE DATABASE blobvault;

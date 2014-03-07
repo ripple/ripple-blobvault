@@ -1,0 +1,12 @@
+db:
+  image: orchardup/mysql
+  environment:
+    MYSQL_DATABASE: blobvault
+  expose:
+    - "3306"
+blobvault:
+  build: .
+  ports:
+    - "23042"
+  links:
+    - db

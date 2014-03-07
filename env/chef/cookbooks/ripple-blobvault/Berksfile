@@ -1,0 +1,14 @@
+site :opscode
+
+metadata
+
+group :test do
+  # ubuntu support cookbooks
+  cookbook 'apt'
+  # centos support cookbooks
+  cookbook 'yum'
+  # metatest support cookbooks
+  cookbook 'minitest-handler'
+  # test environment setup cookbook
+  cookbook 'ripple-blobvault-test', :path => './test/cookbook'
+end
