@@ -1,4 +1,4 @@
-FROM ripple/ubuntu-1204-chef-client
+FROM jaesharp/orli-ubuntu-1204-chef-client-d
 MAINTAINER Ripple Labs Infrastructure Team "ops@ripplelabs.com"
 
 RUN apt-get -y update
