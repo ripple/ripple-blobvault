@@ -6,7 +6,10 @@ db:
     - "3306"
 blobvault:
   build: .
+  volumes:
+    - .:/srv/ripple/blobvault
+  command: supervisor server.js
   ports:
-    - "23042"
+    - "23042:23042"
   links:
     - db
