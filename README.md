@@ -1,5 +1,10 @@
 # Ripple Blobvault
 
+User management for Ripple wallets.
+
+See the [__API Reference__](docs/api-reference.md) for details on how to use the
+API.
+
 ## Environments
 
 ### Development
