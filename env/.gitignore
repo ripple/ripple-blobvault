@@ -1,0 +1,4 @@
+# bundler (dependency manager) temporary
+.bundle/
+# kitchen (test system) temporary state directories
+**/.kitchen/

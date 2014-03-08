@@ -3,10 +3,10 @@
 exports.host = null;
 
 // Port to listen on
-exports.port = 8080;
+exports.port = 23042;
 
 // Public URL for this blobvault (required for authinfo)
-exports.url = "https://blobvault.example.com";
+exports.url = "http://localhost";
 
 // SSL settings
 exports.ssl = false;
@@ -15,7 +15,7 @@ exports.ssl = false;
 exports.is_proxy = false;
 
 // Database settings
-exports.databaseUrl = 'mysql://SETMEUSER:SETMEPASSWORD@localhost:3306/blobvault';
+exports.databaseUrl = 'mysql://root:@'+ process.env.DB_1_PORT_3306_TCP_ADDR + ':' + process.env.DB_1_3306_TCP_PORT;
 
 // PAKDF server setting
 exports.defaultPakdfSetting = {

@@ -1,0 +1,29 @@
+---
+driver:
+  name: vagrant
+  require_chef_omnibus: true
+
+provisioner:
+  name: chef_solo
+
+platforms:
+  - name: ubuntu-13.04
+    run_list:
+      - apt
+  - name: ubuntu-12.04
+    run_list:
+      - apt # this cookbook ensures that ubuntu has up to date package listings
+  - name: centos-6.5
+    run_list:
+      - yum # this cookbook ensures that centos has up to date package listings
+
+# minitest-handler is added to the runlist to ensure that the test
+# cookbooks are correct... Yo Dawg, I put tests in your tests so you can
+# test while you test.
+suites:
+  - name: default
+    run_list:
+      - ripple-blobvault::server
+      - ripple-blobvault-test::server
+      - minitest-handler
+    attributes:

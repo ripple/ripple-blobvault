@@ -1,0 +1,15 @@
+db:
+  image: orchardup/mysql
+  environment:
+    MYSQL_DATABASE: blobvault
+  expose:
+    - "3306"
+blobvault:
+  build: .
+  volumes:
+    - .:/srv/ripple/blobvault
+  command: supervisor -n exit server.js
+  ports:
+    - "23042:23042"
+  links:
+    - db
