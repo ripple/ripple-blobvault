@@ -10,7 +10,10 @@
     "sequelize": "~1.7.0-rc5",
     "optimist": "^0.6.1"
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "request": "^2.34.0",
+    "response": "^0.13.0"
+  },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node server.js"

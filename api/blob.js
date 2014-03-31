@@ -1,55 +1,60 @@
-var config = require('../config');
-var handleException = require('../lib/exceptionhandler').handleException;
-var store = require('../lib/store');
+//var config = require('../config');
+var create = function (req, res) {
+    console.log("create");
+    var config = {reserved : undefined};
+    var writehead = function(res) {
+        if (res.set !== undefined)
+            res.set({
+              'Content-Type': 'text/plain',
+              'Access-Control-Allow-Origin': '*'
+            });
+        else 
+            res.writeHead(200, {
+              'Content-Type': 'text/plain',
+              'Access-Control-Allow-Origin': '*'
+            });
+    };
 
-exports.create = function (req, res) {
-	try {
-    res.set({
-      'Content-Type': 'text/plain',
-      'Access-Control-Allow-Origin': '*'
-    });
-
+//    writehead(res);    
     var blobId = req.body.blob_id;
     if ("string" !== typeof blobId) {
-      handleException(res, new Error("No blob ID given."));
+        console.log('going to throw');
+      throw { res : res , error : new Error("No blob ID given.")};
       return;
     }
     blobId = blobId.toLowerCase();
     if (!/^[0-9a-f]{64}$/.exec(blobId)) {
-      handleException(res, new Error("Blob ID must be 32 bytes hex."));
+      throw { res : res, error : new Error("Blob ID must be 32 bytes hex.") }
       return;
     }
 
     var username = req.body.username;
     if ("string" !== typeof username) {
-      handleException(res, new Error("No username given."));
+      throw { res : res , error : new Error("No username given.") }
       return;
     }
     if (!/^[a-zA-Z0-9][a-zA-Z0-9-]{0,13}[a-zA-Z0-9]$/.exec(username)) {
-      handleException(res, new Error("Username must be between 2 and 15 alphanumeric"
-                                     + " characters or hyphen (-)."
-                                     + " Can not start or end with a hyphen."));
+      throw { res : res , error : new Error("Username must be between 2 and 15 alphanumeric" + " characters or hyphen (-)." + " Can not start or end with a hyphen.")}
       return;
     }
     if (/--/.exec(username)) {
-      handleException(res, new Error("Username cannot contain two consecutive hyphens."));
+      throw { res : res, error : new Error("Username cannot contain two consecutive hyphens.")}
       return;
     }
 
     if (config.reserved[username.toLowerCase()]) {
-      handleException(res, new Error("This username is reserved for "+
-                                     config.reserved[username.toLowerCase()]+'.'));
+      throw { res : res, error : new Error("This username is reserved for "+config.reserved[username.toLowerCase()]+'.')}
       return;
     }
 
     var authSecret = req.body.auth_secret;
     if ("string" !== typeof blobId) {
-      handleException(res, new Error("No auth secret given."));
+      throw { res : res, error : new Error("No auth secret given.") }
       return;
     }
     authSecret = authSecret.toLowerCase();
     if (!/^[0-9a-f]{64}$/.exec(authSecret)) {
-      handleException(res, new Error("Auth secret must be 32 bytes hex."));
+      throw { res : res, error : new Error("Auth secret must be 32 bytes hex.") }
       return;
     }
 
@@ -61,21 +66,27 @@ exports.create = function (req, res) {
 
     // XXX Check signature
 
-    var params = {data:req.body.data,authSecret:authSecret,blobId:blobId,address:req.body.address};
-    store.create(params,function(err,response) {
-        if (err) {
-          handleException(res, err);
+    // TODO : inner key is required on updates
+    var params = {
+        data:req.body.data,
+        authSecret:authSecret,
+        blobId:blobId,
+        address:req.body.address
+    };
+    console.log("Going to create with params");console.log(params);
+    store.create(params,function(resp) {
+        if (resp.err) {
+          throw { res : res, error : new Error("problem with create")}
           return;
         }
         res.json({
           result: 'success'
         });
-    })
+    });
 
 };
-
+exports.create = create;
 exports.patch = function (req, res) {
-	try {
     res.set({
       'Content-Type': 'text/plain',
       'Access-Control-Allow-Origin': '*'
@@ -141,14 +152,9 @@ exports.patch = function (req, res) {
         );
       }
     );
-
-  } catch (e) {
-    handleException(res, e);
-	}
 };
 
 exports.consolidate = function (req, res) {
-	try {
     res.set({
       'Content-Type': 'text/plain',
       'Access-Control-Allow-Origin': '*'
@@ -180,14 +186,9 @@ exports.consolidate = function (req, res) {
         });
       }
     );
-
-  } catch (e) {
-    handleException(res, e);
-	}
 };
 
 exports.delete = function (req, res) {
-	try {
     res.set({
       'Content-Type': 'text/plain',
       'Access-Control-Allow-Origin': '*'
@@ -214,14 +215,9 @@ exports.delete = function (req, res) {
         });
       }
     );
-
-  } catch (e) {
-    handleException(res, e);
-	}
 };
 
 exports.get = function (req, res) {
-	try {
     res.set({
       'Content-Type': 'text/plain',
       'Access-Control-Allow-Origin': '*'
@@ -269,15 +265,10 @@ exports.get = function (req, res) {
         }
       }
     );
-
-  } catch (e) {
-    handleException(res, e);
-	}
 };
 
 
 exports.getPatch = function (req, res) {
-	try {
     res.set({
       'Content-Type': 'text/plain',
       'Access-Control-Allow-Origin': '*'
@@ -307,8 +298,4 @@ exports.getPatch = function (req, res) {
         }
       }
     );
-
-  } catch (e) {
-    handleException(res, e);
-	}
 };

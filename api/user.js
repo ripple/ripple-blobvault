@@ -5,7 +5,6 @@ var store = require('../lib/store');
 var AUTHINFO_VERSION = 3;
 
 function getUserInfo(username, res) {
-  try {
     if ("string" !== typeof username) {
       handleException(new Error("Username is required"));
       return;
@@ -16,9 +15,7 @@ function getUserInfo(username, res) {
     });
 
     store.read({username:username},function(err, response) {
-        
     });
-
 }
 
 exports.authinfo = function (req, res) {
