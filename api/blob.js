@@ -1,6 +1,6 @@
 var config = require('../config');
 var handleException = require('../lib/exceptionhandler').handleException;
-var db = require('../lib/db').connection;
+var store = require('../lib/store');
 
 exports.create = function (req, res) {
 	try {
@@ -61,28 +61,17 @@ exports.create = function (req, res) {
 
     // XXX Check signature
 
-    // Convert blob from base64 to binary
-    var data = new Buffer(req.body.data, 'base64');
-
-    db.query(
-      "INSERT INTO `blob` (`id`, `username`, `address`, `auth_secret`, `data`) " +
-      "VALUES (?, ?, ?, ?, ?)", null,
-      { raw: true }, [blobId, username, req.body.address, authSecret, data]
-    )
-      .complete(function (err, rows) {
+    var params = {data:req.body.data,authSecret:authSecret,blobId:blobId,address:req.body.address};
+    store.create(params,function(err,response) {
         if (err) {
           handleException(res, err);
           return;
         }
-
         res.json({
           result: 'success'
         });
-      }
-    );
-	} catch (e) {
-    handleException(res, e);
-	}
+    })
+
 };
 
 exports.patch = function (req, res) {
