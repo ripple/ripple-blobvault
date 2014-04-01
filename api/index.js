@@ -8,8 +8,8 @@ var d = domain.create();
 d.on('error',function (obj) {
     // obj.res and obj.error are usually 'thrown' back here
     if (obj.res) {
-        console.log("piping to obj.res");
-        response.json({result: 'error'}).pipe(obj.res);
+        if (obj.error !== undefined) 
+            response.json({error:obj.error.message}).pipe(obj.res);
     }
 });
 Object.keys(exports.blob).forEach(function(key) {

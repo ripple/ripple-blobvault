@@ -1,7 +1,11 @@
+var store = require('../lib/store')();
+var response = require('response');
+var Queue = require('queuelib');
+var q = new Queue;
+
 //var config = require('../config');
 var create = function (req, res) {
-    console.log("create");
-    var config = {reserved : undefined};
+    var config = {reserved : {}};
     var writehead = function(res) {
         if (res.set !== undefined)
             res.set({
@@ -14,11 +18,10 @@ var create = function (req, res) {
               'Access-Control-Allow-Origin': '*'
             });
     };
-
-//    writehead(res);    
+//  writehead(res);    
+    console.log(req.body);
     var blobId = req.body.blob_id;
     if ("string" !== typeof blobId) {
-        console.log('going to throw');
       throw { res : res , error : new Error("No blob ID given.")};
       return;
     }
@@ -48,15 +51,26 @@ var create = function (req, res) {
     }
 
     var authSecret = req.body.auth_secret;
-    if ("string" !== typeof blobId) {
+    if ("string" !== typeof authSecret) {
       throw { res : res, error : new Error("No auth secret given.") }
       return;
     }
+
     authSecret = authSecret.toLowerCase();
     if (!/^[0-9a-f]{64}$/.exec(authSecret)) {
       throw { res : res, error : new Error("Auth secret must be 32 bytes hex.") }
       return;
     }
+
+    if (req.body.data === undefined) {
+      throw { res : res, error : new Error("No data provided.") }
+      return;
+    }
+
+    if (req.body.address == undefined) {
+      throw { res : res, error : new Error("No ripple address provided.") }
+      return;
+    } 
 
     // XXX Ensure blob does not exist yet
 
@@ -64,26 +78,42 @@ var create = function (req, res) {
 
     // XXX Ensure there is no blob for this account yet
 
-    // XXX Check signature
+// do we need to check for reserved here?
+    q.series([
+    function(lib,id) {
+        console.log("going to read");
+        store.read({username:username},function(resp) {
+        console.log(resp);
+            if (resp.result == 'no such user') {
+                lib.done();
+            } else {
+                throw { res : res, error : new Error("User already exists.") }
+                lib.terminate(id);
+                return;
+            }
+       });
+    },
+    function(lib) { 
+        // XXX Check signature
 
-    // TODO : inner key is required on updates
-    var params = {
-        data:req.body.data,
-        authSecret:authSecret,
-        blobId:blobId,
-        address:req.body.address
-    };
-    console.log("Going to create with params");console.log(params);
-    store.create(params,function(resp) {
-        if (resp.err) {
-          throw { res : res, error : new Error("problem with create")}
-          return;
-        }
-        res.json({
-          result: 'success'
+        // TODO : inner key is required on updates
+        var params = {
+            data:req.body.data,
+            authSecret:authSecret,
+            blobId:blobId,
+            address:req.body.address,
+            username:username
+        };
+        store.create(params,function(resp) {
+            if (resp.err) {
+              throw { res : res, error : new Error("problem with create")}
+              return;
+            }
+            response.json({result:'success'}).pipe(res);
+            lib.done();
         });
-    });
-
+    }
+    ]);
 };
 exports.create = create;
 exports.patch = function (req, res) {
