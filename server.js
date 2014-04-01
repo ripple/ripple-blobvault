@@ -31,6 +31,9 @@ app.get('/blob/:blob_id/patch/:patch_id', api.blob.getPatch);
 //app.post('verify/create', verify.create) // post email / user data -> create token / associate -- > generate return 
 app.get('/verify/:token', verify.verify); // get token -> prove email ownership - > record association confirmation -> generate return
 
+// return ripple address associated with ripplename
+app.get('/user/ripplename/:ripplename', api.user.ripplename);
+
 
 try {
   var server = config.ssl ? https.createServer({

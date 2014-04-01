@@ -1,5 +1,6 @@
-exports.user = require('./user');
-exports.blob = require('./blob');
+var store = require('../lib/store')();
+exports.user = require('./user')(store);
+exports.blob = require('./blob')(store);
 
 var response = require('response');
 
@@ -12,8 +13,13 @@ d.on('error',function (obj) {
             response.json({error:obj.error.message}).pipe(obj.res);
     }
 });
-Object.keys(exports.blob).forEach(function(key) {
-    if (exports.blob.hasOwnProperty(key)) {
-        exports.blob[key] = d.bind(exports.blob[key]);
-    }
-});
+
+var bindObject = function(obj1,binder) {
+    Object.keys(obj1).forEach(function(key) {
+        if (obj1.hasOwnProperty(key)) {
+            obj1[key] = d.bind(obj1[key]);
+        }
+    });
+}
+bindObject(exports.blob);
+bindObject(exports.user);
