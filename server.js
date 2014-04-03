@@ -5,11 +5,6 @@ var https = require('https');
 var fs = require('fs');
 var express = require('express');
 var hmac = require('./lib/hmac');
-var argv = require('optimist')
-    .usage('Usage $0 -s [mysql, memory, postgres]')
-    .describe('s','storage type : mysql, memory, postgres')
-    .default('s','mysql')
-    .argv; 
 
 var api = require('./api');
 
