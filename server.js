@@ -19,7 +19,10 @@ app.use(express.urlencoded());
 
 
 app.get('/authinfo', api.user.authinfo);
+
 app.get('/user/:username', api.user.get);
+app.get('/user/verify/:token', api.user.verify);
+
 app.post('/blob/create', api.blob.create);
 app.post('/blob/patch', hmac.middleware, api.blob.patch);
 app.post('/blob/consolidate', hmac.middleware, api.blob.consolidate);
@@ -27,12 +30,6 @@ app.post('/blob/delete', hmac.middleware, api.blob.delete);
 app.get('/blob/:blob_id', api.blob.get);
 app.get('/blob/:blob_id/patch/:patch_id', api.blob.getPatch);
 
-
-//app.post('verify/create', verify.create) // post email / user data -> create token / associate -- > generate return 
-app.get('/verify/:token', verify.verify); // get token -> prove email ownership - > record association confirmation -> generate return
-
-// return ripple address associated with ripplename
-app.get('/user/ripplename/:ripplename', api.user.ripplename);
 
 
 try {
