@@ -81,7 +81,7 @@ var verify = function(req,res) {
                 // TODO all fields have to be normalized the same
                 // including blobId -> blob_id (not id)
                 // emailVerify -> email_verified etc
-                exports.store.update({username:'bong',res:res,hash:{email_verified:true}},function(resp) { 
+                exports.store.update({username:username,res:res,hash:{email_verified:true}},function(resp) { 
                     // only after we mark that the email is verified, we inform
                     obj.result = 'success';
                     response.json(obj).pipe(res);
