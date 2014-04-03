@@ -10,7 +10,8 @@
     "sequelize": "~1.7.0-rc5",
     "response": "^0.13.0",
     "node-uuid": "^1.4.1",
-    "hashish": "0.0.4"
+    "hashish": "0.0.4",
+    "queuelib": "^0.3.3"
   },
   "devDependencies": {
     "request": "^2.34.0"
