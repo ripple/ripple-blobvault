@@ -90,14 +90,14 @@ var create = function (req, res) {
     // XXX Ensure blob does not exist yet
 
     // XXX Check account "address" exists
+    // dont you mean not exist in order to create?
 
     // XXX Ensure there is no blob for this account yet
 
-// do we need to check for reserved here?
     q.series([
     function(lib,id) {
         exports.store.read({username:username},function(resp) {
-            if (resp.result == 'no such user') {
+            if (resp.exists === false) {
                 lib.done();
             } else {
                 process.nextTick(function() {
@@ -127,6 +127,7 @@ var create = function (req, res) {
                 process.nextTick(function() {
                     throw { res : res, error : new Error("problem with create")}
                 });
+                lib.done();
                 return;
             }
             response.json({result:'success'}).pipe(res);
@@ -136,7 +137,8 @@ var create = function (req, res) {
     ]);
 };
 exports.create = create;
-var patch = function (req, res) {
+exports.patch = function (req, res) {
+    try {
     res.set({
       'Content-Type': 'text/plain',
       'Access-Control-Allow-Origin': '*'
@@ -154,7 +156,9 @@ var patch = function (req, res) {
     )
       .complete(function (err, rows) {
         if (err) {
-          handleException(res, err);
+            process.nextTick(function() {
+                throw { error : err , res : res }
+            });
           return;
         }
 
@@ -170,7 +174,9 @@ var patch = function (req, res) {
         )
           .complete(function (err, rows) {
             if (err) {
-              handleException(res, err);
+                process.nextTick(function() {
+                    throw { error : err , res : res }
+                });
               return;
             }
 
@@ -188,7 +194,9 @@ var patch = function (req, res) {
               { raw: true }, [req.body.blob_id, lastRevision + 1, patch])
               .complete(function (err) {
                 if (err) {
-                  handleException(res, err);
+                    process.nextTick(function() {
+                        throw { error : err , res : res }
+                    });
                   return;
                 }
 
@@ -202,9 +210,16 @@ var patch = function (req, res) {
         );
       }
     );
+
+  } catch (e) {
+    process.nextTick(function() {
+        throw { error : e , res : res }
+    });
+    }
 };
 
-var consolidate = function (req, res) {
+exports.consolidate = function (req, res) {
+    try {
     res.set({
       'Content-Type': 'text/plain',
       'Access-Control-Allow-Origin': '*'
@@ -227,7 +242,9 @@ var consolidate = function (req, res) {
                       req.body.blob_id, req.body.revision])
       .complete(function (err) {
         if (err) {
-          handleException(res, err);
+            process.nextTick(function() {
+                throw { error : err , res : res }
+            });
           return;
         }
 
@@ -236,9 +253,16 @@ var consolidate = function (req, res) {
         });
       }
     );
+
+  } catch (e) {
+    process.nextTick(function() {
+        throw { error : e , res : res }
+    });
+    }
 };
 
-var _delete = function (req, res) {
+exports.delete = function (req, res) {
+    try {
     res.set({
       'Content-Type': 'text/plain',
       'Access-Control-Allow-Origin': '*'
@@ -256,7 +280,9 @@ var _delete = function (req, res) {
       { raw: true }, [req.body.blob_id, req.body.blob_id])
       .complete(function (err) {
         if (err) {
-          handleException(res, err);
+            process.nextTick(function() {
+                throw { error : err , res : res }
+            });
           return;
         }
 
@@ -265,9 +291,16 @@ var _delete = function (req, res) {
         });
       }
     );
+
+  } catch (e) {
+    process.nextTick(function() {
+        throw { error : e , res : res }
+    });
+    }
 };
 
-var get = function (req, res) {
+exports.get = function (req, res) {
+    try {
     res.set({
       'Content-Type': 'text/plain',
       'Access-Control-Allow-Origin': '*'
@@ -282,7 +315,9 @@ var get = function (req, res) {
       { raw: true }, [req.params.blob_id])
       .complete(function (err, rows) {
         if (err) {
-          handleException(res, err);
+            process.nextTick(function() {
+                throw { error : err , res : res }
+            });
           return;
         }
 
@@ -294,7 +329,9 @@ var get = function (req, res) {
             { raw: true }, [req.params.blob_id])
             .complete(function (err, rows) {
               if (err) {
-                handleException(res, err);
+                    process.nextTick(function() {
+                        throw { error : err , res : res }
+                    });
                 return;
               }
 
@@ -311,14 +348,24 @@ var get = function (req, res) {
             }
           );
         } else {
-          handleException(res, new Error("Blob not found"));
+            process.nextTick(function() {
+                throw { error : new Error("Blob not found") , res : res }
+            });
+            return
         }
       }
     );
+
+  } catch (e) {
+    process.nextTick(function() {
+        throw { error : e , res : res }
+    });
+    }
 };
 
 
-var getPatch = function (req, res) {
+exports.getPatch = function (req, res) {
+    try {
     res.set({
       'Content-Type': 'text/plain',
       'Access-Control-Allow-Origin': '*'
@@ -334,7 +381,9 @@ var getPatch = function (req, res) {
       { raw: true }, [req.params.blob_id, req.params.patch_id])
       .complete(function (err, result) {
         if (err) {
-          handleException(res, err);
+            process.nextTick(function() {
+                throw { error : err , res : res }
+            });
           return;
         }
 
@@ -348,5 +397,10 @@ var getPatch = function (req, res) {
         }
       }
     );
-};
 
+  } catch (e) {
+    process.nextTick(function() {
+        throw { error : e , res : res }
+    });
+    }
+};

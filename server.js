@@ -14,6 +14,12 @@ var argv = require('optimist')
 var api = require('./api');
 
 var app = express();
+app.use(function(req,res,next) {
+    console.log(req.method + " " + req.url);
+    console.log(req.headers);
+    console.log(req.body);
+    next();
+});
 app.use(express.json());
 app.use(express.urlencoded());
 
@@ -21,7 +27,7 @@ app.use(express.urlencoded());
 app.get('/authinfo', api.user.authinfo);
 
 app.get('/user/:username', api.user.get);
-app.get('/user/verify/:token', api.user.verify);
+app.get('/user/:username/verify/:token', api.user.verify);
 
 app.post('/blob/create', api.blob.create);
 app.post('/blob/patch', hmac.middleware, api.blob.patch);
@@ -29,7 +35,6 @@ app.post('/blob/consolidate', hmac.middleware, api.blob.consolidate);
 app.post('/blob/delete', hmac.middleware, api.blob.delete);
 app.get('/blob/:blob_id', api.blob.get);
 app.get('/blob/:blob_id/patch/:patch_id', api.blob.getPatch);
-
 
 
 try {

@@ -1,16 +1,24 @@
-var store = require('../lib/store')();
 exports.user = require('./user');
 exports.blob = require('./blob');
 
+var config = require('../config');
+var store = require('../lib/store')(config.dbtype);
+
+exports.adjust_dbtype = function(dbtype) {
+    store = require('../lib/store')(dbtype);
+    exports.user.store = store;
+    exports.blob.store = store;
+}
 exports.user.store = store;
 exports.blob.store = store;
-var response = require('response');
 
+
+var response = require('response');
 var domain = require('domain');
 var d = domain.create();
 d.on('error',function (obj) {
-    // obj.res and obj.error are usually 'thrown' back here
-    console.log("\nAPI ERROR");
+    console.log("API Error");
+    console.log(obj.error);
     if (obj.res) {
         if (obj.error !== undefined) 
             response.json({error:obj.error.message}).pipe(obj.res);
