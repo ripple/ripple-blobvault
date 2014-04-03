@@ -10,7 +10,7 @@ var getUserInfo = function(username, res) {
         });
         return;
     }
-    if ((username.length <= 15) || (username.indexOf('~') === 0)) {
+    if ((username.length <= 15) || ((username.indexOf('~') === 0) && (username.length <= 16))) {
         if (username.indexOf('~') === 0) {
             username = username.slice(1);
         }
@@ -42,6 +42,13 @@ var getUserInfo = function(username, res) {
                 response.json(obj).pipe(res);
             }
         });
+    } else {
+        exports.store.read_where({key:"address",value:username,res:res},
+            function(resp) {
+                console.log("READ_WHERE");  
+                console.log(resp);
+            }
+        );
     }
 }
 

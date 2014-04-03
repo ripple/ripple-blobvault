@@ -24,7 +24,7 @@ server.listen(5050);
 q.series([
     function(lib) {
     request.get({
-        url:'http://localhost:5050/user/r12345678901234567890',
+        url:'http://localhost:5050/user/bob',
         json:true
         },
         function(err, resp, body) {
