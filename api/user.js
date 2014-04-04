@@ -47,6 +47,32 @@ var getUserInfo = function(username, res) {
             function(resp) {
                 console.log("READ_WHERE");  
                 console.log(resp);
+                var obj = {}
+                if (resp.exists === false) {
+                    if (config.reserved[username.toLowerCase()]) {
+                        obj.exists = false;
+                        obj.reserved = config.reserved[username.toLowerCase()];
+                        process.nextTick(function() { 
+                            throw { res : res, error: new Error('username is reserved') }
+                        });
+                        return;
+                    } else {
+                        obj.exists = false;
+                        obj.reserved = false;
+                        process.nextTick(function() {
+                            throw { res : res, error: new Error('No such user') }
+                        });
+                        return;
+                    }
+                } else {
+                    obj.username = username,
+                    obj.version = config.AUTHINFO_VERSION,
+                    obj.blobvault = config.url,
+                    obj.pakdf = config.defaultPakdfSetting
+                    obj.address = resp.address,
+                    obj.exists = resp.exists
+                    response.json(obj).pipe(res);
+                }
             }
         );
     }
@@ -81,8 +107,8 @@ var verify = function(req,res) {
             return;
         } else {
             var obj = {}
-            console.log("Token provided by user:", token);
-            console.log("Token in database     :", resp.emailToken);
+            console.log("Token provided by user: ->"+ token + "<-");
+            console.log("Token in database       ->"+ resp.emailToken + "<-");
             if (token === resp.emailToken) {
                 // update emailVerified
                 // TODO all fields have to be normalized the same
