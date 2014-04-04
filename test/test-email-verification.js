@@ -34,7 +34,7 @@ q.series([
         auth_secret :'FFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0A',
         blob_id : 'FFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0A',
         data : 'foo' ,
-        address : 'r24242',
+        address : 'r24242993999fadsf9939f9assfdf',
         email: 'bob@foo.com'
         }},
         function(err, resp, body) {
