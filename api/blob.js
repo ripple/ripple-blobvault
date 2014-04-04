@@ -138,269 +138,27 @@ var create = function (req, res) {
 };
 exports.create = create;
 exports.patch = function (req, res) {
-    try {
-    res.set({
-      'Content-Type': 'text/plain',
-      'Access-Control-Allow-Origin': '*'
+    store.blobPatch(req,res,function(resp) {
     });
-
-    // XXX Check HMAC
-
-    // XXX Check patch size
-
-    // XXX Check quota
-
-    db.query(
-      "SELECT `id`, `revision` FROM `blob` WHERE `id` = ?", null,
-      { raw: true }, [req.body.blob_id]
-    )
-      .complete(function (err, rows) {
-        if (err) {
-            process.nextTick(function() {
-                throw { error : err , res : res }
-            });
-          return;
-        }
-
-        // XXX Check blob exists
-
-        var blob = rows[0];
-
-        db.query(
-          "SELECT `revision` FROM `blob_patches` WHERE `blob_id` = ? " +
-          "ORDER BY `revision` DESC " +
-          "LIMIT 0,1", null,
-          { raw: true }, [req.body.blob_id]
-        )
-          .complete(function (err, rows) {
-            if (err) {
-                process.nextTick(function() {
-                    throw { error : err , res : res }
-                });
-              return;
-            }
-
-            // XXX Race condition: another revision might get added at same time
-
-            var lastRevision = +(rows.length ? rows[0].revision : blob.revision);
-
-            // XXX Handle invalid base64
-
-            var patch = new Buffer(req.body.patch, 'base64');
-
-            db.query(
-              "INSERT INTO `blob_patches` (`blob_id`, `revision`, `data`) " +
-              "  VALUES (?, ?, ?)", null,
-              { raw: true }, [req.body.blob_id, lastRevision + 1, patch])
-              .complete(function (err) {
-                if (err) {
-                    process.nextTick(function() {
-                        throw { error : err , res : res }
-                    });
-                  return;
-                }
-
-                res.json({
-                  result: 'success',
-                  revision: lastRevision + 1
-                });
-              }
-            );
-          }
-        );
-      }
-    );
-
-  } catch (e) {
-    process.nextTick(function() {
-        throw { error : e , res : res }
-    });
-    }
 };
 
 exports.consolidate = function (req, res) {
-    try {
-    res.set({
-      'Content-Type': 'text/plain',
-      'Access-Control-Allow-Origin': '*'
-    });
-
-    // XXX Check blob exists
-
-    // XXX Check HMAC
-
-    // XXX Check quota
-
-    var data = new Buffer(req.body.data, 'base64');
-
-    db.query(
-      "START TRANSACTION;" +
-      "UPDATE `blob` SET `data` = ?, `revision` = ? WHERE `id` = ?;" +
-      "DELETE FROM `blob_patches` WHERE `blob_id` = ? AND `revision` <= ?;" +
-      "COMMIT;", null,
-      { raw: true }, [data, req.body.revision, req.body.blob_id,
-                      req.body.blob_id, req.body.revision])
-      .complete(function (err) {
-        if (err) {
-            process.nextTick(function() {
-                throw { error : err , res : res }
-            });
-          return;
-        }
-
-        res.json({
-          result: 'success'
-        });
-      }
-    );
-
-  } catch (e) {
-    process.nextTick(function() {
-        throw { error : e , res : res }
-    });
-    }
+    store.blobConsolidate(req,res,function(resp) {
+    });    
 };
 
 exports.delete = function (req, res) {
-    try {
-    res.set({
-      'Content-Type': 'text/plain',
-      'Access-Control-Allow-Origin': '*'
+    store.blobDelete(req,res,function(resp) {
     });
-
-    // XXX Check blob exists
-
-    // XXX Check HMAC
-
-    db.query(
-      "START TRANSACTION;" +
-      "DELETE FROM `blob` WHERE `id` = ?;" +
-      "DELETE FROM `blob_patches` WHERE `blob_id` = ?;" +
-      "COMMIT;", null,
-      { raw: true }, [req.body.blob_id, req.body.blob_id])
-      .complete(function (err) {
-        if (err) {
-            process.nextTick(function() {
-                throw { error : err , res : res }
-            });
-          return;
-        }
-
-        res.json({
-          result: 'success'
-        });
-      }
-    );
-
-  } catch (e) {
-    process.nextTick(function() {
-        throw { error : e , res : res }
-    });
-    }
 };
 
 exports.get = function (req, res) {
-    try {
-    res.set({
-      'Content-Type': 'text/plain',
-      'Access-Control-Allow-Origin': '*'
+    store.blobGet(req,res,function(resp) {
     });
-
-    // XXX Check blob exists
-
-    // XXX Check HMAC
-
-    db.query(
-      "SELECT data, revision FROM `blob` WHERE `id` = ?", null,
-      { raw: true }, [req.params.blob_id])
-      .complete(function (err, rows) {
-        if (err) {
-            process.nextTick(function() {
-                throw { error : err , res : res }
-            });
-          return;
-        }
-
-        if (rows.length) {
-          var blob = rows[0];
-          db.query(
-            "SELECT `data` FROM `blob_patches` WHERE `blob_id` = ?" +
-            "  ORDER BY `revision` ASC", null,
-            { raw: true }, [req.params.blob_id])
-            .complete(function (err, rows) {
-              if (err) {
-                    process.nextTick(function() {
-                        throw { error : err , res : res }
-                    });
-                return;
-              }
-
-              // XXX Ensure patches are sequential starting with blob.revision+1
-
-              res.json({
-                result: 'success',
-                blob: blob.data.toString('base64'),
-                revision: blob.revision,
-                patches: rows.map(function (patch) {
-                  return patch.data.toString('base64');
-                })
-              });
-            }
-          );
-        } else {
-            process.nextTick(function() {
-                throw { error : new Error("Blob not found") , res : res }
-            });
-            return
-        }
-      }
-    );
-
-  } catch (e) {
-    process.nextTick(function() {
-        throw { error : e , res : res }
-    });
-    }
 };
 
 
 exports.getPatch = function (req, res) {
-    try {
-    res.set({
-      'Content-Type': 'text/plain',
-      'Access-Control-Allow-Origin': '*'
+    store.blobGetPatch(req,res,function(resp) {
     });
-
-    // XXX Check blob exists
-
-    // XXX Check HMAC
-
-    db.query(
-      "SELECT `data` FROM `blob_patches`" +
-      "WHERE `blob_id` = ? AND `revision` = ?", null,
-      { raw: true }, [req.params.blob_id, req.params.patch_id])
-      .complete(function (err, result) {
-        if (err) {
-            process.nextTick(function() {
-                throw { error : err , res : res }
-            });
-          return;
-        }
-
-        if (result.rows.length) {
-          res.json({
-            result: 'success',
-            patch: result.rows[0].data // XXX Convert to base64
-          });
-        } else {
-          // XXX Handle error
-        }
-      }
-    );
-
-  } catch (e) {
-    process.nextTick(function() {
-        throw { error : e , res : res }
-    });
-    }
 };
