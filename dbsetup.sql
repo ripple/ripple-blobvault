@@ -21,7 +21,7 @@ CREATE TABLE IF NOT EXISTS `blob` (
 -- Table structure for table `blob_log`
 --
 
-CREATE TABLE IF NOT EXISTS `blob_log` (
+CREATE TABLE IF NOT EXISTS `blob_patches` (
   `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `blob_id` char(64) NOT NULL,
   `revision` int(10) unsigned NOT NULL,

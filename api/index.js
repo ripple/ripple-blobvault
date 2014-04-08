@@ -1,18 +1,6 @@
 exports.user = require('./user');
 exports.blob = require('./blob');
 
-var config = require('../config');
-var store = require('../lib/store')(config.dbtype);
-
-exports.adjust_dbtype = function(dbtype) {
-    store = require('../lib/store')(dbtype);
-    exports.user.store = store;
-    exports.blob.store = store;
-}
-exports.user.store = store;
-exports.blob.store = store;
-
-
 var response = require('response');
 var domain = require('domain');
 var d = domain.create();

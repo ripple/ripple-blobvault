@@ -1,12 +1,15 @@
 var config = require('./config');
-
 var http = require('http');
 var https = require('https');
 var fs = require('fs');
 var express = require('express');
 var hmac = require('./lib/hmac');
-
 var api = require('./api');
+var store = require('../lib/store')(config.dbtype);
+api.blob.store = store;
+api.user.store = store;
+hmac.store = store;
+
 
 var app = express();
 app.use(function(req,res,next) {
@@ -20,7 +23,6 @@ app.use(express.urlencoded());
 
 
 app.get('/authinfo', api.user.authinfo);
-
 app.get('/user/:username', api.user.get);
 app.get('/user/:username/verify/:token', api.user.verify);
 

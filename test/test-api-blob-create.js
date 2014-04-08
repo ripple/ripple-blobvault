@@ -1,6 +1,10 @@
 var request = require('request');
 var http = require('http');
 var api = require('../api');
+var config = require('../config');
+var store = require('../lib/store')(config.dbtype);
+api.user.store = store;
+api.blob.store = store;
 var util = require('util');
 var queuelib = require('queuelib');
 var express = require('express');
@@ -14,7 +18,6 @@ var app = express();
 
 app.use(express.json());
 app.use(express.urlencoded());
-
 
 var server = http.createServer(app);
 app.post('/blob/create',api.blob.create);

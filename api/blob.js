@@ -110,7 +110,6 @@ var create = function (req, res) {
     },
     function(lib) { 
         // XXX Check signature
-
         // TODO : inner key is required on updates
         var params = {
             data:req.body.data,
@@ -139,6 +138,8 @@ var create = function (req, res) {
 exports.create = create;
 exports.patch = function (req, res) {
     store.blobPatch(req,res,function(resp) {
+        if (resp)        
+            response.json(resp).pipe(res);
     });
 };
 
