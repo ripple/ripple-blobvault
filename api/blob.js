@@ -101,7 +101,13 @@ var create = function (req, res) {
                 lib.done();
             } else {
                 process.nextTick(function() {
-                    throw { res : res, error : new Error("User already exists.") }
+               //     throw { res : res, error : new Error("User already exists.") }
+                // TODO : have this domain enter store's bound domain from process
+                // nexttick
+                    console.log("API Error");
+                    var err = new Error ("User already exists");
+                    console.log(err);
+                    require('response').json({error:err.message}).pipe(res);
                 });
                 lib.terminate(id);
                 return;
@@ -109,6 +115,7 @@ var create = function (req, res) {
        });
     },
     function(lib) { 
+        console.log("Going to create step");
         // XXX Check signature
         // TODO : inner key is required on updates
         var params = {
@@ -142,22 +149,18 @@ exports.patch = function (req, res) {
             response.json(resp).pipe(res);
     });
 };
-
 exports.consolidate = function (req, res) {
     store.blobConsolidate(req,res,function(resp) {
     });    
 };
-
 exports.delete = function (req, res) {
     store.blobDelete(req,res,function(resp) {
     });
 };
-
 exports.get = function (req, res) {
     store.blobGet(req,res,function(resp) {
     });
 };
-
 
 exports.getPatch = function (req, res) {
     store.blobGetPatch(req,res,function(resp) {

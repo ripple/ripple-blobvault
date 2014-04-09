@@ -6,6 +6,8 @@ var express = require('express');
 var hmac = require('./lib/hmac');
 var api = require('./api');
 var store = require('../lib/store')(config.dbtype);
+api.setStore(store);
+hmac.setStore(store);
 api.blob.store = store;
 api.user.store = store;
 hmac.store = store;
