@@ -16,10 +16,19 @@ exports.is_proxy = false;
 
 // Database settings
 // 'mysql', 'memory', 'postgres'
-exports.dbtype = 'memory';
+exports.dbtype = 'postgres';
+//exports.dbtype = 'mysql';
+//exports.dbtype = 'memory';
 exports.database = {
     mysql : {
-        databaseUrl : 'mysql://SETMEUSER:SETMEPASSWORD@localhost:3306/blobvault'
+        databaseUrl : 'mysql://USERNAME:PASSWORD@localhost:3306/blobvault'
+    },
+    postgres : {
+        host     : '127.0.0.1',
+        user     : 'USERNAME',
+        password : 'PASSWORD',
+        database : 'blobvault',
+        charset  : 'utf8'
     }
 }
 
