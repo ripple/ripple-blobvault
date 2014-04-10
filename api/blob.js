@@ -9,7 +9,9 @@ var create = function (req, res) {
     var blobId = req.body.blob_id;
     if ("string" !== typeof blobId) {
         process.nextTick(function() {
-            throw { res : res , error : new Error("No blob ID given.")};
+            throw { res : res , 
+            error : new Error("No blob ID given."), 
+            statusCode : 400 };
         })
         return;
     } else {
@@ -18,7 +20,9 @@ var create = function (req, res) {
 
     if (!/^[0-9a-f]{64}$/.exec(blobId)) {
         process.nextTick(function() {
-          throw { res : res, error : new Error("Blob ID must be 32 bytes hex.") }
+            throw { res : res, 
+            error : new Error("Blob ID must be 32 bytes hex."),
+            statusCode: 400 }
         });
        return;
     }
@@ -26,26 +30,34 @@ var create = function (req, res) {
     var username = req.body.username;
     if ("string" !== typeof username) {
         process.nextTick(function() {
-            throw { res : res , error : new Error("No username given.") }
+            throw { res : res ,     
+            error : new Error("No username given."),
+            statusCode: 400 }
         });
         return;
     } 
     if (!/^[a-zA-Z0-9][a-zA-Z0-9-]{0,13}[a-zA-Z0-9]$/.exec(username)) {
         process.nextTick(function() {
-            throw { res : res , error : new Error("Username must be between 2 and 15 alphanumeric" + " characters or hyphen (-)." + " Can not start or end with a hyphen.")}
+            throw { res : res , 
+            error : new Error("Username must be between 2 and 15 alphanumeric" + " characters or hyphen (-)." + " Can not start or end with a hyphen."),
+            statusCode: 400 }
         });
         return;
     }
     if (/--/.exec(username)) {
         process.nextTick(function() {
-            throw { res : res, error : new Error("Username cannot contain two consecutive hyphens.")}
+            throw { res : res, 
+            error : new Error("Username cannot contain two consecutive hyphens."),
+            statusCode: 400 }
         });
         return;
     }
 
     if (config.reserved[username.toLowerCase()]) {
         process.nextTick(function() {
-            throw { res : res, error : new Error("This username is reserved for "+config.reserved[username.toLowerCase()]+'.')}
+            throw { res : res, 
+            error : new Error("This username is reserved for "+config.reserved[username.toLowerCase()]+'.'),
+            statusCode: 400 }
         });
         return;
     }
@@ -53,7 +65,9 @@ var create = function (req, res) {
     var authSecret = req.body.auth_secret;
     if ("string" !== typeof authSecret) {
         process.nextTick(function() {
-            throw { res : res, error : new Error("No auth secret given.") }
+            throw { res : res, 
+            error : new Error("No auth secret given."),
+            statusCode : 400 }
         });
         return;
     }
@@ -61,28 +75,36 @@ var create = function (req, res) {
     authSecret = authSecret.toLowerCase();
     if (!/^[0-9a-f]{64}$/.exec(authSecret)) {
         process.nextTick(function() {
-            throw { res : res, error : new Error("Auth secret must be 32 bytes hex.") }
+            throw { res : res, 
+            error : new Error("Auth secret must be 32 bytes hex."),
+            statusCode: 400 }
         });
         return;
     }
 
     if (req.body.data === undefined) {
         process.nextTick(function() {
-            throw { res : res, error : new Error("No data provided.") }
+            throw { res : res,  
+            error : new Error("No data provided."),
+            statusCode : 400 }
         });
         return;
     }
 
     if (req.body.address == undefined) {
         process.nextTick(function() {
-            throw { res : res, error : new Error("No ripple address provided.") }
+            throw { res : res, 
+            error : new Error("No ripple address provided."),
+            statusCode : 400 }
         });
         return;
     } 
 
     if (req.body.email == undefined) {
         process.nextTick(function() {
-            throw { res : res, error : new Error("No email address provided.") }
+            throw { res : res, 
+            error : new Error("No email address provided."),
+            statusCode : 400 }
         });
         return;
     } 
@@ -106,8 +128,11 @@ var create = function (req, res) {
                 // nexttick
                     console.log("API Error");
                     var err = new Error ("User already exists");
-                    console.log(err);
-                    require('response').json({error:err.message}).pipe(res);
+                    res.writeHead(400, {
+                        'Content-Type' : 'application/json',
+                        'Access-Control-Allow-Origin': '*' 
+                    });
+                    res.end(JSON.stringify({result:'error',message:err.message}));
                 });
                 lib.terminate(id);
                 return;
@@ -144,25 +169,28 @@ var create = function (req, res) {
 };
 exports.create = create;
 exports.patch = function (req, res) {
-    store.blobPatch(req,res,function(resp) {
-        if (resp)        
-            response.json(resp).pipe(res);
+    exports.store.blobPatch(req,res,function(resp) {
+        response.json(resp).pipe(res);
     });
 };
 exports.consolidate = function (req, res) {
-    store.blobConsolidate(req,res,function(resp) {
+    exports.store.blobConsolidate(req,res,function(resp) {
+        response.json(resp).pipe(res);
     });    
 };
 exports.delete = function (req, res) {
-    store.blobDelete(req,res,function(resp) {
+    exports.store.blobDelete(req,res,function(resp) {
+        response.json(resp).pipe(res);
     });
 };
 exports.get = function (req, res) {
-    store.blobGet(req,res,function(resp) {
+    exports.store.blobGet(req,res,function(resp) {
+        response.json(resp).pipe(res);
     });
 };
 
 exports.getPatch = function (req, res) {
-    store.blobGetPatch(req,res,function(resp) {
+    exports.store.blobGetPatch(req,res,function(resp) {
+        response.json(resp).pipe(res);
     });
 };

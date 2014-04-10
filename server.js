@@ -3,15 +3,11 @@ var http = require('http');
 var https = require('https');
 var fs = require('fs');
 var express = require('express');
+var store = require('./lib/store')(config.dbtype);
 var hmac = require('./lib/hmac');
 var api = require('./api');
-var store = require('../lib/store')(config.dbtype);
 api.setStore(store);
 hmac.setStore(store);
-api.blob.store = store;
-api.user.store = store;
-hmac.store = store;
-
 
 var app = express();
 app.use(function(req,res,next) {
@@ -23,17 +19,16 @@ app.use(function(req,res,next) {
 app.use(express.json());
 app.use(express.urlencoded());
 
+app.get('/v1/authinfo', api.user.authinfo);
+app.get('/v1/user/:username', api.user.get);
+app.get('/v1/user/:username/verify/:token', api.user.verify);
 
-app.get('/authinfo', api.user.authinfo);
-app.get('/user/:username', api.user.get);
-app.get('/user/:username/verify/:token', api.user.verify);
-
-app.post('/blob/create', api.blob.create);
-app.post('/blob/patch', hmac.middleware, api.blob.patch);
-app.post('/blob/consolidate', hmac.middleware, api.blob.consolidate);
-app.post('/blob/delete', hmac.middleware, api.blob.delete);
-app.get('/blob/:blob_id', api.blob.get);
-app.get('/blob/:blob_id/patch/:patch_id', api.blob.getPatch);
+app.post('/v1/blob/create', api.blob.create);
+app.post('/v1/blob/patch', hmac.middleware, api.blob.patch);
+app.post('/v1/blob/consolidate', hmac.middleware, api.blob.consolidate);
+app.post('/v1/blob/delete', hmac.middleware, api.blob.delete);
+app.get('/v1/blob/:blob_id', api.blob.get);
+app.get('/v1/blob/:blob_id/patch/:patch_id', api.blob.getPatch);
 
 
 try {

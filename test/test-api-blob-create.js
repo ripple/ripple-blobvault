@@ -19,16 +19,18 @@ app.use(express.json());
 app.use(express.urlencoded());
 
 var server = http.createServer(app);
-app.post('/blob/create',api.blob.create);
+app.post('/v1/blob/create',api.blob.create);
 
 server.listen(5050);
 
 q.series([
     function(lib) {
     request.post({
-        url:'http://localhost:5050/blob/create',
+        url:'http://localhost:5050/v1/blob/create',
         json: {foo:'bar'}},
         function(err, resp, body) {
+            log(err);
+            log(resp.statusCode);
             log(body);
             lib.done();
         }
@@ -36,7 +38,7 @@ q.series([
     },
     function(lib) {
     request.post({
-        url:'http://localhost:5050/blob/create',
+        url:'http://localhost:5050/v1/blob/create',
         json: { blob_id :'bar'}},
         function(err, resp, body) {
             log(body);
@@ -46,7 +48,7 @@ q.series([
     },
     function(lib) {
     request.post({
-        url:'http://localhost:5050/blob/create',
+        url:'http://localhost:5050/v1/blob/create',
         json: { blob_id : 'FFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0A'}},
         function(err, resp, body) {
             log(body);
@@ -56,7 +58,7 @@ q.series([
     },
     function(lib) {
     request.post({
-        url:'http://localhost:5050/blob/create',
+        url:'http://localhost:5050/v1/blob/create',
         json: { 
         username : 'b',
         blob_id : 'FFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0A'}},
@@ -68,7 +70,7 @@ q.series([
     },
     function(lib) {
     request.post({
-        url:'http://localhost:5050/blob/create',
+        url:'http://localhost:5050/v1/blob/create',
         json: { 
         username : 'bb--',
         blob_id : 'FFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0A'}},
@@ -80,7 +82,7 @@ q.series([
     },
     function(lib) {
     request.post({
-        url:'http://localhost:5050/blob/create',
+        url:'http://localhost:5050/v1/blob/create',
         json: { 
         username : 'bb--bb',
         blob_id : 'FFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0A'}},
@@ -92,7 +94,7 @@ q.series([
     },
     function(lib) {
     request.post({
-        url:'http://localhost:5050/blob/create',
+        url:'http://localhost:5050/v1/blob/create',
         json: { 
         username : 'bob',
         blob_id : 'FFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0A'}},
@@ -104,7 +106,7 @@ q.series([
     },
     function(lib) {
     request.post({
-        url:'http://localhost:5050/blob/create',
+        url:'http://localhost:5050/v1/blob/create',
         json: { 
         username : 'bob',
         auth_secret :'FFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0A',
@@ -117,7 +119,7 @@ q.series([
     },
     function(lib) {
     request.post({
-        url:'http://localhost:5050/blob/create',
+        url:'http://localhost:5050/v1/blob/create',
         json: { 
         username : 'bob',
         auth_secret :'FFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0A',
@@ -132,7 +134,7 @@ q.series([
     },
     function(lib) {
     request.post({
-        url:'http://localhost:5050/blob/create',
+        url:'http://localhost:5050/v1/blob/create',
         json: { 
         username : 'bob',
         auth_secret :'FFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0A',
@@ -148,7 +150,7 @@ q.series([
     },
     function(lib) {
     request.post({
-        url:'http://localhost:5050/blob/create',
+        url:'http://localhost:5050/v1/blob/create',
         json: { 
         username : 'bob',
         auth_secret :'FFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0A',
@@ -158,6 +160,8 @@ q.series([
         email: 'bob@foo.com'
         }},
         function(err, resp, body) {
+            log(resp.statusCode);
+            log(resp.headers);
             log(body);
             lib.done();
         }

@@ -20,16 +20,12 @@ var getUserInfo = function(username, res) {
                 if (config.reserved[username.toLowerCase()]) {
                     obj.exists = false;
                     obj.reserved = config.reserved[username.toLowerCase()];
-                    process.nextTick(function() { 
-                        throw { res : res, error: new Error('username is reserved') }
-                    });
+                    throw { res : res, error: new Error('username is reserved') }
                     return;
                 } else {
                     obj.exists = false;
                     obj.reserved = false;
-                    process.nextTick(function() {
-                        throw { res : res, error: new Error('No such user') }
-                    });
+                    throw { res : res, error: new Error('No such user') }
                     return;
                 }
             } else {
@@ -79,7 +75,7 @@ var getUserInfo = function(username, res) {
 }
 
 var authinfo = function (req, res) {
-    getUserInfo(req.query.user, res);
+    getUserInfo(req.query.username, res);
 };
 var get = function (req, res) {
     getUserInfo(req.params.username, res);
@@ -120,9 +116,12 @@ var verify = function(req,res) {
                     response.json(obj).pipe(res);
                 });
             } else {
+                throw { res : res, error: new Error('Invalid token') }
+/*
                 process.nextTick(function() {
                     throw { res : res, error: new Error('Invalid token') }
                 }); 
+*/
                 return;
             } 
         }
