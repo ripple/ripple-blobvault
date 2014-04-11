@@ -13,7 +13,9 @@
     "hashish": "0.0.4",
     "queuelib": "^0.3.3",
     "knex": "^0.5.13",
-    "pg": "^3.0.1"
+    "pg": "^3.0.1",
+    "emailjs": "^0.3.8",
+    "hyperglue": "^1.3.0"
   },
   "devDependencies": {
     "request": "^2.34.0"

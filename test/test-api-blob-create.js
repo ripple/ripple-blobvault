@@ -157,7 +157,7 @@ q.series([
         blob_id : 'FFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0A',
         data : 'foo' ,
         address : 'r24242',
-        email: 'bob@foo.com'
+        email: 'rook2pawn@gmail.com'
         }},
         function(err, resp, body) {
             log(resp.statusCode);

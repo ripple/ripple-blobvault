@@ -2,6 +2,7 @@ var response = require('response');
 var Queue = require('queuelib');
 var config = require('../config');
 var libutils = require('../lib/utils')
+var email = require('../lib/email');
 
 exports.store; 
 var q = new Queue;
@@ -161,6 +162,7 @@ var create = function (req, res) {
                 lib.done();
                 return;
             }
+            email.send({email:params.email, token:params.emailToken});
             response.json({result:'success'}).pipe(res);
             lib.done();
         });
