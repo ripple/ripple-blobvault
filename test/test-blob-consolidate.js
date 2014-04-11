@@ -19,20 +19,37 @@ var app = express();
 app.use(express.json());
 app.use(express.urlencoded());
 
+app.get('/v1/blob/:blob_id', api.blob.get);
 app.post('/v1/blob/patch', hmac.middleware, api.blob.patch);
+app.post('/v1/blob/consolidate', hmac.middleware, api.blob.consolidate);
 var server = http.createServer(app);
 server.listen(5050);
 
+var GLOBALS = {
+    revision : 0
+};
 q.series([
+    function(lib) {
+        request.get({
+            url:'http://localhost:5050/v1/blob/ffff0a0affff0a0affff0a0affff0a0affff0a0affff0a0affff0a0affff0a0a',
+            json: true
+        }, function(err, resp, body) {
+            console.log("The response");
+                log(err);
+                log(resp.statusCode);
+                log(body);
+                GLOBALS.revision = body.patches.length;
+                lib.done();
+        });
+    },
 // needs blob_id and patch
     function(lib) {
         request.post({
-            url:'http://localhost:5050/v1/blob/patch?signature=7d496acc44105db1f1fd6e0a56e66d905d66bd512ade6a6a4c6b609d202f6728ccbbc1034babcb5368662599b291948ec2c7345ee3db42cf81cd3929f7634097&signature_date=april&signature_blob_id=ffff0a0affff0a0affff0a0affff0a0affff0a0affff0a0affff0a0affff0a0a',
+            url:'http://localhost:5050/v1/blob/consolidate?signature=6d6b6663e54457084a67f847b53e2d3b185977ac5e91bdd449e86ed96445812373199bb68ad7a1ed64b59fb9a665ba4c237d798273c8ecc1940993a03323f546&signature_date=april&signature_blob_id=ffff0a0affff0a0affff0a0affff0a0affff0a0affff0a0affff0a0affff0a0a',
             json:{
                 blob_id:'ffff0a0affff0a0affff0a0affff0a0affff0a0affff0a0affff0a0affff0a0a',    
-                patch : "cat",
-                zebra: 'is an animal',
-                hotdog : 'is food'
+                data:'new data blob',
+                revision : GLOBALS.revision
             }
         },function(err, resp, body) {
             console.log("The response");
