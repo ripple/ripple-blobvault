@@ -16,6 +16,9 @@ var getUserInfo = function(username, res) {
         }
         exports.store.read({username:username,res:res},function(resp) {
             var obj = {}
+            obj.version = config.AUTHINFO_VERSION,
+            obj.blobvault = config.url,
+            obj.pakdf = config.defaultPakdfSetting
             if (resp.exists === false) {
                 if (config.reserved[username.toLowerCase()]) {
                     obj.exists = false;
@@ -24,7 +27,7 @@ var getUserInfo = function(username, res) {
                         'Content-Type' : 'application/json',
                         'Access-Control-Allow-Origin': '*' 
                     });
-                    res.end(JSON.stringify({result:'error',message:"Username is reserved"}));
+                    res.end(JSON.stringify(obj));
                     //throw { res : res, error: new Error('username is reserved') }
                     //return;
                 } else {
@@ -34,7 +37,7 @@ var getUserInfo = function(username, res) {
                         'Content-Type' : 'application/json',
                         'Access-Control-Allow-Origin': '*' 
                     });
-                    res.end(JSON.stringify({result:'error',message:"No such user"}));
+                    res.end(JSON.stringify(obj));
                     //throw { res : res, error: new Error('No such user') }
                     //return;
                 }
