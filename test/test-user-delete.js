@@ -4,6 +4,8 @@ var express = require('express');
 var store = require('../lib/store')(config.dbtype);
 var hmac = require('../lib/hmac');
 var api = require('../api');
+
+var testutils = require('./utils');
 var request = require('request');
 api.setStore(store);
 hmac.setStore(store);
@@ -26,10 +28,19 @@ server.listen(5050);
 var GLOBALS = {
     revision : 0
 };
+
+console.log("testUtils. sig:");
+
+var sig = testutils.createSignature({method:'DELETE',url:'/v1/user',secret:testutils.person.auth_secret,date:'april'});
+console.log(sig);
+
 q.series([
     function(lib) {
+        var url = 'http://localhost:5050/v1/user?signature=' + sig + '&signature_date=april&signature_blob_id='+ testutils.person.blob_id;
+        console.log("Url:" + url);
+
         request.del({
-            url:'http://localhost:5050/v1/user?signature=ac7788e688e511884947ca9953523bfadbd6f3a9d895cdce524d9b2d90f09fc7b2a36f90a87e94565ec775d1830682ae882b95308a4a4bafac6e9805bdecd3a3&signature_date=april&signature_blob_id=ffff0a0affff0a0affff0a0affff0a0affff0a0affff0a0affff0a0affff0a0a',
+            url:url,
             json:true
         },function(err, resp, body) {
             console.log("The response");

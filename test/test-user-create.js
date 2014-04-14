@@ -7,6 +7,7 @@ api.setStore(store);
 var util = require('util');
 var queuelib = require('queuelib');
 var express = require('express');
+var testutils = require('./utils');
 var q = new queuelib;
 
 var log = function(obj) {
@@ -151,14 +152,8 @@ q.series([
     function(lib) {
     request.post({
         url:'http://localhost:5050/v1/user',
-        json: { 
-        username : 'bob5050',
-        auth_secret :'FFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0A',
-        blob_id : 'FFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0A',
-        data : 'foo' ,
-        address : 'r24242asdfe0fe0fe0fea0sfesfjkej',
-        email: 'bob5050@bob.com'
-        }},
+        json: testutils.person
+        },
         function(err, resp, body) {
             log(resp.statusCode);
             log(resp.headers);
@@ -166,5 +161,8 @@ q.series([
             lib.done();
         }
     );
+    },
+    function(lib) {
+        lib.done();
     }
 ]);
