@@ -20,11 +20,21 @@ var getUserInfo = function(username, res) {
                 if (config.reserved[username.toLowerCase()]) {
                     obj.exists = false;
                     obj.reserved = config.reserved[username.toLowerCase()];
+                    res.writeHead(400, {
+                        'Content-Type' : 'application/json',
+                        'Access-Control-Allow-Origin': '*' 
+                    });
+                    res.end(JSON.stringify({result:'error',message:"Username is reserved"}));
                     //throw { res : res, error: new Error('username is reserved') }
                     //return;
                 } else {
                     obj.exists = false;
                     obj.reserved = false;
+                    res.writeHead(400, {
+                        'Content-Type' : 'application/json',
+                        'Access-Control-Allow-Origin': '*' 
+                    });
+                    res.end(JSON.stringify({result:'error',message:"No such user"}));
                     //throw { res : res, error: new Error('No such user') }
                     //return;
                 }
@@ -48,13 +58,23 @@ var getUserInfo = function(username, res) {
                     if (config.reserved[username.toLowerCase()]) {
                         obj.exists = false;
                         obj.reserved = config.reserved[username.toLowerCase()];
-                        throw { res : res, error: new Error('username is reserved') }
-                        return;
+                        res.writeHead(400, {
+                            'Content-Type' : 'application/json',
+                            'Access-Control-Allow-Origin': '*' 
+                        });
+                        res.end(JSON.stringify({result:'error',message:"Username is reserved"}));
+                        //throw { res : res, error: new Error('username is reserved') }
+                        //return;
                     } else {
                         obj.exists = false;
                         obj.reserved = false;
-                        throw { res : res, error: new Error('No such user') }
-                        return;
+                        res.writeHead(400, {
+                            'Content-Type' : 'application/json',
+                            'Access-Control-Allow-Origin': '*' 
+                        });
+                        res.end(JSON.stringify({result:'error',message:"No such user"}));
+                        //throw { res : res, error: new Error('No such user') }
+                        //return;
                     }
                 } else {
                     obj.username = username,
