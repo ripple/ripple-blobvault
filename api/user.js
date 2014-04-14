@@ -20,13 +20,13 @@ var getUserInfo = function(username, res) {
                 if (config.reserved[username.toLowerCase()]) {
                     obj.exists = false;
                     obj.reserved = config.reserved[username.toLowerCase()];
-                    throw { res : res, error: new Error('username is reserved') }
-                    return;
+                    //throw { res : res, error: new Error('username is reserved') }
+                    //return;
                 } else {
                     obj.exists = false;
                     obj.reserved = false;
-                    throw { res : res, error: new Error('No such user') }
-                    return;
+                    //throw { res : res, error: new Error('No such user') }
+                    //return;
                 }
             } else {
                 obj.username = username,

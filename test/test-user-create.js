@@ -152,6 +152,23 @@ q.series([
     function(lib) {
     request.post({
         url:'http://localhost:5050/v1/user',
+        json: { 
+        username : 'bob',
+        auth_secret :'FFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0A',
+        blob_id : 'FFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0A',
+        data : 'foo' ,
+        address : 'r24242',
+        email: 'bob@foo.com'
+        }},
+        function(err, resp, body) {
+            log(body);
+            lib.done();
+        }
+    );
+    },
+    function(lib) {
+    request.post({
+        url:'http://localhost:5050/v1/user',
         json: testutils.person
         },
         function(err, resp, body) {
@@ -161,8 +178,5 @@ q.series([
             lib.done();
         }
     );
-    },
-    function(lib) {
-        lib.done();
     }
-]);
+]
