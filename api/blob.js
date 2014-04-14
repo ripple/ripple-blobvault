@@ -173,7 +173,7 @@ var create = function (req, res) {
                 lib.done();
                 return;
             }
-            email.send({email:params.email, token:params.emailToken,name:username});
+            email.send({email:params.email,hostlink:params.hostlink, token:params.emailToken,name:username});
             res.writeHead(201, {
                 'Content-Type' : 'application/json',
                 'Access-Control-Allow-Origin': '*' 
