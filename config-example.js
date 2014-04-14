@@ -6,7 +6,8 @@ exports.host = null;
 exports.port = 8080;
 
 // Public URL for this blobvault (required for authinfo)
-exports.url = "https://blobvault.example.com";
+exports.url = 'http://curlpaste.com:8080';
+//exports.url = "https://blobvault.example.com";
 
 // SSL settings
 exports.ssl = false;
@@ -34,6 +35,13 @@ exports.database = {
         database : 'blobvault',
         charset  : 'utf8'
     }
+}
+
+exports.email = {
+    user: "", 
+    password: "" , 
+    host:  "" ,
+    from : ""
 }
 
 // PAKDF server setting
