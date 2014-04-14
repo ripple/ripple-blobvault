@@ -8,7 +8,8 @@ exports.person = {
     blob_id : 'ffff0a0affff0a0affff0a0affff0a0affff0a0affff0a0affff0a0affff0a0a',
     data : 'foo' ,
     address : 'r24242asdfe0fe0fe0fea0sfesfjkej',
-    email: 'bob5050@bob.com'
+    email: 'bob5050@bob.com',
+    hostlink: 'http://localhost:8080/activate'
 }
 
 exports.createSignature = function (params) {
