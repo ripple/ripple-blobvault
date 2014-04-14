@@ -145,6 +145,7 @@ var create = function (req, res) {
         // XXX Check signature
         // TODO : inner key is required on updates
         var params = {
+            res:res,
             data:req.body.data,
             authSecret:authSecret,
             blobId:blobId,
