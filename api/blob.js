@@ -110,6 +110,15 @@ var create = function (req, res) {
         return;
     } 
 
+    if (req.body.hostlink == undefined) {
+        process.nextTick(function() {
+            throw { res : res, 
+            error : new Error("No hostlink provided."),
+            statusCode : 400 }
+        });
+        return;
+    } 
+
     // XXX Ensure blob does not exist yet
 
     // XXX Check account "address" exists
