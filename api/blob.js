@@ -153,7 +153,8 @@ var create = function (req, res) {
             username:username,
             emailVerified:false,
             email:req.body.email,
-            emailToken:libutils.generateToken()
+            emailToken:libutils.generateToken(),
+            hostlink : req.body.hostlink
         };
         exports.store.create(params,function(resp) {
             if (resp.err) {

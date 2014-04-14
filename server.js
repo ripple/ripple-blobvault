@@ -19,12 +19,13 @@ app.use(function(req,res,next) {
 app.use(express.json());
 app.use(express.urlencoded());
 
+// JSON handlers
 app.post('/v1/user', api.blob.create);
 app.delete('/v1/user', hmac.middleware, api.blob.delete);
 app.get('/v1/user/:username', api.user.get);
 app.get('/v1/user/:username/verify/:token', api.user.verify);
 
-
+// JSON handlers
 app.get('/v1/blob/:blob_id', api.blob.get);
 app.post('/v1/blob/patch', hmac.middleware, api.blob.patch);
 app.get('/v1/blob/:blob_id/patch/:patch_id', api.blob.getPatch);
@@ -32,6 +33,8 @@ app.post('/v1/blob/consolidate', hmac.middleware, api.blob.consolidate);
 
 
 app.get('/v1/authinfo', api.user.authinfo);
+
+
 
 
 try {
