@@ -31,8 +31,9 @@ app.post('/v1/blob/patch', hmac.middleware, api.blob.patch);
 app.get('/v1/blob/:blob_id/patch/:patch_id', api.blob.getPatch);
 app.post('/v1/blob/consolidate', hmac.middleware, api.blob.consolidate);
 
-
 app.get('/v1/authinfo', api.user.authinfo);
+
+app.get('/v1/meta', api.meta);
 
 
 

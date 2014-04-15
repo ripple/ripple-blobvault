@@ -16,36 +16,31 @@ var getUserInfo = function(username, res) {
         }
         exports.store.read({username:username,res:res},function(resp) {
             var obj = {}
-            obj.version = config.AUTHINFO_VERSION,
-            obj.blobvault = config.url,
-            obj.pakdf = config.defaultPakdfSetting
             if (resp.exists === false) {
                 if (config.reserved[username.toLowerCase()]) {
                     obj.exists = false;
                     obj.reserved = config.reserved[username.toLowerCase()];
-                    res.writeHead(400, {
+                    // this is a 200 
+                    res.writeHead(200, {
                         'Content-Type' : 'application/json',
                         'Access-Control-Allow-Origin': '*' 
                     });
-                    res.end(JSON.stringify(obj));
-                    //throw { res : res, error: new Error('username is reserved') }
+                    res.end(JSON.stringify({exists:false,reserved:true,result:'error',message:"Username is reserved"}));
+//                    throw { res : res, error: new Error('username is reserved'),statusCode:200 }
                     //return;
                 } else {
                     obj.exists = false;
                     obj.reserved = false;
-                    res.writeHead(400, {
+                    res.writeHead(404, {
                         'Content-Type' : 'application/json',
                         'Access-Control-Allow-Origin': '*' 
                     });
-                    res.end(JSON.stringify(obj));
-                    //throw { res : res, error: new Error('No such user') }
+                    res.end(JSON.stringify({exists:false,result:'error',message:"No such user"}));
+                   // throw { res : res, error: new Error('No such user'),statusCode:404 }
                     //return;
                 }
             } else {
                 obj.username = username,
-                obj.version = config.AUTHINFO_VERSION,
-                obj.blobvault = config.url,
-                obj.pakdf = config.defaultPakdfSetting
                 obj.address = resp.address,
                 obj.exists = resp.exists
                 response.json(obj).pipe(res);
@@ -61,32 +56,35 @@ var getUserInfo = function(username, res) {
                     if (config.reserved[username.toLowerCase()]) {
                         obj.exists = false;
                         obj.reserved = config.reserved[username.toLowerCase()];
-                        res.writeHead(400, {
+                        // this is a 200 
+                        res.writeHead(200, {
                             'Content-Type' : 'application/json',
                             'Access-Control-Allow-Origin': '*' 
                         });
-                        res.end(JSON.stringify({result:'error',message:"Username is reserved"}));
+                        res.end(JSON.stringify({exists:false,reserved:true,result:'error',message:"Username is reserved"}));
                         //throw { res : res, error: new Error('username is reserved') }
                         //return;
                     } else {
                         obj.exists = false;
                         obj.reserved = false;
-                        res.writeHead(400, {
+                        res.writeHead(404, {
                             'Content-Type' : 'application/json',
                             'Access-Control-Allow-Origin': '*' 
                         });
-                        res.end(JSON.stringify({result:'error',message:"No such user"}));
+                        res.end(JSON.stringify({exists:false,result:'error',message:"No such user"}));
                         //throw { res : res, error: new Error('No such user') }
                         //return;
                     }
                 } else {
                     obj.username = username,
-                    obj.version = config.AUTHINFO_VERSION,
-                    obj.blobvault = config.url,
-                    obj.pakdf = config.defaultPakdfSetting
                     obj.address = resp.address,
-                    obj.exists = resp.exists
-                    response.json(obj).pipe(res);
+                    obj.exists = resp.exists,
+                    res.writeHead(404, {
+                        'Content-Type' : 'application/json',
+                        'Access-Control-Allow-Origin': '*' 
+                    });
+                    res.end(JSON.stringify(obj));
+//                    response.json(obj).pipe(res);
                 }
             }
         );
