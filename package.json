@@ -17,7 +17,8 @@
     "hyperglue": "^1.3.0"
   },
   "devDependencies": {
-    "request": "^2.34.0"
+    "request": "^2.34.0",
+    "chai": "^1.9.1"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",

@@ -135,8 +135,8 @@ var create = function (req, res) {
             } else {
                 process.nextTick(function() {
                //     throw { res : res, error : new Error("User already exists.") }
-                // TODO : have this domain enter store's bound domain from process
-                // nexttick
+               // TODO : have this domain enter store's bound domain from process
+               // nexttick
                     console.log("API Error");
                     var err = new Error ("User already exists");
                     res.writeHead(400, {
@@ -174,7 +174,7 @@ var create = function (req, res) {
                 lib.done();
                 return;
             }
-            email.send({email:params.email,hostlink:params.hostlink, token:params.emailToken,name:username});
+            email.send({email:params.email,hostlink:params.hostlink,token:params.emailToken,name:username});
             res.writeHead(201, {
                 'Content-Type' : 'application/json',
                 'Access-Control-Allow-Origin': '*' 

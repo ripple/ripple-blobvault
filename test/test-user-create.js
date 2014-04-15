@@ -22,166 +22,162 @@ app.use(express.urlencoded());
 
 var server = http.createServer(app);
 app.post('/v1/user',api.blob.create);
-
 server.listen(5050);
 
-
-
 var assert = require('chai').assert;
-suite('test -  user creation', function() {
-    q.series([
-        function(lib) {
-        request.post({
-            url:'http://localhost:5050/v1/user',
-            json: {foo:'bar'}},
-            function(err, resp, body) {
-                log(err);
-                log(resp.statusCode);
-                log(body);
-                lib.done();
-            }
-        );
-        },
-        function(lib) {
-        request.post({
-            url:'http://localhost:5050/v1/user',
-            json: { blob_id :'bar'}},
-            function(err, resp, body) {
-                log(body);
-                lib.done();
-            }
-        );
-        },
-        function(lib) {
-        request.post({
-            url:'http://localhost:5050/v1/user',
-            json: { blob_id : 'FFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0A'}},
-            function(err, resp, body) {
-                log(body);
-                lib.done();
-            }
-        );
-        },
-        function(lib) {
-        request.post({
-            url:'http://localhost:5050/v1/user',
-            json: { 
-            username : 'b',
-            blob_id : 'FFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0A'}},
-            function(err, resp, body) {
-                log(body);
-                lib.done();
-            }
-        );
-        },
-        function(lib) {
-        request.post({
-            url:'http://localhost:5050/v1/user',
-            json: { 
-            username : 'bb--',
-            blob_id : 'FFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0A'}},
-            function(err, resp, body) {
-                log(body);
-                lib.done();
-            }
-        );
-        },
-        function(lib) {
-        request.post({
-            url:'http://localhost:5050/v1/user',
-            json: { 
-            username : 'bb--bb',
-            blob_id : 'FFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0A'}},
-            function(err, resp, body) {
-                log(body);
-                lib.done();
-            }
-        );
-        },
-        function(lib) {
-        request.post({
-            url:'http://localhost:5050/v1/user',
-            json: { 
-            username : 'bob',
-            blob_id : 'FFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0A'}},
-            function(err, resp, body) {
-                log(body);
-                lib.done();
-            }
-        );
-        },
-        function(lib) {
-        request.post({
-            url:'http://localhost:5050/v1/user',
-            json: { 
-            username : 'bob',
-            auth_secret :'FFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0A',
-            blob_id : 'FFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0A'}},
-            function(err, resp, body) {
-                log(body);
-                lib.done();
-            }
-        );
-        },
-        function(lib) {
-        request.post({
-            url:'http://localhost:5050/v1/user',
-            json: { 
-            username : 'bob',
-            auth_secret :'FFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0A',
-            blob_id : 'FFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0A',
-            data : 'foo' 
-            }},
-            function(err, resp, body) {
-                log(body);
-                lib.done();
-            }
-        );
-        },
-        function(lib) {
-        request.post({
-            url:'http://localhost:5050/v1/user',
-            json: { 
-            username : 'bob',
-            auth_secret :'FFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0A',
-            blob_id : 'FFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0A',
-            data : 'foo' ,
-            address : 'r24242'
-            }},
-            function(err, resp, body) {
-                log(body);
-                lib.done();
-            }
-        );
-        },
-        function(lib) {
-        request.post({
-            url:'http://localhost:5050/v1/user',
-            json: { 
-            username : 'bob',
-            auth_secret :'FFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0A',
-            blob_id : 'FFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0A',
-            data : 'foo' ,
-            address : 'r24242',
-            email: 'bob@foo.com'
-            }},
-            function(err, resp, body) {
-                log(body);
-                lib.done();
-            }
-        );
-        },
-        function(lib) {
-        request.post({
-            url:'http://localhost:5050/v1/user',
-            json: testutils.person
-            },
-            function(err, resp, body) {
-                log(resp.statusCode);
-                log(resp.headers);
-                log(body);
-                lib.done();
-            }
-        );
+q.series([
+    function(lib) {
+    request.post({
+        url:'http://localhost:5050/v1/user',
+        json: {foo:'bar'}},
+        function(err, resp, body) {
+            log(err);
+            log(resp.statusCode);
+            log(body);
+            lib.done();
         }
-    ]
+    );
+    },
+    function(lib) {
+    request.post({
+        url:'http://localhost:5050/v1/user',
+        json: { blob_id :'bar'}},
+        function(err, resp, body) {
+            log(body);
+            lib.done();
+        }
+    );
+    },
+    function(lib) {
+    request.post({
+        url:'http://localhost:5050/v1/user',
+        json: { blob_id : 'FFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0A'}},
+        function(err, resp, body) {
+            log(body);
+            lib.done();
+        }
+    );
+    },
+    function(lib) {
+    request.post({
+        url:'http://localhost:5050/v1/user',
+        json: { 
+        username : 'b',
+        blob_id : 'FFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0A'}},
+        function(err, resp, body) {
+            log(body);
+            lib.done();
+        }
+    );
+    },
+    function(lib) {
+    request.post({
+        url:'http://localhost:5050/v1/user',
+        json: { 
+        username : 'bb--',
+        blob_id : 'FFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0A'}},
+        function(err, resp, body) {
+            log(body);
+            lib.done();
+        }
+    );
+    },
+    function(lib) {
+    request.post({
+        url:'http://localhost:5050/v1/user',
+        json: { 
+        username : 'bb--bb',
+        blob_id : 'FFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0A'}},
+        function(err, resp, body) {
+            log(body);
+            lib.done();
+        }
+    );
+    },
+    function(lib) {
+    request.post({
+        url:'http://localhost:5050/v1/user',
+        json: { 
+        username : 'bob',
+        blob_id : 'FFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0A'}},
+        function(err, resp, body) {
+            log(body);
+            lib.done();
+        }
+    );
+    },
+    function(lib) {
+    request.post({
+        url:'http://localhost:5050/v1/user',
+        json: { 
+        username : 'bob',
+        auth_secret :'FFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0A',
+        blob_id : 'FFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0A'}},
+        function(err, resp, body) {
+            log(body);
+            lib.done();
+        }
+    );
+    },
+    function(lib) {
+    request.post({
+        url:'http://localhost:5050/v1/user',
+        json: { 
+        username : 'bob',
+        auth_secret :'FFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0A',
+        blob_id : 'FFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0A',
+        data : 'foo' 
+        }},
+        function(err, resp, body) {
+            log(body);
+            lib.done();
+        }
+    );
+    },
+    function(lib) {
+    request.post({
+        url:'http://localhost:5050/v1/user',
+        json: { 
+        username : 'bob',
+        auth_secret :'FFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0A',
+        blob_id : 'FFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0A',
+        data : 'foo' ,
+        address : 'r24242'
+        }},
+        function(err, resp, body) {
+            log(body);
+            lib.done();
+        }
+    );
+    },
+    function(lib) {
+    request.post({
+        url:'http://localhost:5050/v1/user',
+        json: { 
+        username : 'bob',
+        auth_secret :'FFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0A',
+        blob_id : 'FFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0A',
+        data : 'foo' ,
+        address : 'r24242',
+        email: 'bob@foo.com'
+        }},
+        function(err, resp, body) {
+            log(body);
+            lib.done();
+        }
+    );
+    },
+    function(lib) {
+    request.post({
+        url:'http://localhost:5050/v1/user',
+        json: testutils.person
+        },
+        function(err, resp, body) {
+            log(resp.statusCode);
+            log(resp.headers);
+            log(body);
+            lib.done();
+        }
+    );
+    }
+]);
