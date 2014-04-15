@@ -47,6 +47,7 @@ var getUserInfo = function(username, res) {
             } else {
                 obj.username = username,
                 obj.address = resp.address,
+                obj.exists = true;
                 response.json(obj).pipe(res);
             }
         });
