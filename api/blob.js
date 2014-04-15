@@ -6,6 +6,7 @@ var email = require('../lib/email');
 
 exports.store; 
 var q = new Queue;
+
 var create = function (req, res) {
     var blobId = req.body.blob_id;
     if ("string" !== typeof blobId) {
