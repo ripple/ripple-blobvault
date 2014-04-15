@@ -48,7 +48,12 @@ var getUserInfo = function(username, res) {
                 obj.username = username,
                 obj.address = resp.address,
                 obj.exists = true;
-                response.json(obj).pipe(res);
+                res.writeHead(200, {
+                    'Content-Type' : 'application/json',
+                    'Access-Control-Allow-Origin': '*' 
+                });
+                res.end(JSON.stringify(obj));
+                //response.json(obj).pipe(res);
             }
         });
     } else {
