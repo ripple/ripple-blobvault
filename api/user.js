@@ -35,7 +35,7 @@ var getUserInfo = function(username, res) {
                         'Content-Type' : 'application/json',
                         'Access-Control-Allow-Origin': '*' 
                     });
-                    res.end(JSON.stringify({exists:false,result:'error',message:"No such user"}));
+                    res.end(JSON.stringify({result:'error',message:"No such user"}));
                    // throw { res : res, error: new Error('No such user'),statusCode:404 }
                     //return;
                 }
@@ -71,7 +71,7 @@ var getUserInfo = function(username, res) {
                             'Content-Type' : 'application/json',
                             'Access-Control-Allow-Origin': '*' 
                         });
-                        res.end(JSON.stringify({exists:false,result:'error',message:"No such user"}));
+                        res.end(JSON.stringify({result:'error',message:"No such user"}));
                         //throw { res : res, error: new Error('No such user') }
                         //return;
                     }
