@@ -60,8 +60,6 @@ var getUserInfo = function(username, res) {
     } else {
         exports.store.read_where({key:"address",value:username,res:res},
             function(resp) {
-                console.log("READ_WHERE");  
-                console.log(resp);
                 var obj = {}
                 obj.version = config.AUTHINFO_VERSION,
                 obj.blobvault = config.url,

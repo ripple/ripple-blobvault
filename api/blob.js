@@ -151,7 +151,6 @@ var create = function (req, res) {
        });
     },
     function(lib) { 
-        console.log("Going to create step");
         // XXX Check signature
         // TODO : inner key is required on updates
         var params = {

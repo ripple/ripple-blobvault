@@ -31,6 +31,11 @@ var assert = require('chai').assert;
 test('create then delete',function(done) {
     q.series([
         function(lib) {
+            server.listen(5050,function() {
+                lib.done();
+            });
+        },
+        function(lib) {
         request.post({
             url:'http://localhost:5050/v1/user',
             json: {foo:'bar'}},

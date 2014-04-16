@@ -23,38 +23,33 @@ app.delete('/v1/user',hmac.middleware, api.blob.delete);
 app.post('/v1/user',api.blob.create);
 app.get('/v1/user/:username', api.user.get);
 var server = http.createServer(app);
-server.listen(5050);
-
 var testutils = require('./utils');
 var assert = require('chai').assert;
-
 test('create, get, the cleanup and delete', function(done) {
     q.series([
+        function(lib) {
+            server.listen(5050,function() {
+                lib.done();
+            });
+        },
         // create the user first
         function(lib) {
-        request.post({
-            url:'http://localhost:5050/v1/user',
-            json: testutils.person
-            },
-            function(err, resp, body) {
-                log(arguments);
-                assert.equal(resp.statusCode,201,'after proper create request, status code should be 201');
-                lib.done();
-            }
-        );
+            request.post({
+                url:'http://localhost:5050/v1/user',
+                json: testutils.person
+                }, function(err, resp, body) {
+                    console.log(err);
+                    console.log(body);
+                    assert.equal(resp.statusCode,201,'after proper create request, status code should be 201');
+                    lib.done();
+            });
         },
         // should work
         function(lib) {
-            console.log("Getting user " + testutils.person.username);
             request.get({
                 url:'http://localhost:5050/v1/user/'+testutils.person.username
             },function(err, resp, body) {
-                    console.log("The get user response " + testutils.person.username + " response");
-                    log(err);
-                    log(body); 
-                    log(resp.statusCode);
                     assert.equal(resp.statusCode,200,'newly created user GET should have statuscode 200');
-                    log(body);
                     lib.done();
             });
         },
@@ -63,10 +58,6 @@ test('create, get, the cleanup and delete', function(done) {
             request.get({
                 url:'http://localhost:5050/v1/user/r24242asdfe0fe0fe0fea0sfesfjkej'
             },function(err, resp, body) {
-                console.log("The response");
-                    log(err);
-                    log(resp.statusCode);
-                    log(body);
                     lib.done();
             });
         },
@@ -75,10 +66,6 @@ test('create, get, the cleanup and delete', function(done) {
             request.get({
                 url:'http://localhost:5050/v1/user/bob5051'
             },function(err, resp, body) {
-                console.log("The response");
-                    log(err);
-                    log(resp.statusCode);
-                    log(body);
                     lib.done();
             });
         },
@@ -87,10 +74,6 @@ test('create, get, the cleanup and delete', function(done) {
             request.get({
                 url:'http://localhost:5050/v1/user/r24242asdfe0fe0fe0fea0sfesfjke'
             },function(err, resp, body) {
-                console.log("The response");
-                    log(err);
-                    log(resp.statusCode);
-                    log(body);
                     lib.done();
             });
         },
@@ -99,10 +82,6 @@ test('create, get, the cleanup and delete', function(done) {
             request.get({
                 url:'http://localhost:5050/v1/user/FFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0A'
             },function(err, resp, body) {
-                console.log("The response");
-                    log(err);
-                    log(resp.statusCode);
-                    log(body);
                     lib.done();
             });
         },
@@ -114,11 +93,7 @@ test('create, get, the cleanup and delete', function(done) {
                 url:url,
                 json:true
             },function(err, resp, body) {
-                console.log("The response");
-                log(err);
-                log(resp.statusCode);
                 assert.equal(resp.statusCode,200,'after delete request, status code should be 200');
-                log(body);
                 lib.done();
             });
         },
