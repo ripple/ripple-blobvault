@@ -22,7 +22,7 @@
     "chai": "^1.9.1"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "mocha --ui tdd -R spec test/test-user-delete.js",
     "start": "node server.js"
   },
   "repository": {
