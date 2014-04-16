@@ -9,7 +9,8 @@ exports.person = {
     data : 'foo' ,
     address : 'r24242asdfe0fe0fe0fea0sfesfjkej',
     email: 'bob5050@bob.com',
-    hostlink: 'http://localhost:8080/activate'
+    hostlink: 'http://localhost:8080/activate',
+    date: 'april'
 }
 
 exports.createSignature = function (params) {

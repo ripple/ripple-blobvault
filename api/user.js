@@ -48,6 +48,7 @@ var getUserInfo = function(username, res) {
                 obj.username = username,
                 obj.address = resp.address,
                 obj.exists = true;
+                obj.emailVerified = resp.emailVerified,
                 res.writeHead(200, {
                     'Content-Type' : 'application/json',
                     'Access-Control-Allow-Origin': '*' 
@@ -108,6 +109,7 @@ var getUserInfo = function(username, res) {
                     obj.username = username,
                     obj.address = resp.address,
                     obj.exists = resp.exists,
+                    obj.emailVerified = resp.emailVerified,
                     obj.reserved = false;
                     res.writeHead(200, {
                         'Content-Type' : 'application/json',

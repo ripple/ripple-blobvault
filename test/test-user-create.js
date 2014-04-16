@@ -1,9 +1,11 @@
 var request = require('request');
 var http = require('http');
 var api = require('../api');
+var hmac = require('../lib/hmac');
 var config = require('../config');
 var store = require('../lib/store')(config.dbtype);
 api.setStore(store);
+hmac.setStore(store);
 var util = require('util');
 
 var queuelib = require('queuelib');
@@ -22,6 +24,7 @@ app.use(express.json());
 app.use(express.urlencoded());
 
 var server = http.createServer(app);
+app.delete('/v1/user',hmac.middleware, api.blob.delete);
 app.post('/v1/user',api.blob.create);
 server.listen(5050);
 
@@ -180,5 +183,22 @@ q.series([
             lib.done();
         }
     );
+    },
+    // delete user after 
+    function(lib) {
+        var sig = testutils.createSignature({method:'DELETE',url:'/v1/user',secret:testutils.person.auth_secret,date:testutils.person.date});
+        var url = 'http://localhost:5050/v1/user?signature=' + sig + '&signature_date='+testutils.person.date + '&signature_blob_id='+ testutils.person.blob_id;
+        request.del({
+            url:url,
+            json:true
+        },function(err, resp, body) {
+            console.log("The response");
+                log(err);
+                log(resp.statusCode);
+                assert.equal(200, resp.statusCode);
+                log(body);
+                lib.done();
+        });
+        lib.done(); 
     }
 ]);
