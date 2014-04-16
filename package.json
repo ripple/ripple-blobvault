@@ -19,10 +19,11 @@
   },
   "devDependencies": {
     "request": "^2.34.0",
-    "chai": "^1.9.1"
+    "chai": "^1.9.1",
+    "mocha": "^1.18.2"
   },
   "scripts": {
-    "test": "mocha --ui tdd -R spec test/test-user-delete.js",
+    "test": "node_modules/.bin/mocha --ui tdd -R spec test/test-user-*.js",
     "start": "node server.js"
   },
   "repository": {

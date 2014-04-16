@@ -18,14 +18,13 @@ var log = function(obj) {
 }
 
 var app = express();
-
-
 app.use(express.json());
 app.use(express.urlencoded());
 
-var server = http.createServer(app);
 app.delete('/v1/user',hmac.middleware, api.blob.delete);
 app.post('/v1/user',api.blob.create);
+
+var server = http.createServer(app);
 server.listen(5050);
 
 var assert = require('chai').assert;
@@ -37,7 +36,6 @@ test('create then delete',function(done) {
             json: {foo:'bar'}},
             function(err, resp, body) {
                 log(err);
-                log(resp.statusCode);
                 log(body);
                 lib.done();
             }
@@ -203,8 +201,10 @@ test('create then delete',function(done) {
             });
         },
         function(lib) {
-            done();
-            lib.done();
+            server.close(function() {
+                lib.done();
+                done();
+            });
         }
     ]);
 });
