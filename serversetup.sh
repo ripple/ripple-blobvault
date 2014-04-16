@@ -12,6 +12,9 @@ git clone https://github.com/ripple/ripple-blobvault.git
 # enter user name and password
 cd ripple-blobvault
 
-mysql -u root -p PASSWORD < dbsetup.sql
+
+# ensure CREATE DATABASE blobvault;
+mysql -u root -p blobvault < dbsetup.sql
+# you will be prompted for password from mysql
 
 node server.js

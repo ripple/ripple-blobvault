@@ -1,26 +1,45 @@
 var config = require('./config');
-
 var http = require('http');
 var https = require('https');
 var fs = require('fs');
 var express = require('express');
+var store = require('./lib/store')(config.dbtype);
 var hmac = require('./lib/hmac');
-
 var api = require('./api');
+api.setStore(store);
+hmac.setStore(store);
 
 var app = express();
+app.use(function(req,res,next) {
+    console.log(req.method + " " + req.url);
+    console.log(req.headers);
+    console.log(req.body);
+    next();
+});
 app.use(express.json());
 app.use(express.urlencoded());
 
+var cors = require('cors');
+app.use(cors());
 
-app.get('/authinfo', api.user.authinfo);
-app.get('/user/:username', api.user.get);
-app.post('/blob/create', api.blob.create);
-app.post('/blob/patch', hmac.middleware, api.blob.patch);
-app.post('/blob/consolidate', hmac.middleware, api.blob.consolidate);
-app.post('/blob/delete', hmac.middleware, api.blob.delete);
-app.get('/blob/:blob_id', api.blob.get);
-app.get('/blob/:blob_id/patch/:patch_id', api.blob.getPatch);
+// JSON handlers
+app.post('/v1/user', api.blob.create);
+app.delete('/v1/user', hmac.middleware, api.blob.delete);
+app.get('/v1/user/:username', api.user.get);
+app.get('/v1/user/:username/verify/:token', api.user.verify);
+
+// JSON handlers
+app.get('/v1/blob/:blob_id', api.blob.get);
+app.post('/v1/blob/patch', hmac.middleware, api.blob.patch);
+app.get('/v1/blob/:blob_id/patch/:patch_id', api.blob.getPatch);
+app.post('/v1/blob/consolidate', hmac.middleware, api.blob.consolidate);
+
+app.get('/v1/authinfo', api.user.authinfo);
+
+app.get('/v1/meta', api.meta);
+
+
+
 
 try {
   var server = config.ssl ? https.createServer({

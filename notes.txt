@@ -1,0 +1,38 @@
+
+Postgres Database
+=================
+user: tom
+password: rippplelabs
+
+npm install pg
+==============
+psql --version
+psql (PostgreSQL) 9.1.12
+contains support for command-line editing
+root@debian:/home/rook/ripple-blobvault# apt-get install postgresql-server-dev-9.1
+
+Then you cann run npm install pg to get the native implementation
+
+
+Errors in form 400 bad request
+
+Errors on wrong endpoints 404 not found
+
+Successful /blob/create 201 CREATED
+
+GET /user/:username 200 
+
+Duplicate User on POST /blob/create 403 FORBIDDEN
+
+GET /user/<a user that does not exist>  -> 404 , but repeat the information about pakdf/reserved/exists/etc
+
+
+EMAIL verification wrong token .. to be determined on status code
+
+
+Invalidate email token after validating it.
+
+/user -> /v1/users/
+/blob -> /v1/blobs/
+
+
