@@ -40,7 +40,7 @@ var server = http.createServer(app);
 server.listen(5050);
 
 var assert = require('chai').assert;
-test('create , patch, patch, delete', function(done) {
+test('create , patch, patch, get specific patch #2, delete', function(done) {
     q.series([
         function(lib) {
             server.listen(5050,function() {
@@ -91,6 +91,50 @@ test('create , patch, patch, delete', function(done) {
                     log(resp.statusCode);
                     log(body);
                     assert.deepEqual(body,{result:'success',revision:2});
+                    lib.done();
+            });
+        },
+        // Get patch #2 
+        function(lib) {
+            request.get({
+                url:'http://localhost:5050/v1/blob/'+testutils.person.blob_id+'/patch/2',
+                json:true
+            },function(err, resp, body) {
+                    log(err);
+                    log(resp.statusCode);
+                    assert.equal(body.result,'success','we should be able to retreive patch 2');
+                    log(body);
+                    lib.done();
+            });
+        },
+        // Consolidate patches
+        function(lib) {
+            var body = { data : "foo and bar", revision: 3, blob_id:testutils.person.blob_id  }; 
+            var sig = testutils.createSignature({method:'POST',url:'/v1/blob/consolidate',secret:testutils.person.auth_secret,date:testutils.person.date,body:body});
+            var url = 'http://localhost:5050/v1/blob/consolidate?signature=' + sig + '&signature_date='+testutils.person.date + '&signature_blob_id='+ testutils.person.blob_id;
+            request.post({
+                url:url,
+                json:body
+            },function(err, resp, body) {
+                console.log("The response");
+                    log(err);
+                    log(resp.statusCode);
+                    assert.equal(body.result,'success','we should be able to consolidate patches 1 and 2 into 3');
+                    log(body);
+                    lib.done();
+            });
+        },
+        // Check that blob is now at revision 3 and there are 0 patches since they were 
+        // consolidated 
+        function(lib) {
+            request.get({
+                url:'http://localhost:5050/v1/blob/'+testutils.person.blob_id,
+                json:true
+            },function(err, resp, body) {
+                    log(err);
+                    log(resp.statusCode);
+                    assert.equal(body.revision, 3, 'revision should be equal to 3');
+                    log(body);
                     lib.done();
             });
         },
