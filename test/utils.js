@@ -1,5 +1,6 @@
 var config = require('../config');
 var crypto = require('crypto');
+var _ = require('lodash');
 
 
 exports.person = {
@@ -18,6 +19,7 @@ exports.createSignature = function (params) {
     var url = params.url;
     var secret = params.secret;
     var date = params.date;
+    var body = params.body;
 
     var copyObjectWithSortedKeys = function(object) {
         if (_.isObject(object)) {
@@ -40,6 +42,12 @@ exports.createSignature = function (params) {
 
     // Canonical request using Amazon's v4 signature format
     // See: http://docs.aws.amazon.com/general/latest/gr/sigv4-create-canonical-request.html
+
+    // Sort the properties of the JSON object into canonical form
+
+    var canonicalData = (body) ? JSON.stringify(copyObjectWithSortedKeys(body)) : '{}'
+    console.log('canonicalData:' + canonicalData);
+
     var canonicalRequest = [
     method || 'GET',
     (config.urlPrefix || '') + (url || ''),
@@ -47,7 +55,7 @@ exports.createSignature = function (params) {
     // XXX Headers signing not supported
     '',
     '',
-    crypto.createHash('sha512').update('{}').digest('hex').toLowerCase()
+    crypto.createHash('sha512').update(canonicalData).digest('hex').toLowerCase()
     ].join('\n');
 
     // String to sign inspired by Amazon's v4 signature format
