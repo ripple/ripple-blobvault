@@ -47,7 +47,7 @@ var getUserInfo = function(username, res) {
             } else {
                 obj.username = username,
                 obj.address = resp.address,
-                obj.reserved = config.reserved[username.toLowerCase()];
+                obj.reserved = config.reserved[username.toLowerCase()] || false;
                 obj.exists = true;
                 obj.emailVerified = resp.emailVerified,
                 res.writeHead(200, {
