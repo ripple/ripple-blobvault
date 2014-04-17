@@ -172,7 +172,8 @@ This request downloads only the patches, omitting the base blob. This can be use
 Part of the response is the revision that the patches should be applied on top of. If the client has a lower revision, it should redownload the blob. If the client has a higher revision it should drop the patches its local blob already contains.
 + Parameters
 
-    + id (required, string, `952de772210118f043a4e2225da5f5943609c653a6736940e0fad4e9c7cd3cfd`)
+    + blob_id (required, string, `952de772210118f043a4e2225da5f5943609c653a6736940e0fad4e9c7cd3cfd`)
+    + patch_id (required, string, `2`)
 
 + Response 200 (application/json)
 
