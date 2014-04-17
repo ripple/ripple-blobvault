@@ -22,7 +22,7 @@ var getUserInfo = function(username, res) {
             if (resp.exists === false) {
                 if (config.reserved[username.toLowerCase()]) {
                     obj.exists = false;
-                    obj.reserved = config.reserved[username.toLowerCase()];
+                    obj.reserved = true;
                     // this is a 200 
                     res.writeHead(200, {
                         'Content-Type' : 'application/json',
@@ -47,6 +47,7 @@ var getUserInfo = function(username, res) {
             } else {
                 obj.username = username,
                 obj.address = resp.address,
+                obj.reserved = config.reserved[username.toLowerCase()];
                 obj.exists = true;
                 obj.emailVerified = resp.emailVerified,
                 res.writeHead(200, {
@@ -108,7 +109,6 @@ var getUserInfo = function(username, res) {
                     obj.address = resp.address,
                     obj.exists = resp.exists,
                     obj.emailVerified = resp.emailVerified,
-                    obj.reserved = false;
                     res.writeHead(200, {
                         'Content-Type' : 'application/json',
                         'Access-Control-Allow-Origin': '*' 
