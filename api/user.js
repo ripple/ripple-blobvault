@@ -104,7 +104,7 @@ var getUserInfo = function(username, res) {
                         //return;
                     }
                 } else {
-                    obj.username = username,
+                    obj.username = resp.username,
                     obj.address = resp.address,
                     obj.exists = resp.exists,
                     obj.emailVerified = resp.emailVerified,
