@@ -56,32 +56,39 @@ test('create, get, the cleanup and delete', function(done) {
         // should work
         function(lib) {
             request.get({
-                url:'http://localhost:5050/v1/user/r24242asdfe0fe0fe0fea0sfesfjkej'
+                url:'http://localhost:5050/v1/user/'+testutils.person.address
             },function(err, resp, body) {
+                    assert.equal(resp.statusCode,200,'newly created user GET by ripple address should have statuscode 200');
+                    lib.done();
+            });
+        },
+        // should fail, but we return 200 anyways since we check for exist : false
+        function(lib) {
+            request.get({
+                url:'http://localhost:5050/v1/user/bob5051',
+                json: true 
+            },function(err, resp, body) {
+                assert.equal(body.exists,false,'this user should not exist');
+                lib.done();
+            });
+        },
+        // should fail
+        function(lib) {
+            request.get({
+                url:'http://localhost:5050/v1/user/r24242asdfe0fe0fe0fea0sfesfjke',
+                json:true
+            },function(err, resp, body) {
+                    assert.equal(body.exists, false,'this user should not exist');
                     lib.done();
             });
         },
         // should fail
         function(lib) {
             request.get({
-                url:'http://localhost:5050/v1/user/bob5051'
+                url:'http://localhost:5050/v1/user/FFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0A',
+                json : true
             },function(err, resp, body) {
-                    lib.done();
-            });
-        },
-        // should fail
-        function(lib) {
-            request.get({
-                url:'http://localhost:5050/v1/user/r24242asdfe0fe0fe0fea0sfesfjke'
-            },function(err, resp, body) {
-                    lib.done();
-            });
-        },
-        // should fail
-        function(lib) {
-            request.get({
-                url:'http://localhost:5050/v1/user/FFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0A'
-            },function(err, resp, body) {
+                    assert.equal(body.exists, false,'this user should not exist');
                     lib.done();
             });
         },
