@@ -6,8 +6,7 @@ exports.host = null;
 exports.port = 8080;
 
 // Public URL for this blobvault (required for authinfo)
-exports.url = 'http://curlpaste.com:8080';
-//exports.url = "https://blobvault.example.com";
+exports.url = "https://blobvault.example.com";
 
 // SSL settings
 exports.ssl = false;
@@ -17,21 +16,21 @@ exports.is_proxy = false;
 
 // Database settings
 // 'mysql', 'memory', 'postgres'
-//exports.dbtype = 'postgres';
-exports.dbtype = 'mysql';
+exports.dbtype = 'postgres';
+//exports.dbtype = 'mysql';
 //exports.dbtype = 'memory';
 exports.database = {
     mysql : {
         host     : '127.0.0.1',
-        user     : 'root',
-        password : 'ripplelabs',
+        user     : '',
+        password : '',
         database : 'blobvault',
         charset  : 'utf8'
     },
     postgres : {
         host     : '127.0.0.1',
-        user     : 'tom',
-        password : 'ripplelabs',
+        user     : 'postgres',
+        password : '',
         database : 'blobvault',
         charset  : 'utf8'
     }
