@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/rook2pawn/ripple-blobvault.svg?branch=master)](https://travis-ci.org/rook2pawn/ripple-blobvault)
+
 # Ripple Blobvault
 
 User management for Ripple wallets.
