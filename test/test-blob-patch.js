@@ -62,7 +62,7 @@ test('create , patch, patch, delete', function(done) {
         },
         // do the patch
         function(lib) {
-            var body = { patch : "foo" }; // req.body = { patch : 'foo' }
+            var body = { patch : "foo", blob_id:testutils.person.blob_id }; // req.body = { patch : 'foo' }
             var sig = testutils.createSignature({method:'POST',url:'/v1/blob/patch',secret:testutils.person.auth_secret,date:testutils.person.date,body:body});
             var url = 'http://localhost:5050/v1/blob/patch?signature=' + sig + '&signature_date='+testutils.person.date + '&signature_blob_id='+ testutils.person.blob_id;
             request.post({
@@ -79,7 +79,7 @@ test('create , patch, patch, delete', function(done) {
         },
         // do another patch
         function(lib) {
-            var body = { patch : "bar" }; // req.body = { patch : 'bar' }
+            var body = { patch : "bar", blob_id:testutils.person.blob_id  }; // req.body = { patch : 'bar' }
             var sig = testutils.createSignature({method:'POST',url:'/v1/blob/patch',secret:testutils.person.auth_secret,date:testutils.person.date,body:body});
             var url = 'http://localhost:5050/v1/blob/patch?signature=' + sig + '&signature_date='+testutils.person.date + '&signature_blob_id='+ testutils.person.blob_id;
             request.post({

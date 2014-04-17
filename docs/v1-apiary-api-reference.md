@@ -192,6 +192,7 @@ Submitting a new patch stores it in the Vault. Patches can never be deleted, onl
 + Request (application/json)
 
         {
+          blob_id : [blob_id]
           patch: [blob_patch]
         }
 
@@ -201,8 +202,8 @@ Submitting a new patch stores it in the Vault. Patches can never be deleted, onl
           "result": "success",
           "revision": 14
         }
-        
-## More update tools [/blob/consolidate]
+
+## Consolidate [/blob/consolidate{?signature,signature_date,signature_blob_id}]
 ### Consolidate blob [POST]
 Over time blobs will accumulate more and more patches, so from time to time, clients should upload a new version of the encrypted blob which consolidates all patches up to a certain revision.
 
@@ -213,9 +214,9 @@ Clients **MUST NOT** make changes that are not part of one of the patches, other
 + Request (application/json)
 
         {
-          blob: [encrypted_blob],
-          revision: 45,
-          signature: [HMAC using auth_secret]
+          blob_id: [blob_id],
+          data: [encrypted_blob],
+          revision: 45
         }
 
 + Response 201 (application/json)
