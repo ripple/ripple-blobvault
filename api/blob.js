@@ -166,10 +166,17 @@ var create = function (req, res) {
             hostlink : req.body.hostlink
         };
         exports.store.create(params,function(resp) {
-            if (resp.err) {
+            if (resp.error) {
+                res.writeHead(400, {
+                    'Content-Type' : 'application/json',
+                    'Access-Control-Allow-Origin': '*' 
+                });
+                res.end(JSON.stringify({result:'error',message:resp.error.message}));
+/*
                 process.nextTick(function() {
                     throw { res : res, error : new Error("problem with create")}
                 });
+*/
                 lib.done();
                 return;
             }

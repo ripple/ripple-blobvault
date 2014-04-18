@@ -61,6 +61,14 @@ var getUserInfo = function(username, res) {
     } else {
         exports.store.read_where({key:"address",value:username,res:res},
             function(resp) {
+                if (resp.error) {
+                    res.writeHead(400, {
+                        'Content-Type' : 'application/json',
+                        'Access-Control-Allow-Origin': '*' 
+                    });
+                    res.end(JSON.stringify({result:'error',message:resp.error.message}));
+                    return;
+                }
                 var obj = {}
                 obj.version = config.AUTHINFO_VERSION,
                 obj.blobvault = config.url,
