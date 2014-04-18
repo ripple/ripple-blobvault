@@ -1,3 +1,7 @@
  language: node_js
  node_js:
    - "0.10"
+ before_script:
+   - "echo start of before script"
+   - "cp ./config-example.js ./config.js"
+   - psql -c 'create database blobvault;' -U postgres

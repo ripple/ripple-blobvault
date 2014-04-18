@@ -1,9 +1,10 @@
+[![Build Status](https://travis-ci.org/rook2pawn/ripple-blobvault.svg?branch=master)](https://travis-ci.org/rook2pawn/ripple-blobvault)
+
 # Ripple Blobvault
 
 User management for Ripple wallets.
 
-See the [__API Reference__](docs/api-reference.md) for details on how to use the
-API.
+See [API Reference](http://docs.blobvaultv1.apiary.io/) for details on how to use the API.
 
 ## Environments
 

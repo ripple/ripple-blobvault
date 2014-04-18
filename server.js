@@ -36,7 +36,7 @@ app.post('/v1/blob/consolidate', hmac.middleware, api.blob.consolidate);
 
 app.get('/v1/authinfo', api.user.authinfo);
 
-app.get('/v1/meta', api.meta);
+//app.get('/v1/meta', api.meta);
 
 
 

@@ -22,7 +22,7 @@ var getUserInfo = function(username, res) {
             if (resp.exists === false) {
                 if (config.reserved[username.toLowerCase()]) {
                     obj.exists = false;
-                    obj.reserved = config.reserved[username.toLowerCase()];
+                    obj.reserved = true;
                     // this is a 200 
                     res.writeHead(200, {
                         'Content-Type' : 'application/json',
@@ -47,6 +47,7 @@ var getUserInfo = function(username, res) {
             } else {
                 obj.username = username,
                 obj.address = resp.address,
+                obj.reserved = config.reserved[username.toLowerCase()] || false;
                 obj.exists = true;
                 obj.emailVerified = resp.emailVerified,
                 res.writeHead(200, {
@@ -60,8 +61,6 @@ var getUserInfo = function(username, res) {
     } else {
         exports.store.read_where({key:"address",value:username,res:res},
             function(resp) {
-                console.log("READ_WHERE");  
-                console.log(resp);
                 var obj = {}
                 obj.version = config.AUTHINFO_VERSION,
                 obj.blobvault = config.url,
@@ -106,11 +105,10 @@ var getUserInfo = function(username, res) {
                         //return;
                     }
                 } else {
-                    obj.username = username,
+                    obj.username = resp.username,
                     obj.address = resp.address,
                     obj.exists = resp.exists,
                     obj.emailVerified = resp.emailVerified,
-                    obj.reserved = false;
                     res.writeHead(200, {
                         'Content-Type' : 'application/json',
                         'Access-Control-Allow-Origin': '*' 
