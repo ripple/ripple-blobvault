@@ -8,7 +8,7 @@ exports.person = {
     auth_secret :'FFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0A',
     blob_id : 'ffff0a0affff0a0affff0a0affff0a0affff0a0affff0a0affff0a0affff0a0a',
     data : 'foo' ,
-    address : 'r24242asdfe0fe0fe0fea0sfesfjkej',
+    address : 'rDgGMxXd6yBigGtP2iitfZwqfAYreWHt3n',
     email: 'bob5050@bob.com',
     hostlink: 'http://localhost:8080/activate',
     date: 'april'
