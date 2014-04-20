@@ -1,8 +1,9 @@
+console.log(__filename);
+var config = require('../config');
 var request = require('request');
 var http = require('http');
 var api = require('../api');
 var hmac = require('../lib/hmac');
-var config = require('../config');
 var store = require('../lib/store')(config.dbtype);
 api.setStore(store);
 hmac.setStore(store);
@@ -26,13 +27,13 @@ app.post('/v1/user',api.blob.create);
 app.get('/v1/user/:username', api.user.get);
 
 var server = http.createServer(app);
-server.listen(5050);
 
 var assert = require('chai').assert;
 test('test case insensitive lookup',function(done) {
     q.series([
         function(lib) {
             server.listen(5050,function() {
+                console.log("SERVER CREATED");
                 lib.done();
             });
         },

@@ -3,5 +3,6 @@
    - "0.10"
  before_script:
    - "echo start of before script"
+   - chmod +x test.sh
    - "cp ./config-example.js ./config.js"
    - psql -c 'create database blobvault;' -U postgres

@@ -1,7 +1,8 @@
+console.log(__filename);
+var config = require('../config');
 var request = require('request');
 var http = require('http');
 var api = require('../api');
-var config = require('../config');
 var store = require('../lib/store')(config.dbtype);
 api.setStore(store);
 var util = require('util');
@@ -22,8 +23,13 @@ var server = http.createServer(app);
 app.get('/v1/user/:username',api.user.get);
 app.get('/v1/user/:username/verify/:token',api.user.verify);
 app.post('/v1/blob/create',api.blob.create);
-server.listen(5050);
 q.series([
+    function(lib) {
+        server.listen(5050,function() {
+                console.log("SERVER CREATED");
+            lib.done();
+        });
+    },
     // create the user
     function(lib) {
     request.post({
@@ -66,5 +72,11 @@ q.series([
             lib.done();
         }
     );
+    },
+    function(lib) {
+        server.close(function() {
+            lib.done();
+            done();
+        });
     }
 ]);

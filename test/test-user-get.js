@@ -1,3 +1,4 @@
+console.log(__filename);
 var config = require('../config');
 var http = require('http');
 var express = require('express');
@@ -29,6 +30,7 @@ test('create, get, the cleanup and delete', function(done) {
     q.series([
         function(lib) {
             server.listen(5050,function() {
+                console.log("SERVER CREATED");
                 lib.done();
             });
         },

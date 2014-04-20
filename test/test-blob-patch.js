@@ -1,3 +1,4 @@
+console.log(__filename);
 var config = require('../config');
 var http = require('http');
 var express = require('express');
@@ -37,13 +38,13 @@ app.get('/v1/blob/:blob_id/patch/:patch_id', api.blob.getPatch);
 app.post('/v1/blob/consolidate', hmac.middleware, api.blob.consolidate);
 
 var server = http.createServer(app);
-server.listen(5050);
 
 var assert = require('chai').assert;
 test('create , patch, patch, get specific patch #2, delete', function(done) {
     q.series([
         function(lib) {
             server.listen(5050,function() {
+                console.log("SERVER CREATED");
                 lib.done();
             });
         },
