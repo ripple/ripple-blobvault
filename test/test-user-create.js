@@ -190,6 +190,20 @@ test('create then delete',function(done) {
             }
         );
         },
+        function(lib) {
+        request.post({
+            url:'http://localhost:5050/v1/user',
+            json: testutils.person
+            },
+            function(err, resp, body) {
+                log(resp.statusCode);
+                assert.equal(resp.statusCode,400,'we should not be able to duplicate a user that already exists');
+                log(resp.headers);
+                log(body);
+                lib.done();
+            }
+        );
+        },
         // delete user after 
         function(lib) {
             var sig = testutils.createSignature({method:'DELETE',url:'/v1/user',secret:testutils.person.auth_secret,date:testutils.person.date});
