@@ -152,9 +152,11 @@ var verify = function(req,res) {
     }
     exports.store.read({username:username,res:res},function(resp) {
         if (resp.exists === false) {
-            process.nextTick(function() {
-                throw { res : res, error: new Error('No such user') }
+            res.writeHead(404, {
+                'Content-Type' : 'application/json',
+                'Access-Control-Allow-Origin': '*' 
             });
+            res.end(JSON.stringify({result:'error',message:'No such user'}));
             return;
         } else {
             var obj = {}
@@ -171,12 +173,11 @@ var verify = function(req,res) {
                     response.json(obj).pipe(res);
                 });
             } else {
-                throw { res : res, error: new Error('Invalid token') }
-/*
-                process.nextTick(function() {
-                    throw { res : res, error: new Error('Invalid token') }
-                }); 
-*/
+                res.writeHead(400, {
+                    'Content-Type' : 'application/json',
+                    'Access-Control-Allow-Origin': '*' 
+                });
+                res.end(JSON.stringify({result:'error',message:'Invalid token'}));
                 return;
             } 
         }

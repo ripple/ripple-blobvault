@@ -23,10 +23,10 @@ app.use(express.urlencoded());
 app.delete('/v1/user',hmac.middleware, api.blob.delete);
 app.post('/v1/user',api.blob.create);
 app.get('/v1/user/:username', api.user.get);
-var server = http.createServer(app);
 var testutils = require('./utils');
 var assert = require('chai').assert;
 test('create, get, the cleanup and delete', function(done) {
+    var server = http.createServer(app);
     q.series([
         function(lib) {
             server.listen(5050,function() {

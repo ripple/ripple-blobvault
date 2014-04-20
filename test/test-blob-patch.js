@@ -37,10 +37,10 @@ app.get('/v1/blob/:blob_id/patch/:patch_id', api.blob.getPatch);
 // consolidate
 app.post('/v1/blob/consolidate', hmac.middleware, api.blob.consolidate);
 
-var server = http.createServer(app);
 
 var assert = require('chai').assert;
 test('create , patch, patch, get specific patch #2, delete', function(done) {
+    var server = http.createServer(app);
     q.series([
         function(lib) {
             server.listen(5050,function() {

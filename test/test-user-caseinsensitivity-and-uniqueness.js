@@ -26,10 +26,10 @@ app.delete('/v1/user',hmac.middleware, api.blob.delete);
 app.post('/v1/user',api.blob.create);
 app.get('/v1/user/:username', api.user.get);
 
-var server = http.createServer(app);
 
 var assert = require('chai').assert;
 test('test case insensitive lookup',function(done) {
+    var server = http.createServer(app);
     q.series([
         function(lib) {
             server.listen(5050,function() {
