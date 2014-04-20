@@ -23,7 +23,7 @@
     "mocha": "^1.18.2"
   },
   "scripts": {
-    "test": "node_modules/.bin/mocha --ui tdd -R spec test/test-user-*.js && node_modules/.bin/mocha --ui tdd -R spec test/test-blob-patch.js",
+    "test": "node_modules/.bin/mocha --ui tdd -R spec test/test-*.js",
     "start": "node server.js"
   },
   "repository": {
