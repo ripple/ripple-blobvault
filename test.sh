@@ -1,1 +1,5 @@
-find ./test -name "test*.js" -exec node_modules/.bin/mocha --ui tdd -R spec '{}' \;
+# find ./test -name "test*.js" -exec node_modules/.bin/mocha --ui tdd -R spec '{}' \;
+node_modules/.bin/mocha --ui tdd -R spec test/test-user-create.js
+node_modules/.bin/mocha --ui tdd -R spec test/test-user-get.js
+node_modules/.bin/mocha --ui tdd -R spec test/test-user-caseinsensitivity-and-uniqueness.js
+node_modules/.bin/mocha --ui tdd -R spec test/test-blob-patch.js
