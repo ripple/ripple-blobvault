@@ -10,7 +10,7 @@
     "response": "^0.13.0",
     "node-uuid": "^1.4.1",
     "hashish": "0.0.4",
-    "queuelib": "^0.3.3",
+    "queuelib": "0.3.4",
     "knex": "^0.5.13",
     "pg": "^3.0.1",
     "emailjs": "^0.3.8",
@@ -23,7 +23,7 @@
     "mocha": "^1.18.2"
   },
   "scripts": {
-    "test": "node_modules/.bin/mocha --ui tdd -R spec test/test-user-*.js && node_modules/.bin/mocha --ui tdd -R spec test/test-blob-patch.js",
+    "test": "./test.sh",
     "start": "node server.js"
   },
   "repository": {

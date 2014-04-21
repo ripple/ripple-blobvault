@@ -8,7 +8,7 @@ exports.person = {
     auth_secret :'FFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0A',
     blob_id : 'ffff0a0affff0a0affff0a0affff0a0affff0a0affff0a0affff0a0affff0a0a',
     data : 'foo' ,
-    address : 'r24242asdfe0fe0fe0fea0sfesfjkej',
+    address : 'rDgGMxXd6yBigGtP2iitfZwqfAYreWHt3n',
     email: 'bob5050@bob.com',
     hostlink: 'http://localhost:8080/activate',
     date: 'april'
@@ -46,7 +46,7 @@ exports.createSignature = function (params) {
     // Sort the properties of the JSON object into canonical form
 
     var canonicalData = (body) ? JSON.stringify(copyObjectWithSortedKeys(body)) : '{}'
-    console.log('canonicalData:' + canonicalData);
+    //console.log('canonicalData:' + canonicalData);
 
     var canonicalRequest = [
     method || 'GET',

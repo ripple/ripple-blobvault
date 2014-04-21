@@ -1,8 +1,9 @@
+console.log(__filename);
+var config = require('../config');
 var request = require('request');
 var http = require('http');
 var api = require('../api');
 var hmac = require('../lib/hmac');
-var config = require('../config');
 var store = require('../lib/store')(config.dbtype);
 api.setStore(store);
 hmac.setStore(store);
@@ -24,11 +25,10 @@ app.use(express.urlencoded());
 app.delete('/v1/user',hmac.middleware, api.blob.delete);
 app.post('/v1/user',api.blob.create);
 
-var server = http.createServer(app);
-server.listen(5050);
 
 var assert = require('chai').assert;
 test('create then delete',function(done) {
+    var server = http.createServer(app);
     q.series([
         function(lib) {
             server.listen(5050,function() {
@@ -40,7 +40,6 @@ test('create then delete',function(done) {
             url:'http://localhost:5050/v1/user',
             json: {foo:'bar'}},
             function(err, resp, body) {
-                log(err);
                 log(body);
                 lib.done();
             }
@@ -181,9 +180,18 @@ test('create then delete',function(done) {
             json: testutils.person
             },
             function(err, resp, body) {
-                log(resp.statusCode);
                 assert.equal(resp.statusCode,201,'after proper create request, status code should be 201');
-                log(resp.headers);
+                lib.done();
+            }
+        );
+        },
+        function(lib) {
+        request.post({
+            url:'http://localhost:5050/v1/user',
+            json: testutils.person
+            },
+            function(err, resp, body) {
+                assert.equal(resp.statusCode,400,'we should not be able to duplicate a user that already exists');
                 log(body);
                 lib.done();
             }
@@ -197,11 +205,7 @@ test('create then delete',function(done) {
                 url:url,
                 json:true
             },function(err, resp, body) {
-                console.log("The response");
-                log(err);
-                log(resp.statusCode);
                 assert.equal(resp.statusCode,200,'after delete request, status code should be 200');
-                log(body);
                 lib.done();
             });
         },

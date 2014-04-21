@@ -8,10 +8,10 @@ var store = require('../lib/store')(config.dbtype);
 api.setStore(store);
 hmac.setStore(store);
 var util = require('util');
+
 var queuelib = require('queuelib');
 var express = require('express');
-var testutils = require('./utils')
-var assert = require('chai').assert;
+var testutils = require('./utils');
 var q = new queuelib;
 
 var log = function(obj) {
@@ -19,29 +19,24 @@ var log = function(obj) {
 }
 
 var app = express();
-
-app.use(function(req,res,next) {
-    console.log("URL CALL " + req.url);
-    next();
-});
 app.use(express.json());
 app.use(express.urlencoded());
 
-app.get('/v1/user/:username',api.user.get);
-app.get('/v1/user/:username/verify/:token',api.user.verify);
-app.post('/v1/user',api.blob.create);
 app.delete('/v1/user',hmac.middleware, api.blob.delete);
-// we just test that the token secret is created
-test('email verification', function(done) {
+app.post('/v1/user',api.blob.create);
+app.get('/v1/user/:username', api.user.get);
+
+
+var assert = require('chai').assert;
+test('test case insensitive lookup',function(done) {
     var server = http.createServer(app);
-    var GLOBALS = {};
     q.series([
         function(lib) {
             server.listen(5050,function() {
                 lib.done();
             });
         },
-        // create the user
+        // first we create user bob5050
         function(lib) {
         request.post({
             url:'http://localhost:5050/v1/user',
@@ -53,45 +48,39 @@ test('email verification', function(done) {
             }
         );
         },
+        // next we perform case-insensitive lookup
         function(lib) {
-            store.readall({username:testutils.person.username}, function(resp) {
-                if (resp.length)
-                    GLOBALS.token = resp[0].email_token;
-                lib.done();
-            });
-        },    
-        function(lib) {
+        var capitalize = function (string) {
+            return string.charAt(0).toUpperCase() + string.slice(1);
+        }
+        var casedUsername = capitalize(testutils.person.username);
         request.get({
-            url:'http://localhost:5050/v1/user/'+testutils.person.username+'/verify/05bb0cff-3b93-40f3-bf50-35c2e9d3da3b',
-            json:true
+            url:'http://localhost:5050/v1/user/'+casedUsername,
+            json: true
             },
             function(err, resp, body) {
-                assert.equal(body.message, 'Invalid token','token should be invalid');
+                assert.equal(resp.statusCode,200,'after case insensitive lookup, status code should be 200');
                 lib.done();
             }
         );
         },
+        // next we create user Bob5050, which should fail
         function(lib) {
-        request.get({
-            url:'http://localhost:5050/v1/user/x0x0x0x0x'+testutils.person.username+'/verify/05bb0cff-3b93-40f3-bf50-35c2e9d3da3b',
-            json:true
-            },
-            function(err, resp, body) {
-                assert.equal(body.message, 'No such user','user should not exist');
-                lib.done();
+            var capitalize = function (string) {
+                return string.charAt(0).toUpperCase() + string.slice(1);
             }
-        );
-        },
-        function(lib) {
-        request.get({
-            url:'http://localhost:5050/v1/user/'+testutils.person.username+'/verify/'+GLOBALS.token,
-            json:true
-            },
-            function(err, resp, body) {
-                assert.equal(body.result, 'success','Correct token supplied');
-                lib.done();
-            }
-        );
+            var casedUsername = capitalize(testutils.person.username);
+            testutils.person.username = casedUsername;
+            request.post({
+                url:'http://localhost:5050/v1/user',
+                json: testutils.person
+                },
+                function(err, resp, body) {
+                    assert.equal(resp.statusCode,400,' we should guarantee case-insensitive uniqueness however on user creation');
+                    assert.equal(body.result, 'error',' there should be an error on creating a user with a username that has a case insensitive equality to another user');
+                    lib.done();
+                }
+            );
         },
         // delete user after 
         function(lib) {
@@ -112,4 +101,4 @@ test('email verification', function(done) {
             });
         }
     ]);
-})
+});
