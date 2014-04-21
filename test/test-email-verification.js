@@ -38,7 +38,6 @@ test('email verification', function(done) {
     q.series([
         function(lib) {
             server.listen(5050,function() {
-                    console.log("SERVER CREATED");
                 lib.done();
             });
         },
@@ -49,9 +48,6 @@ test('email verification', function(done) {
             json: testutils.person
             },
             function(err, resp, body) {
-                log(resp.statusCode);
-                log(resp.headers);
-                console.log("BODY->", body);
                 assert.equal(resp.statusCode,201,'after proper create request, status code should be 201');
                 lib.done();
             }
@@ -70,8 +66,6 @@ test('email verification', function(done) {
             json:true
             },
             function(err, resp, body) {
-                console.log("purposeful bad verify attempt");
-                log(resp.headers);
                 assert.equal(body.message, 'Invalid token','token should be invalid');
                 lib.done();
             }
@@ -83,8 +77,6 @@ test('email verification', function(done) {
             json:true
             },
             function(err, resp, body) {
-                console.log("purposeful bad verify attempt, non-existant user");
-                log(resp.headers);
                 assert.equal(body.message, 'No such user','user should not exist');
                 lib.done();
             }
@@ -96,9 +88,6 @@ test('email verification', function(done) {
             json:true
             },
             function(err, resp, body) {
-                console.log("Correct token supplied");
-                log(resp.headers);
-                log(body);
                 assert.equal(body.result, 'success','Correct token supplied');
                 lib.done();
             }
@@ -112,11 +101,7 @@ test('email verification', function(done) {
                 url:url,
                 json:true
             },function(err, resp, body) {
-                console.log("The response");
-                log(err);
-                log(resp.statusCode);
                 assert.equal(resp.statusCode,200,'after delete request, status code should be 200');
-                log(body);
                 lib.done();
             });
         },

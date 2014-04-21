@@ -30,7 +30,6 @@ test('create, get, the cleanup and delete', function(done) {
     q.series([
         function(lib) {
             server.listen(5050,function() {
-                console.log("SERVER CREATED");
                 lib.done();
             });
         },
@@ -40,8 +39,6 @@ test('create, get, the cleanup and delete', function(done) {
                 url:'http://localhost:5050/v1/user',
                 json: testutils.person
                 }, function(err, resp, body) {
-                    console.log(err);
-                    console.log(body);
                     assert.equal(resp.statusCode,201,'after proper create request, status code should be 201');
                     lib.done();
             });

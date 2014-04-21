@@ -193,44 +193,75 @@ var create = function (req, res) {
 };
 exports.create = create;
 exports.patch = function (req, res) {
-    exports.store.blobPatch(req,res,function(resp) {
-        res.writeHead(200, {
+    var keyresp = libutils.hasKeys(req.body,['blob_id','patch']);
+    if (!keyresp.hasAllKeys) {
+        res.writeHead(400, {
             'Content-Type' : 'application/json',
             'Access-Control-Allow-Origin': '*' 
         })
-        res.end(JSON.stringify(resp));
-//        response.json(resp).pipe(res);
-    });
+        res.end(JSON.stringify({result:'error', message:'Missing keys',missing:keyresp.missing}));
+    } else 
+        exports.store.blobPatch(req,res,function(resp) {
+            res.writeHead(200, {
+                'Content-Type' : 'application/json',
+                'Access-Control-Allow-Origin': '*' 
+            })
+            res.end(JSON.stringify(resp));
+        });
 };
 exports.consolidate = function (req, res) {
-    exports.store.blobConsolidate(req,res,function(resp) {
-        res.writeHead(200, {
+    var keyresp = libutils.hasKeys(req.body,['data','revision','blob_id']);
+    if (!keyresp.hasAllKeys) {
+        res.writeHead(400, {
             'Content-Type' : 'application/json',
             'Access-Control-Allow-Origin': '*' 
         })
-        res.end(JSON.stringify(resp));
-        //response.json(resp).pipe(res);
-    });    
+        res.end(JSON.stringify({result:'error', message:'Missing keys',missing:keyresp.missing}));
+    } else 
+        exports.store.blobConsolidate(req,res,function(resp) {
+            res.writeHead(200, {
+                'Content-Type' : 'application/json',
+                'Access-Control-Allow-Origin': '*' 
+            })
+            res.end(JSON.stringify(resp));
+            //response.json(resp).pipe(res);
+        });    
 };
 exports.delete = function (req, res) {
-    exports.store.blobDelete(req,res,function(resp) {
-        res.writeHead(200, {
+    var keyresp = libutils.hasKeys(req.query,['signature_blob_id']);
+    if (!keyresp.hasAllKeys) {
+        res.writeHead(400, {
             'Content-Type' : 'application/json',
             'Access-Control-Allow-Origin': '*' 
         })
-        res.end(JSON.stringify(resp));
-        //response.json(resp).pipe(res);
-    });
+        res.end(JSON.stringify({result:'error', message:'Missing keys',missing:keyresp.missing}));
+    } else 
+        exports.store.blobDelete(req,res,function(resp) {
+            res.writeHead(200, {
+                'Content-Type' : 'application/json',
+                'Access-Control-Allow-Origin': '*' 
+            })
+            res.end(JSON.stringify(resp));
+            //response.json(resp).pipe(res);
+        });
 };
 exports.get = function (req, res) {
-    exports.store.blobGet(req,res,function(resp) {
-        res.writeHead(200, {
+    var keyresp = libutils.hasKeys(req.params,['blob_id']);
+    if (!keyresp.hasAllKeys) {
+        res.writeHead(400, {
             'Content-Type' : 'application/json',
             'Access-Control-Allow-Origin': '*' 
         })
-        res.end(JSON.stringify(resp));
-        //response.json(resp).pipe(res);
-    });
+        res.end(JSON.stringify({result:'error', message:'Missing keys',missing:keyresp.missing}));
+    } else 
+        exports.store.blobGet(req,res,function(resp) {
+            res.writeHead(200, {
+                'Content-Type' : 'application/json',
+                'Access-Control-Allow-Origin': '*' 
+            })
+            res.end(JSON.stringify(resp));
+            //response.json(resp).pipe(res);
+        });
 };
 
 exports.getPatch = function (req, res) {

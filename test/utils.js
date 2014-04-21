@@ -46,7 +46,7 @@ exports.createSignature = function (params) {
     // Sort the properties of the JSON object into canonical form
 
     var canonicalData = (body) ? JSON.stringify(copyObjectWithSortedKeys(body)) : '{}'
-    console.log('canonicalData:' + canonicalData);
+    //console.log('canonicalData:' + canonicalData);
 
     var canonicalRequest = [
     method || 'GET',

@@ -32,7 +32,6 @@ test('create then delete',function(done) {
     q.series([
         function(lib) {
             server.listen(5050,function() {
-                console.log("SERVER CREATED");
                 lib.done();
             });
         },
@@ -41,7 +40,6 @@ test('create then delete',function(done) {
             url:'http://localhost:5050/v1/user',
             json: {foo:'bar'}},
             function(err, resp, body) {
-                log(err);
                 log(body);
                 lib.done();
             }
@@ -182,10 +180,7 @@ test('create then delete',function(done) {
             json: testutils.person
             },
             function(err, resp, body) {
-                log(resp.statusCode);
                 assert.equal(resp.statusCode,201,'after proper create request, status code should be 201');
-                log(resp.headers);
-                log(body);
                 lib.done();
             }
         );
@@ -196,9 +191,7 @@ test('create then delete',function(done) {
             json: testutils.person
             },
             function(err, resp, body) {
-                log(resp.statusCode);
                 assert.equal(resp.statusCode,400,'we should not be able to duplicate a user that already exists');
-                log(resp.headers);
                 log(body);
                 lib.done();
             }
@@ -212,11 +205,7 @@ test('create then delete',function(done) {
                 url:url,
                 json:true
             },function(err, resp, body) {
-                console.log("The response");
-                log(err);
-                log(resp.statusCode);
                 assert.equal(resp.statusCode,200,'after delete request, status code should be 200');
-                log(body);
                 lib.done();
             });
         },
