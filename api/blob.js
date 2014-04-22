@@ -4,10 +4,21 @@ var config = require('../config');
 var libutils = require('../lib/utils')
 var email = require('../lib/email');
 
+var Counter = require('../lib/counter');
+var count = new Counter;
+
 exports.store; 
 var q = new Queue;
 
 var create = function (req, res) {
+    if (!count.check()) {
+        process.nextTick(function() {
+            throw { res : res, 
+            error : new Error("maxcap"),
+            statusCode: 400 }
+        });
+        return;
+    }
     var blobId = req.body.blob_id;
     if ("string" !== typeof blobId) {
         process.nextTick(function() {
@@ -186,6 +197,7 @@ var create = function (req, res) {
                 'Access-Control-Allow-Origin': '*' 
             })
             res.end(JSON.stringify({result:'success'}));
+            count.add();
             lib.done();
         });
     }
@@ -265,6 +277,14 @@ exports.get = function (req, res) {
 };
 
 exports.getPatch = function (req, res) {
+    var keyresp = libutils.hasKeys(req.params,['blob_id','patch_id']);
+    if (!keyresp.hasAllKeys) {
+        res.writeHead(400, {
+            'Content-Type' : 'application/json',
+            'Access-Control-Allow-Origin': '*' 
+        })
+        res.end(JSON.stringify({result:'error', message:'Missing keys',missing:keyresp.missing}));
+    } else 
     exports.store.blobGetPatch(req,res,function(resp) {
         res.writeHead(200, {
             'Content-Type' : 'application/json',
