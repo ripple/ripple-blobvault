@@ -9,7 +9,22 @@ var count = new Counter;
 
 exports.store; 
 var q = new Queue;
-
+exports.logs = function(req,res) {
+    if (req.query.format == 'html') {
+        res.writeHead(200, {
+            'Content-Type' : 'text/html',
+            'Access-Control-Allow-Origin': '*' 
+        });
+        res.end(count.toHTML())
+    } else {
+        res.writeHead(200, {
+            'Content-Type' : 'application/json',
+            'Access-Control-Allow-Origin': '*' 
+        });
+        res.end(JSON.stringify(count.hash))
+    }
+}
+    
 var create = function (req, res) {
     if (!count.check()) {
         process.nextTick(function() {
