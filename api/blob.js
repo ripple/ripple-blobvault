@@ -147,11 +147,14 @@ var create = function (req, res) {
     } 
 
     // XXX Ensure blob does not exist yet
+    // yes. we read first 
 
     // XXX Check account "address" exists
-    // dont you mean not exist in order to create?
+    // do you mean that this is valid address?
+    // do a unique address requirement in schema 
 
     // XXX Ensure there is no blob for this account yet
+    // yes. we read first 
 
     q.series([
     function(lib,id) {
@@ -160,9 +163,6 @@ var create = function (req, res) {
                 lib.done();
             } else {
                 process.nextTick(function() {
-               //     throw { res : res, error : new Error("User already exists.") }
-               // TODO : have this domain enter store's bound domain from process
-               // nexttick
                     console.log("API Error");
                     var err = new Error ("User already exists");
                     res.writeHead(400, {
@@ -178,6 +178,7 @@ var create = function (req, res) {
     },
     function(lib) { 
         // XXX Check signature
+        // coordinate with evan 
         // TODO : inner key is required on updates
         var params = {
             res:res,
@@ -198,11 +199,6 @@ var create = function (req, res) {
                     'Access-Control-Allow-Origin': '*' 
                 });
                 res.end(JSON.stringify({result:'error',message:resp.error.message}));
-/*
-                process.nextTick(function() {
-                    throw { res : res, error : new Error("problem with create")}
-                });
-*/
                 lib.done();
                 return;
             }
