@@ -24,7 +24,7 @@
     "sinon": "^1.9.1"
   },
   "scripts": {
-    "test": "./node_modules/.bin/mocha --ui tdd -R spec test/test-*.js",
+    "test": "./test.sh",
     "start": "node server.js"
   },
   "repository": {
