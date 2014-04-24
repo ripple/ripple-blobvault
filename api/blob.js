@@ -224,12 +224,13 @@ exports.patch = function (req, res) {
         return
     } 
     // check patch size <= 1kb
-    if (req.body.patch.length > 1e3) {
+    var size = libutils.atob(req.body.patch).length;
+    if (size > 1e3) {
         res.writeHead(400, {
             'Content-Type' : 'application/json',
             'Access-Control-Allow-Origin': '*' 
         })
-        res.end(JSON.stringify({result:'error', message:'patch size > 1kb',size:req.body.patch.length}));
+        res.end(JSON.stringify({result:'error', message:'patch size > 1kb',size:size}))
         return
     }
     // XXX Check quota, 1000kb
@@ -269,6 +270,16 @@ exports.consolidate = function (req, res) {
             'Access-Control-Allow-Origin': '*' 
         })
         res.end(JSON.stringify({result:'error', message:'data is not valid base64'}));
+        return
+    }
+    var size = libutils.atob(req.body.data).length;
+    // checking quota
+    if (size > 1e6) {
+        res.writeHead(400, {
+            'Content-Type' : 'application/json',
+            'Access-Control-Allow-Origin': '*' 
+        })
+        res.end(JSON.stringify({result:'error', message:'data > 1e6 bytes',size:size}));
         return
     }
     exports.store.blobConsolidate(req,res,function(resp) {

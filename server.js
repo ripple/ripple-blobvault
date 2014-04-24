@@ -15,6 +15,10 @@ app.use(function(req,res,next) {
     console.log(req.headers);
     next();
 });
+
+// app.use(express.limit('1mb')); is deprecated and has no functionality
+// now delegated to raw-body; has a default 1mb limit 
+
 app.use(express.json());
 app.use(express.urlencoded());
 
