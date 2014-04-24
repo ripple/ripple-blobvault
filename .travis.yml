@@ -3,12 +3,12 @@
    - "0.10"
  before_script:
    - "echo start of before script"
+   - "echo We use the config example as the config this must happen before migration"
+   - "cp ./config-example.js ./config.js"
    - "echo Ensure we are migrated"
    - node migration.js
    - "echo make test script executable"
    - chmod +x test.sh
-   - "echo We use the config example as the config"
-   - "cp ./config-example.js ./config.js"
    - "echo create database blobvault as user postgres"
    - psql -c 'create database blobvault;' -U postgres
    - "echo End of before script"
