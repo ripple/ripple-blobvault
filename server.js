@@ -13,7 +13,6 @@ var app = express();
 app.use(function(req,res,next) {
     console.log(req.method + " " + req.url);
     console.log(req.headers);
-    console.log(req.body);
     next();
 });
 app.use(express.json());

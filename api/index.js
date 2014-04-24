@@ -15,9 +15,9 @@ var bindObject = function(obj1,binder) {
 var domain = require('domain');
 var d = domain.create();
 d.on('error',function (obj) {
-    console.log("API Error");
     if (obj.res) {
         if (obj.error !== undefined) {
+            console.log("API Error",obj.error + " " + new Date());
             obj.res.writeHead(obj.statusCode || 400, {
                 'Content-Type' : 'application/json',
                 'Access-Control-Allow-Origin': '*' 

@@ -146,15 +146,14 @@ var create = function (req, res) {
         return;
     } 
 
-    // XXX Ensure blob does not exist yet
-    // yes. we read first 
-
-    // XXX Check account "address" exists
-    // do you mean that this is valid address?
-    // do a unique address requirement in schema 
-
-    // XXX Ensure there is no blob for this account yet
-    // yes. we read first 
+    if (req.body.encrypted_secret == undefined) {
+        process.nextTick(function() {
+            throw { res : res, 
+            error : new Error("No encrypted secret provided."),
+            statusCode : 400 }
+        });
+        return;
+    } 
 
     q.series([
     function(lib,id) {
@@ -163,13 +162,11 @@ var create = function (req, res) {
                 lib.done();
             } else {
                 process.nextTick(function() {
-                    console.log("API Error");
-                    var err = new Error ("User already exists");
                     res.writeHead(400, {
                         'Content-Type' : 'application/json',
                         'Access-Control-Allow-Origin': '*' 
                     });
-                    res.end(JSON.stringify({result:'error',message:err.message}));
+                    res.end(JSON.stringify({result:'error',message:"User already exists"}));
                 });
                 lib.terminate(id);
                 return;
@@ -190,7 +187,8 @@ var create = function (req, res) {
             emailVerified:false,
             email:req.body.email,
             emailToken:libutils.generateToken(),
-            hostlink : req.body.hostlink
+            hostlink : req.body.hostlink,
+            encrypted_secret:req.body.encrypted_secret
         };
         exports.store.create(params,function(resp) {
             if (resp.error) {
@@ -223,14 +221,36 @@ exports.patch = function (req, res) {
             'Access-Control-Allow-Origin': '*' 
         })
         res.end(JSON.stringify({result:'error', message:'Missing keys',missing:keyresp.missing}));
-    } else 
-        exports.store.blobPatch(req,res,function(resp) {
-            res.writeHead(200, {
-                'Content-Type' : 'application/json',
-                'Access-Control-Allow-Origin': '*' 
-            })
-            res.end(JSON.stringify(resp));
-        });
+        return
+    } 
+    // check patch size <= 1kb
+    if (req.body.patch.length > 1e3) {
+        res.writeHead(400, {
+            'Content-Type' : 'application/json',
+            'Access-Control-Allow-Origin': '*' 
+        })
+        res.end(JSON.stringify({result:'error', message:'patch size > 1kb',size:req.body.patch.length}));
+        return
+    }
+    // XXX Check quota, 1000kb
+   
+    // check valid base64
+    if (!libutils.isBase64(req.body.patch)) {
+        res.writeHead(400, {
+            'Content-Type' : 'application/json',
+            'Access-Control-Allow-Origin': '*' 
+        })
+        res.end(JSON.stringify({result:'error', message:'patch is not valid base64'}));
+        return
+    }
+    exports.store.blobPatch(req,res,function(resp) {
+        // check valid base64 on req.patch
+        res.writeHead(200, {
+            'Content-Type' : 'application/json',
+            'Access-Control-Allow-Origin': '*' 
+        })
+        res.end(JSON.stringify(resp));
+    });
 };
 exports.consolidate = function (req, res) {
     var keyresp = libutils.hasKeys(req.body,['data','revision','blob_id']);
@@ -240,15 +260,25 @@ exports.consolidate = function (req, res) {
             'Access-Control-Allow-Origin': '*' 
         })
         res.end(JSON.stringify({result:'error', message:'Missing keys',missing:keyresp.missing}));
-    } else 
-        exports.store.blobConsolidate(req,res,function(resp) {
-            res.writeHead(200, {
-                'Content-Type' : 'application/json',
-                'Access-Control-Allow-Origin': '*' 
-            })
-            res.end(JSON.stringify(resp));
-            //response.json(resp).pipe(res);
-        });    
+        return;
+    }
+    // check valid base64
+    if (!libutils.isBase64(req.body.data)) {
+        res.writeHead(400, {
+            'Content-Type' : 'application/json',
+            'Access-Control-Allow-Origin': '*' 
+        })
+        res.end(JSON.stringify({result:'error', message:'data is not valid base64'}));
+        return
+    }
+    exports.store.blobConsolidate(req,res,function(resp) {
+        res.writeHead(200, {
+            'Content-Type' : 'application/json',
+            'Access-Control-Allow-Origin': '*' 
+        })
+        res.end(JSON.stringify(resp));
+        //response.json(resp).pipe(res);
+    });    
 };
 exports.delete = function (req, res) {
     var keyresp = libutils.hasKeys(req.query,['signature_blob_id']);

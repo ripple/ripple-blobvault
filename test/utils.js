@@ -1,5 +1,6 @@
 var config = require('../config');
 var crypto = require('crypto');
+var libutils = require('../lib/utils');
 var _ = require('lodash');
 
 
@@ -7,11 +8,12 @@ exports.person = {
     username : 'bob5050',
     auth_secret :'FFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0A',
     blob_id : 'ffff0a0affff0a0affff0a0affff0a0affff0a0affff0a0affff0a0affff0a0a',
-    data : 'foo' ,
+    data : libutils.btoa('foo'),
     address : 'rDgGMxXd6yBigGtP2iitfZwqfAYreWHt3n',
     email: 'bob5050@bob.com',
     hostlink: 'http://localhost:8080/activate',
-    date: 'april'
+    date: 'april',
+    encrypted_secret : 'r5nUDJLNQfWERYFm1sUSxxhate8r1q'
 }
 
 exports.createSignature = function (params) {

@@ -1,5 +1,6 @@
 console.log(__filename);
 var config = require('../config');
+var Hash = require('hashish');
 var request = require('request');
 var http = require('http');
 var api = require('../api');
@@ -175,6 +176,22 @@ test('create then delete',function(done) {
         );
         },
         function(lib) {
+        var mod_person = Hash(testutils.person).clone.end;
+        delete mod_person.encrypted_secret;
+        request.post({
+            url:'http://localhost:5050/v1/user',
+            json: mod_person
+            },
+            function(err, resp, body) {
+                console.log(body);
+                assert.equal(resp.statusCode,400,'encrypted secret is required');
+                assert.equal(body.result,'error');
+                assert.equal(body.message,'No encrypted secret provided.');
+                lib.done();
+            }
+        );
+        },
+        function(lib) {
         request.post({
             url:'http://localhost:5050/v1/user',
             json: testutils.person
@@ -192,6 +209,24 @@ test('create then delete',function(done) {
             },
             function(err, resp, body) {
                 assert.equal(resp.statusCode,400,'we should not be able to duplicate a user that already exists');
+                log(body);
+                lib.done();
+            }
+        );
+        },
+        // here we are going to modify the username but violate the constraint on the unique ripple address 
+        // we want to .catch from the store since it should be throwing at the db level
+        
+        // step 1 modify the testutils.person.username 
+        function(lib) {
+            var mod_person = Hash(testutils.person).clone.end;
+            mod_person.username = 'zed';
+        request.post({
+            url:'http://localhost:5050/v1/user',
+            json: mod_person
+            },
+            function(err, resp, body) {
+                assert.equal(resp.statusCode,400,'we should not be create a new person with the same ripple address');
                 log(body);
                 lib.done();
             }
