@@ -3,7 +3,7 @@ exports.blob = require('./blob');
 exports.meta = require('./meta');
 exports.setStore = function(store) {
     exports.user.store = store;
-    exports.blob.store = store;
+    exports.blob.setStore(store);
 };
 var bindObject = function(obj1,binder) {
     Object.keys(obj1).forEach(function(key) {

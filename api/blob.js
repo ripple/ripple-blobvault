@@ -6,8 +6,12 @@ var email = require('../lib/email');
 
 var Counter = require('../lib/counter');
 var count = new Counter;
+exports.store;
 
-exports.store; 
+exports.setStore = function(store) {
+    count.db = store.db;
+    exports.store = store;
+}
 var q = new Queue;
 exports.logs = function(req,res) {
     if (req.query.format == 'html') {
@@ -15,7 +19,10 @@ exports.logs = function(req,res) {
             'Content-Type' : 'text/html',
             'Access-Control-Allow-Origin': '*' 
         });
-        res.end(count.toHTML())
+//        res.end(count.toHTML())
+        count.toHTML_fromdb(function(html) {
+            res.end(html);
+        });
     } else {
         res.writeHead(200, {
             'Content-Type' : 'application/json',
@@ -206,7 +213,8 @@ var create = function (req, res) {
                 'Access-Control-Allow-Origin': '*' 
             })
             res.end(JSON.stringify({result:'success'}));
-            count.add();
+            //count.add();
+            count.adddb();
             lib.done();
         });
     }
