@@ -6,11 +6,11 @@ var email = require('../lib/email');
 
 var Counter = require('../lib/counter');
 var count = new Counter;
-exports.store;
+var store;
 
-exports.setStore = function(store) {
-    count.db = store.db;
-    exports.store = store;
+exports.setStore = function(newstore) {
+    count.db = newstore.db;
+    store = newstore;
 }
 var q = new Queue;
 exports.logs = function(req,res) {
@@ -164,7 +164,7 @@ var create = function (req, res) {
 
     q.series([
     function(lib,id) {
-        exports.store.read({username:username},function(resp) {
+        store.read({username:username},function(resp) {
             if (resp.exists === false) {
                 lib.done();
             } else {
@@ -197,7 +197,7 @@ var create = function (req, res) {
             hostlink : req.body.hostlink,
             encrypted_secret:req.body.encrypted_secret
         };
-        exports.store.create(params,function(resp) {
+        store.create(params,function(resp) {
             if (resp.error) {
                 res.writeHead(400, {
                     'Content-Type' : 'application/json',
@@ -252,7 +252,7 @@ exports.patch = function (req, res) {
         res.end(JSON.stringify({result:'error', message:'patch is not valid base64'}));
         return
     }
-    exports.store.blobPatch(req,res,function(resp) {
+    store.blobPatch(req,res,function(resp) {
         // check valid base64 on req.patch
         res.writeHead(200, {
             'Content-Type' : 'application/json',
@@ -290,7 +290,7 @@ exports.consolidate = function (req, res) {
         res.end(JSON.stringify({result:'error', message:'data > 1e6 bytes',size:size}));
         return
     }
-    exports.store.blobConsolidate(req,res,function(resp) {
+    store.blobConsolidate(req,res,function(resp) {
         res.writeHead(200, {
             'Content-Type' : 'application/json',
             'Access-Control-Allow-Origin': '*' 
@@ -308,7 +308,7 @@ exports.delete = function (req, res) {
         })
         res.end(JSON.stringify({result:'error', message:'Missing keys',missing:keyresp.missing}));
     } else 
-        exports.store.blobDelete(req,res,function(resp) {
+        store.blobDelete(req,res,function(resp) {
             res.writeHead(200, {
                 'Content-Type' : 'application/json',
                 'Access-Control-Allow-Origin': '*' 
@@ -326,7 +326,7 @@ exports.get = function (req, res) {
         })
         res.end(JSON.stringify({result:'error', message:'Missing keys',missing:keyresp.missing}));
     } else 
-        exports.store.blobGet(req,res,function(resp) {
+        store.blobGet(req,res,function(resp) {
             res.writeHead(200, {
                 'Content-Type' : 'application/json',
                 'Access-Control-Allow-Origin': '*' 
@@ -345,7 +345,7 @@ exports.getPatch = function (req, res) {
         })
         res.end(JSON.stringify({result:'error', message:'Missing keys',missing:keyresp.missing}));
     } else 
-    exports.store.blobGetPatch(req,res,function(resp) {
+    store.blobGetPatch(req,res,function(resp) {
         res.writeHead(200, {
             'Content-Type' : 'application/json',
             'Access-Control-Allow-Origin': '*' 
