@@ -7,6 +7,7 @@
    - cp ./config-example.js ./config.js
    - "echo create database blobvault as user postgres"
    - psql -c 'create database blobvault;' -U postgres
+   - node migration.js
    - "echo make test script executable"
    - chmod +x test.sh
    - "echo End of before script"
