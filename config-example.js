@@ -14,6 +14,9 @@ exports.ssl = false;
 // Whether this blob vault is running behind a reverse proxy
 exports.is_proxy = false;
 
+// The disk quota per user in kilobytes
+exports.quota = 1024;
+
 // Database settings
 // 'mysql', 'memory', 'postgres'
 exports.dbtype = 'postgres';

@@ -3,7 +3,6 @@ var Queue = require('queuelib');
 var config = require('../config');
 var libutils = require('../lib/utils')
 var email = require('../lib/email');
-
 var Counter = require('../lib/counter');
 var count = new Counter;
 var store;
@@ -248,6 +247,7 @@ exports.patch = function (req, res) {
         store.read_where({key:'id',value:req.body.blob_id},function(resp) {
             if (resp.length) {
                 var row = resp[0];
+                console.log(row);
                 lib.done();
             } else if (resp.error) {
                 res.writeHead(400, {
