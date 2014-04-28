@@ -244,22 +244,23 @@ exports.patch = function (req, res) {
     // XXX Check quota, 1000kb
     var q = new Queue;
     q.series([
+/*
     function(lib,id) {
         store.read_where({key:'id',value:req.body.blob_id},function(resp) {
-            if (resp.length) {
-                var row = resp[0];
-                lib.done();
-            } else if (resp.error) {
+            console.log("\n\nQUOTA GOT RESP", resp);
+            if (resp.error) {
                 res.writeHead(400, {
                     'Content-Type' : 'application/json',
                     'Access-Control-Allow-Origin': '*' 
                 })
                 res.end(JSON.stringify({result:'error', message:resp.error.message}))
                 lib.terminate(id);
-            } 
-            lib.done();
+            } else {
+                lib.done();   
+            }
         })
     },
+*/
     function(lib,id) {
         // check valid base64
         if (!libutils.isBase64(req.body.patch)) {
