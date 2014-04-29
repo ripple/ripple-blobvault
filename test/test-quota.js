@@ -82,7 +82,6 @@ test('create , patch, patch, get specific patch #2, delete', function(done) {
             };
             doPatch(); 
         },
-/*
         // delete user after 
         function(lib) {
             var sig = testutils.createSignature({method:'DELETE',url:'/v1/user',secret:testutils.person.auth_secret,date:testutils.person.date});
@@ -95,7 +94,6 @@ test('create , patch, patch, get specific patch #2, delete', function(done) {
                 lib.done();
             });
         },
-*/
         function(lib) {
             server.close(function() {
                 lib.done();
