@@ -346,14 +346,31 @@ exports.consolidate = function (req, res) {
         res.end(JSON.stringify({result:'error', message:'data is not valid base64'}));
         return
     }
+    // check revision is at greater than the previous revisions
+    // XXX TODO - discuss this
+/*
+    var q = new Queue;
+    q.series([
+        function(lib,id) {
+            store.read_where({key:'id', value:req.body.blob_id},function(resp) {
+                if (resp.length) {
+                    var row = resp[0];
+                    console.log("OLD REVISION: ", row);
+                    console.log("Attempted revision", req.body.revision);
+                }
+                lib.done();
+            });
+        }
+    ]);
+*/
     var size = libutils.atob(req.body.data).length;
     // checking quota
-    if (size > 1e6) {
+    if (size >= config.quota*1024) {
         res.writeHead(400, {
             'Content-Type' : 'application/json',
             'Access-Control-Allow-Origin': '*' 
         })
-        res.end(JSON.stringify({result:'error', message:'data > 1e6 bytes',size:size}));
+        res.end(JSON.stringify({result:'error', message:'data too large',size:size}));
         return
     }
     store.blobConsolidate(req,res,function(resp) {

@@ -62,7 +62,7 @@ test('create , patch, patch, get specific patch #2, delete', function(done) {
             }
         );
         },
-        // do a 500 patches
+        // do a 500 patches at 3 bytes each
         // also we are going to be checking that revisions follow
         function(lib) {
             var count = 0;
@@ -72,7 +72,8 @@ test('create , patch, patch, get specific patch #2, delete', function(done) {
                 var url = 'http://localhost:5050/v1/blob/patch?signature=' + sig + '&signature_date='+testutils.person.date + '&signature_blob_id='+ testutils.person.blob_id;
                 request.post({url:url,json:body},function(err, resp, body) {
                     count++;
-                    console.log(body);
+                    if ((body.revision) && (body.revision % 5 == 0))
+                        console.log(body)
                     assert.deepEqual(body,{result:'success',revision:count});
                     if (count < 500)
                         doPatch();
@@ -81,6 +82,14 @@ test('create , patch, patch, get specific patch #2, delete', function(done) {
                 });
             };
             doPatch(); 
+        },
+        // check that the quota is 500*3 bytes
+        function(lib) {
+            store.read_where({key:'id',value:testutils.person.blob_id},function(resp) {
+                var row = resp[0];
+                assert.equal(500*3,row.quota,'quota should be equal to 500*3'); 
+                lib.done();
+            })
         },
         // delete user after 
         function(lib) {
