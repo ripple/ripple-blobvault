@@ -232,7 +232,7 @@ exports.patch = function (req, res) {
     } 
     // check patch size <= 1kb
     var size = libutils.atob(req.body.patch).length;
-    if (size > 1e3) {
+    if (size > config.patchsize*1024) {
         res.writeHead(400, {
             'Content-Type' : 'application/json',
             'Access-Control-Allow-Origin': '*' 
@@ -240,16 +240,24 @@ exports.patch = function (req, res) {
         res.end(JSON.stringify({result:'error', message:'patch size > 1kb',size:size}))
         return
     }
-    // XXX Check quota, 1000kb
+    // check quota, user cannot submit patch if they >= quota limit
     var q = new Queue;
     q.series([
     function(lib,id) {
         store.read_where({key:'id',value:req.body.blob_id},function(resp) {
             if (resp.length) {
                 var row = resp[0];
-                console.log(row);
-                lib.done();
-                return;
+                lib.set({quota:row.quota});
+                if (row.quota >= config.quota*1024) {
+                    res.writeHead(400, {
+                        'Content-Type' : 'application/json',
+                        'Access-Control-Allow-Origin': '*' 
+                    })
+                    res.end(JSON.stringify({result:'error', message:'quota exceeded'}))
+                    lib.terminate(id);
+                    return;
+                } else 
+                    lib.done();
             } else if (resp.error) {
                 res.writeHead(400, {
                     'Content-Type' : 'application/json',
@@ -274,9 +282,38 @@ exports.patch = function (req, res) {
         }
         lib.done();
     },
+    // update quota amount
+    function(lib,id) {
+        var newquota = size + lib.get('quota'); 
+        store.update_where({
+            set:{key:'quota',value:newquota},
+            where:{key:'id',value:req.body.blob_id}},
+            function(resp) {
+                if (resp.error) {
+                    res.writeHead(400, {
+                        'Content-Type' : 'application/json',
+                        'Access-Control-Allow-Origin': '*' 
+                    })
+                    res.end(JSON.stringify({result:'error', message:resp.error.message}));
+                    lib.terminate(id);
+                    return;
+                } else {
+                    lib.done();
+                }
+            }
+        );
+    },
+    function(lib,id) {
+        store.read_where({key:'id',value:req.body.blob_id},function(resp) {
+            if (resp.length) {
+                var row = resp[0];
+                console.log("ROW AFTER QUOTA UPDATE:", row);
+            }
+            lib.done();
+        })
+    },
     function(lib) {
         store.blobPatch(size,req,res,function(resp) {
-            // check valid base64 on req.patch
             res.writeHead(200, {
                 'Content-Type' : 'application/json',
                 'Access-Control-Allow-Origin': '*' 
