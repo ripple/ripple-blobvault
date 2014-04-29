@@ -303,6 +303,8 @@ exports.patch = function (req, res) {
             }
         );
     },
+// uncomment this to see the quota values change
+/* 
     function(lib,id) {
         store.read_where({key:'id',value:req.body.blob_id},function(resp) {
             if (resp.length) {
@@ -312,6 +314,7 @@ exports.patch = function (req, res) {
             lib.done();
         })
     },
+*/
     function(lib) {
         store.blobPatch(size,req,res,function(resp) {
             res.writeHead(200, {

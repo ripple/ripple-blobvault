@@ -73,9 +73,9 @@ test('create , patch, patch, get specific patch #2, delete', function(done) {
                     lib.done();
             });
         },
-        // do the patch but make it too big s.t. patch.length > 1e3
+        // do the patch but make it too big s.t. patch.length > 1kb
         function(lib) {
-            var largestring = libutils.rs(1e3+4);
+            var largestring = libutils.rs((config.patchsize*1024)+4);
             var body = { patch : libutils.btoa(largestring), blob_id:testutils.person.blob_id }; // req.body = { patch : 'foo' }
             var sig = testutils.createSignature({method:'POST',url:'/v1/blob/patch',secret:testutils.person.auth_secret,date:testutils.person.date,body:body});
             var url = 'http://localhost:5050/v1/blob/patch?signature=' + sig + '&signature_date='+testutils.person.date + '&signature_blob_id='+ testutils.person.blob_id;
