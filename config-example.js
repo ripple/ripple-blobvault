@@ -17,6 +17,9 @@ exports.is_proxy = false;
 // The disk quota per user in kilobytes
 exports.quota = 1024;
 
+// The maximum patch size in kilobytes
+exports.patchsize = 1;
+
 // Database settings
 // 'mysql', 'memory', 'postgres'
 exports.dbtype = 'postgres';

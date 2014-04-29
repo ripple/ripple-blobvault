@@ -249,6 +249,7 @@ exports.patch = function (req, res) {
                 var row = resp[0];
                 console.log(row);
                 lib.done();
+                return;
             } else if (resp.error) {
                 res.writeHead(400, {
                     'Content-Type' : 'application/json',
@@ -256,8 +257,8 @@ exports.patch = function (req, res) {
                 })
                 res.end(JSON.stringify({result:'error', message:resp.error.message}))
                 lib.terminate(id);
+                return;
             } 
-            lib.done();
         })
     },
     function(lib,id) {
