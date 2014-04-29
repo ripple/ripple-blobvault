@@ -15,7 +15,8 @@ exports.ssl = false;
 exports.is_proxy = false;
 
 // The disk quota per user in kilobytes
-exports.quota = 1024;
+// 1mb = 1024kb = 1024 bytes / kb * 1024 kb / mb = 1048576 bytes / mb
+exports.quota = 1024; 
 
 // The maximum patch size in kilobytes
 exports.patchsize = 1;

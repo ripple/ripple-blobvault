@@ -66,8 +66,9 @@ test('create , patch, patch, get specific patch #2, delete', function(done) {
         // also we are going to be checking that revisions follow
         function(lib) {
             var count = 0;
+            var converted = libutils.btoa('foo');
             var doPatch = function() {
-                var body = { patch : libutils.btoa('foo'), blob_id:testutils.person.blob_id }; // req.body = { patch : 'foo' }
+                var body = { patch : converted, blob_id:testutils.person.blob_id }; 
                 var sig = testutils.createSignature({method:'POST',url:'/v1/blob/patch',secret:testutils.person.auth_secret,date:testutils.person.date,body:body});
                 var url = 'http://localhost:5050/v1/blob/patch?signature=' + sig + '&signature_date='+testutils.person.date + '&signature_blob_id='+ testutils.person.blob_id;
                 request.post({url:url,json:body},function(err, resp, body) {
@@ -91,6 +92,36 @@ test('create , patch, patch, get specific patch #2, delete', function(done) {
                 lib.done();
             })
         },
+        // so far we have used up 1500 bytes out of a total 1024*1000
+        // we should be able to go another 999 patches, and the 1000'th
+        // should be a quota error
+
+        function(lib) {
+            // note we start the count at 500 
+            var count = 500;
+            var largestring = libutils.rs((config.patchsize*1024));
+            var converted = libutils.btoa(largestring)
+            var doPatch = function() {
+                var body = { patch : converted, blob_id:testutils.person.blob_id }; 
+                var sig = testutils.createSignature({method:'POST',url:'/v1/blob/patch',secret:testutils.person.auth_secret,date:testutils.person.date,body:body});
+                var url = 'http://localhost:5050/v1/blob/patch?signature=' + sig + '&signature_date='+testutils.person.date + '&signature_blob_id='+ testutils.person.blob_id;
+                request.post({url:url,json:body},function(err, resp, body) {
+                    count++;
+                    if ((body.revision) && (body.revision % 5 == 0))
+                        console.log(body)
+                    if (count <= 1523)
+                        assert.deepEqual(body,{result:'success',revision:count});
+                    else 
+                        assert.deepEqual(body,{result:'error',message:'quota exceeded'});
+                    if (count <= 1530)
+                        doPatch();
+                    else 
+                        lib.done();
+                });
+            };
+            doPatch(); 
+        },
+        
         // delete user after 
         function(lib) {
             var sig = testutils.createSignature({method:'DELETE',url:'/v1/user',secret:testutils.person.auth_secret,date:testutils.person.date});

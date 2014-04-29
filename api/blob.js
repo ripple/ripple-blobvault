@@ -249,6 +249,7 @@ exports.patch = function (req, res) {
                 var row = resp[0];
                 lib.set({quota:row.quota});
                 if (row.quota >= config.quota*1024) {
+                    console.log("Excceeded quota. row.quota = ",row.quota, " vs config.quota*1024 = ", config.quota*1024);
                     res.writeHead(400, {
                         'Content-Type' : 'application/json',
                         'Access-Control-Allow-Origin': '*' 
@@ -303,13 +304,13 @@ exports.patch = function (req, res) {
             }
         );
     },
-// uncomment this to see the quota values change
-/* 
+// inspect quota values
+/*
     function(lib,id) {
         store.read_where({key:'id',value:req.body.blob_id},function(resp) {
             if (resp.length) {
                 var row = resp[0];
-                console.log("ROW AFTER QUOTA UPDATE:", row);
+                console.log("quota:", row.quota);
             }
             lib.done();
         })
