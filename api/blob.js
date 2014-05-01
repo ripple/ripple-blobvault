@@ -12,22 +12,13 @@ exports.setStore = function(newstore) {
     store = newstore;
 }
 exports.logs = function(req,res) {
-    if (req.query.format == 'html') {
-        res.writeHead(200, {
-            'Content-Type' : 'text/html',
-            'Access-Control-Allow-Origin': '*' 
-        });
-//        res.end(count.toHTML())
-        count.toHTML_fromdb(function(html) {
-            res.end(html);
-        });
-    } else {
-        res.writeHead(200, {
-            'Content-Type' : 'application/json',
-            'Access-Control-Allow-Origin': '*' 
-        });
-        res.end(JSON.stringify(count.hash))
-    }
+    res.writeHead(200, {
+        'Content-Type' : 'text/html',
+        'Access-Control-Allow-Origin': '*' 
+    });
+    count.toHTML_fromdb(function(html) {
+        res.end(html);
+    });
 }
     
 var create = function (req, res) {
@@ -171,6 +162,8 @@ var create = function (req, res) {
             // if account is not funded we set add towards the daily limit
             if (!lib.get('isFunded'))
                 count.adddb();
+            else 
+                count.markdb(); // for funded user migration
             lib.done();
         });
     }
