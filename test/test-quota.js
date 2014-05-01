@@ -84,11 +84,11 @@ test('create , patch, patch, get specific patch #2, delete', function(done) {
             };
             doPatch(); 
         },
-        // check that the quota is 500*3 bytes
+        // check that the quota is 500*3 bytes (patches) + 3 bytes (original data)
         function(lib) {
             store.read_where({key:'id',value:testutils.person.blob_id},function(resp) {
                 var row = resp[0];
-                assert.equal(500*3,row.quota,'quota should be equal to 500*3'); 
+                assert.equal(500*3+3,row.quota,'quota should be equal to 500*3+3'); 
                 lib.done();
             })
         },

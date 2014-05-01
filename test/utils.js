@@ -9,11 +9,12 @@ exports.person = {
     auth_secret :'FFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0A',
     blob_id : 'ffff0a0affff0a0affff0a0affff0a0affff0a0affff0a0affff0a0affff0a0a',
     data : libutils.btoa('foo'),
-    address : 'rDgGMxXd6yBigGtP2iitfZwqfAYreWHt3n',
+    address : 'rwUNHL9AdSupre4tGb7NXZpRS1ift5sR7W',
     email: 'bob5050@bob.com',
     hostlink: 'http://localhost:8080/activate',
     date: 'april',
-    encrypted_secret : 'r5nUDJLNQfWERYFm1sUSxxhate8r1q'
+    encrypted_secret : 'r5nUDJLNQfWERYFm1sUSxxhate8r1q',
+    encrypted_blobdecrypt_key: 'asdfasdfasdf'
 }
 
 exports.createSignature = function (params) {

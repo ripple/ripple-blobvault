@@ -15,7 +15,8 @@
     "pg": "^3.0.1",
     "emailjs": "^0.3.8",
     "hyperglue": "^1.3.0",
-    "cors": "^2.2.0"
+    "cors": "^2.2.0",
+    "ripple-lib" : "https://github.com/ripple/ripple-lib/archive/develop.tar.gz"
   },
   "devDependencies": {
     "request": "^2.34.0",

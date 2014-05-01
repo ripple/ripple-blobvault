@@ -162,6 +162,7 @@ test('create , patch, patch, get specific patch #2, delete', function(done) {
                 url:'http://localhost:5050/v1/blob/'+testutils.person.blob_id,
                 json:true
             },function(err, resp, body) {
+                    console.log(body);
                     assert.equal(body.revision, 3, 'revision should be equal to 3');
                     lib.done();
             });

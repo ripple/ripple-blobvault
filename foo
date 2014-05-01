@@ -23,7 +23,7 @@ exports.patchsize = 1;
 
 // if testmode = true, there is no remote rippled connection made
 // for checking ledger dates
-exports.testmode = false;
+exports.testmode = true;
 
 // Database settings
 // 'mysql', 'memory', 'postgres'

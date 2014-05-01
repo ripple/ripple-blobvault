@@ -31,25 +31,17 @@ exports.logs = function(req,res) {
 }
     
 var create = function (req, res) {
-    if (!count.check()) {
-        process.nextTick(function() {
-            throw { res : res, 
-            error : new Error("maxcap"),
-            statusCode: 400 }
-        });
-        return;
-    }
-    var blobId = req.body.blob_id;
-    if ("string" !== typeof blobId) {
-        process.nextTick(function() {
-            throw { res : res , 
-            error : new Error("No blob ID given."), 
-            statusCode : 400 };
+    var keyresp = libutils.hasKeys(req.body,['encrypted_blobdecrypt_key','blob_id','username','auth_secret','data','email','address','hostlink','encrypted_secret']);
+    if (!keyresp.hasAllKeys) {
+        res.writeHead(400, {
+            'Content-Type' : 'application/json',
+            'Access-Control-Allow-Origin': '*' 
         })
-        return;
-    } else {
-        blobId = blobId.toLowerCase();
-    }
+        res.end(JSON.stringify({result:'error', message:'Missing keys',missing:keyresp.missing}));
+        return
+    } 
+    var blobId = req.body.blob_id;
+    blobId = blobId.toLowerCase();
 
     if (!/^[0-9a-f]{64}$/.exec(blobId)) {
         process.nextTick(function() {
@@ -61,14 +53,6 @@ var create = function (req, res) {
     }
 
     var username = req.body.username;
-    if ("string" !== typeof username) {
-        process.nextTick(function() {
-            throw { res : res ,     
-            error : new Error("No username given."),
-            statusCode: 400 }
-        });
-        return;
-    } 
     if (!/^[a-zA-Z0-9][a-zA-Z0-9-]{0,13}[a-zA-Z0-9]$/.exec(username)) {
         process.nextTick(function() {
             throw { res : res , 
@@ -96,15 +80,6 @@ var create = function (req, res) {
     }
 
     var authSecret = req.body.auth_secret;
-    if ("string" !== typeof authSecret) {
-        process.nextTick(function() {
-            throw { res : res, 
-            error : new Error("No auth secret given."),
-            statusCode : 400 }
-        });
-        return;
-    }
-
     authSecret = authSecret.toLowerCase();
     if (!/^[0-9a-f]{64}$/.exec(authSecret)) {
         process.nextTick(function() {
@@ -114,52 +89,6 @@ var create = function (req, res) {
         });
         return;
     }
-
-    if (req.body.data === undefined) {
-        process.nextTick(function() {
-            throw { res : res,  
-            error : new Error("No data provided."),
-            statusCode : 400 }
-        });
-        return;
-    }
-
-    if (req.body.address == undefined) {
-        process.nextTick(function() {
-            throw { res : res, 
-            error : new Error("No ripple address provided."),
-            statusCode : 400 }
-        });
-        return;
-    } 
-
-    if (req.body.email == undefined) {
-        process.nextTick(function() {
-            throw { res : res, 
-            error : new Error("No email address provided."),
-            statusCode : 400 }
-        });
-        return;
-    } 
-
-    if (req.body.hostlink == undefined) {
-        process.nextTick(function() {
-            throw { res : res, 
-            error : new Error("No hostlink provided."),
-            statusCode : 400 }
-        });
-        return;
-    } 
-
-    if (req.body.encrypted_secret == undefined) {
-        process.nextTick(function() {
-            throw { res : res, 
-            error : new Error("No encrypted secret provided."),
-            statusCode : 400 }
-        });
-        return;
-    } 
-
     var q = new Queue;
     q.series([
     function(lib,id) {
@@ -179,13 +108,37 @@ var create = function (req, res) {
             }
        });
     },
+    function(lib,id) {
+        // check if account is funded
+        count.checkLedger(req.body.address,function(isFunded) {
+            if (!isFunded) { 
+                if (!count.check()) {
+                    process.nextTick(function() {
+                        throw { res : res, 
+                        error : new Error("maxcap"),
+                        statusCode: 400 }
+                    });
+                    lib.terminate(id);
+                    return;
+                } else {
+                    lib.done();
+                }
+            } else {
+                // mark as funded
+                lib.done({isFunded:true});
+            }
+        })
+    },
     function(lib) { 
         // XXX Check signature
         // coordinate with evan 
         // TODO : inner key is required on updates
+
+        var data_size = libutils.atob(req.body.data).length;
         var params = {
             res:res,
             data:req.body.data,
+            data_size:data_size,
             authSecret:authSecret,
             blobId:blobId,
             address:req.body.address,
@@ -212,8 +165,9 @@ var create = function (req, res) {
                 'Access-Control-Allow-Origin': '*' 
             })
             res.end(JSON.stringify({result:'success'}));
-            //count.add();
-            count.adddb();
+            // if account is not funded we set add towards the daily limit
+            if (!lib.get('isFunded'))
+                count.adddb();
             lib.done();
         });
     }
@@ -347,8 +301,6 @@ exports.consolidate = function (req, res) {
         res.end(JSON.stringify({result:'error', message:'data is not valid base64'}));
         return
     }
-    // check revision is at greater than the previous revisions
-    // XXX TODO - discuss this
 /*
     var q = new Queue;
     q.series([
@@ -366,7 +318,7 @@ exports.consolidate = function (req, res) {
 */
     var size = libutils.atob(req.body.data).length;
     // checking quota
-    if (size >= config.quota*1024) {
+    if (size > config.quota*1024) {
         res.writeHead(400, {
             'Content-Type' : 'application/json',
             'Access-Control-Allow-Origin': '*' 
@@ -374,7 +326,9 @@ exports.consolidate = function (req, res) {
         res.end(JSON.stringify({result:'error', message:'data too large',size:size}));
         return
     }
-    store.blobConsolidate(req,res,function(resp) {
+    // XXX: write out new quota value
+
+    store.blobConsolidate(size,req,res,function(resp) {
         res.writeHead(200, {
             'Content-Type' : 'application/json',
             'Access-Control-Allow-Origin': '*' 
