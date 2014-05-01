@@ -13,7 +13,7 @@ if (config.dbtype == 'memory') {
 }
 var knex = Knex.initialize({
     client: config.dbtype,
-    connection : config.database.postgres
+    connection : config.database[config.dbtype]
 });
 migrate(knex,function() {
     console.log("Migration completed");

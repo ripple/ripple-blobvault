@@ -143,6 +143,8 @@ var create = function (req, res) {
             hostlink : req.body.hostlink,
             encrypted_secret:req.body.encrypted_secret
         };
+        // if we reached here, we are either unfunded but within limit cap
+        // or funded by the cutoff date
         store.create(params,function(resp) {
             if (resp.error) {
                 res.writeHead(400, {
