@@ -29,9 +29,6 @@ var getUserInfo = function(username, res) {
                         'Access-Control-Allow-Origin': '*' 
                     });
                     res.end(JSON.stringify(obj));
-//                    res.end(JSON.stringify({exists:false,reserved:true,result:'error',message:"Username is reserved"}));
-//                    throw { res : res, error: new Error('username is reserved'),statusCode:200 }
-                    //return;
                 } else {
                     obj.exists = false;
                     obj.reserved = false;
@@ -40,9 +37,6 @@ var getUserInfo = function(username, res) {
                         'Access-Control-Allow-Origin': '*' 
                     });
                     res.end(JSON.stringify(obj));
-                    //res.end(JSON.stringify({result:'error',message:"No such user"}));
-                   // throw { res : res, error: new Error('No such user'),statusCode:404 }
-                    //return;
                 }
             } else {
                 obj.username = username,
@@ -55,7 +49,6 @@ var getUserInfo = function(username, res) {
                     'Access-Control-Allow-Origin': '*' 
                 });
                 res.end(JSON.stringify(obj));
-                //response.json(obj).pipe(res);
             }
         });
     } else {
@@ -73,62 +66,30 @@ var getUserInfo = function(username, res) {
                 obj.version = config.AUTHINFO_VERSION,
                 obj.blobvault = config.url,
                 obj.pakdf = config.defaultPakdfSetting
-                if (resp.exists === false) {
-                    if (config.reserved[username.toLowerCase()]) {
-                        obj.exists = false;
-                        obj.reserved = config.reserved[username.toLowerCase()];
-                        // this is a 200 
-                        res.writeHead(200, {
-                            'Content-Type' : 'application/json',
-                            'Access-Control-Allow-Origin': '*' 
-                        });
-                        res.end(JSON.stringify(obj));
-/*
-                        // this is a 200 
-                        res.writeHead(200, {
-                            'Content-Type' : 'application/json',
-                            'Access-Control-Allow-Origin': '*' 
-                        });
-                        res.end(JSON.stringify({exists:false,reserved:true,result:'error',message:"Username is reserved"}));
-*/
-                        //throw { res : res, error: new Error('username is reserved') }
-                        //return;
-                    } else {
-                        obj.exists = false;
-                        obj.reserved = false;
-                        // this is a 200 
-                        res.writeHead(200, {
-                            'Content-Type' : 'application/json',
-                            'Access-Control-Allow-Origin': '*' 
-                        });
-                        res.end(JSON.stringify(obj));
-/*
-                        res.writeHead(404, {
-                            'Content-Type' : 'application/json',
-                            'Access-Control-Allow-Origin': '*' 
-                        });
-                        res.end(JSON.stringify({result:'error',message:"No such user"}));
-*/
-                        //throw { res : res, error: new Error('No such user') }
-                        //return;
-                    }
-                } else {
-                    obj.username = resp.username,
-                    obj.address = resp.address,
-                    obj.exists = resp.exists,
-                    obj.emailVerified = resp.emailVerified,
+                if (resp.length) {
+                    var row = resp[0];
+                    obj.exists = true;
+                    obj.username = row.username,
+                    obj.address = row.address,
+                    obj.emailVerified = row.email_verified,
                     res.writeHead(200, {
                         'Content-Type' : 'application/json',
                         'Access-Control-Allow-Origin': '*' 
                     });
                     res.end(JSON.stringify(obj));
-//                    response.json(obj).pipe(res);
+                } else {
+                    obj.exists = false;
+                    obj.reserved = config.reserved[username.toLowerCase()] || false;
+                    res.writeHead(200, {
+                        'Content-Type' : 'application/json',
+                        'Access-Control-Allow-Origin': '*' 
+                    });
+                    res.end(JSON.stringify(obj));
                 }
             }
-        );
+        )
     }
 }
-
 var authinfo = function (req, res) {
     getUserInfo(req.query.username, res);
 };

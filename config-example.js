@@ -14,6 +14,20 @@ exports.ssl = false;
 // Whether this blob vault is running behind a reverse proxy
 exports.is_proxy = false;
 
+// The disk quota per user in kilobytes
+// 1mb = 1024kb = 1024 bytes / kb * 1024 kb / mb = 1048576 bytes / mb
+exports.quota = 1024; 
+
+// The maximum patch size in kilobytes
+exports.patchsize = 1;
+
+// if testmode = true, there is no remote rippled connection made
+// for checking ledger dates
+exports.testmode = false;
+
+// if account is created before this date and funded
+exports.nolimit_date = 'Thu May 1 2014';
+
 // Database settings
 // 'mysql', 'memory', 'postgres'
 exports.dbtype = 'postgres';
@@ -41,6 +55,17 @@ exports.email = {
     password: "" , 
     host:  "" ,
     from : ""
+}
+
+exports.ripplelib = {
+  trusted:        true,
+  servers: [
+    {
+        host:    's1.ripple.com'
+      , port:    443
+      , secure:  false
+    }
+  ]
 }
 
 // PAKDF server setting

@@ -13,9 +13,12 @@ var app = express();
 app.use(function(req,res,next) {
     console.log(req.method + " " + req.url);
     console.log(req.headers);
-    console.log(req.body);
     next();
 });
+
+// app.use(express.limit('1mb')); is deprecated and has no functionality
+// now delegated to raw-body; has a default 1mb limit 
+
 app.use(express.json());
 app.use(express.urlencoded());
 
@@ -36,6 +39,7 @@ app.post('/v1/blob/consolidate', hmac.middleware, api.blob.consolidate);
 
 app.get('/v1/authinfo', api.user.authinfo);
 
+app.get('/logs', api.blob.logs);
 //app.get('/v1/meta', api.meta);
 
 

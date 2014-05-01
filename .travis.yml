@@ -3,6 +3,15 @@
    - "0.10"
  before_script:
    - "echo start of before script"
-   - chmod +x test.sh
-   - "cp ./config-example.js ./config.js"
+   - "echo We use the config example as the config this must happen before migration"
+   - cp ./config-example.js ./config.js
+   - "echo For travis testing we turn on testmode"
+   - sed -e 's/exports.testmode = false/exports.testmode = true/g' config.js > foo
+   - mv foo config.js
+   - cat config.js
+   - "echo create database blobvault as user postgres"
    - psql -c 'create database blobvault;' -U postgres
+   - node migration.js
+   - "echo make test script executable"
+   - chmod +x test.sh
+   - "echo End of before script"

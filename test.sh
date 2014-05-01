@@ -3,3 +3,6 @@ node_modules/.bin/mocha --ui tdd -R spec test/test-user-create.js
 node_modules/.bin/mocha --ui tdd -R spec test/test-user-get.js
 node_modules/.bin/mocha --ui tdd -R spec test/test-user-caseinsensitivity-and-uniqueness.js
 node_modules/.bin/mocha --ui tdd -R spec test/test-blob-patch.js
+node_modules/.bin/mocha --ui tdd -R spec test/test-signature.js
+node_modules/.bin/mocha --ui tdd -R spec test/test-usercap.js
+node_modules/.bin/mocha --ui tdd -R spec test/test-quota.js

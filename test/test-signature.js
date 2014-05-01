@@ -6,6 +6,7 @@ var store = require('../lib/store')(config.dbtype);
 var hmac = require('../lib/hmac');
 var api = require('../api');
 var testutils = require('./utils');
+var libutils = require('../lib/utils');
 var request = require('request');
 api.setStore(store);
 hmac.setStore(store);
@@ -61,7 +62,7 @@ test('create , patch, patch, get specific patch #2, delete', function(done) {
         },
         // do the patch but with a bad signature
         function(lib) {
-            var body = { patch : "foo", blob_id:testutils.person.blob_id }; // req.body = { patch : 'foo' }
+            var body = { patch : libutils.btoa("foo"), blob_id:testutils.person.blob_id }; // req.body = { patch : 'foo' }
             var sig = 'foobar';
             var url = 'http://localhost:5050/v1/blob/patch?signature=' + sig + '&signature_date='+testutils.person.date + '&signature_blob_id='+ testutils.person.blob_id;
             request.post({
@@ -88,7 +89,7 @@ test('create , patch, patch, get specific patch #2, delete', function(done) {
         },
         // do the patch but with missing blob_id information
         function(lib) {
-            var body = { patch : "foo" }; // req.body = { patch : 'foo' }
+            var body = { patch : libutils.btoa("foo") }; // req.body = { patch : 'foo' }
             var sig = testutils.createSignature({method:'POST',url:'/v1/blob/patch',secret:testutils.person.auth_secret,date:testutils.person.date,body:body});
             var url = 'http://localhost:5050/v1/blob/patch?signature=' + sig + '&signature_date='+testutils.person.date + '&signature_blob_id='+ testutils.person.blob_id;
             request.post({
@@ -102,7 +103,7 @@ test('create , patch, patch, get specific patch #2, delete', function(done) {
         },
         // do the patch
         function(lib) {
-            var body = { patch : "foo", blob_id:testutils.person.blob_id }; // req.body = { patch : 'foo' }
+            var body = { patch : libutils.btoa("foo"), blob_id:testutils.person.blob_id }; // req.body = { patch : 'foo' }
             var sig = testutils.createSignature({method:'POST',url:'/v1/blob/patch',secret:testutils.person.auth_secret,date:testutils.person.date,body:body});
             var url = 'http://localhost:5050/v1/blob/patch?signature=' + sig + '&signature_date='+testutils.person.date + '&signature_blob_id='+ testutils.person.blob_id;
             request.post({
@@ -115,7 +116,7 @@ test('create , patch, patch, get specific patch #2, delete', function(done) {
         },
         // do another patch
         function(lib) {
-            var body = { patch : "bar", blob_id:testutils.person.blob_id  }; // req.body = { patch : 'bar' }
+            var body = { patch : libutils.btoa("bar"), blob_id:testutils.person.blob_id  }; // req.body = { patch : 'bar' }
             var sig = testutils.createSignature({method:'POST',url:'/v1/blob/patch',secret:testutils.person.auth_secret,date:testutils.person.date,body:body});
             var url = 'http://localhost:5050/v1/blob/patch?signature=' + sig + '&signature_date='+testutils.person.date + '&signature_blob_id='+ testutils.person.blob_id;
             request.post({
@@ -138,7 +139,7 @@ test('create , patch, patch, get specific patch #2, delete', function(done) {
         },
         // Consolidate patches
         function(lib) {
-            var body = { data : "foo and bar", revision: 3, blob_id:testutils.person.blob_id  }; 
+            var body = { data : libutils.btoa("foo and bar"), revision: 3, blob_id:testutils.person.blob_id  }; 
             var sig = testutils.createSignature({method:'POST',url:'/v1/blob/consolidate',secret:testutils.person.auth_secret,date:testutils.person.date,body:body});
             var url = 'http://localhost:5050/v1/blob/consolidate?signature=' + sig + '&signature_date='+testutils.person.date + '&signature_blob_id='+ testutils.person.blob_id;
             request.post({
