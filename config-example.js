@@ -25,6 +25,9 @@ exports.patchsize = 1;
 // for checking ledger dates
 exports.testmode = false;
 
+// if account is created before this date and funded
+exports.nolimit_date = 'Thu May 1 2014';
+
 // Database settings
 // 'mysql', 'memory', 'postgres'
 exports.dbtype = 'postgres';
@@ -54,7 +57,6 @@ exports.email = {
     from : ""
 }
 
-exports.nolimit_date = 'Thu May 1 2014';
 exports.ripplelib = {
   trusted:        true,
   servers: [

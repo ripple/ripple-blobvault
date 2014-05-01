@@ -121,10 +121,13 @@ var create = function (req, res) {
                     lib.terminate(id);
                     return;
                 } else {
+                    // account is NOT funded but within the limit cap
+                    console.log(req.body.address + " is not funded but within the limit cap");
                     lib.done();
                 }
             } else {
                 // mark as funded
+                console.log("Marking as funded");
                 lib.done({isFunded:true});
             }
         })
