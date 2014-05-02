@@ -39,6 +39,7 @@ test('create, get, the cleanup and delete', function(done) {
                 url:'http://localhost:5050/v1/user',
                 json: testutils.person
                 }, function(err, resp, body) {
+                    
                     assert.equal(resp.statusCode,201,'after proper create request, status code should be 201');
                     lib.done();
             });
@@ -64,7 +65,7 @@ test('create, get, the cleanup and delete', function(done) {
         // should fail, but we return 200 anyways since we check for exist : false
         function(lib) {
             request.get({
-                url:'http://localhost:5050/v1/user/bob5051',
+                url:'http://localhost:5050/v1/user/abob5051',
                 json: true 
             },function(err, resp, body) {
                 assert.equal(body.exists,false,'this user should not exist');

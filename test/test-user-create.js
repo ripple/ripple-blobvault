@@ -45,7 +45,6 @@ test('create then delete',function(done) {
             json: mod_person
             },
             function(err, resp, body) {
-                console.log("BODY:",body);
                 assert.equal(resp.statusCode,400,'encrypted secret is required');
                 assert.equal(body.result,'error');
                 assert.equal(body.message,'Missing keys');
@@ -60,6 +59,7 @@ test('create then delete',function(done) {
             json: testutils.person
             },
             function(err, resp, body) {
+                console.log("BODY:",body);
                 assert.equal(resp.statusCode,201,'after proper create request, status code should be 201');
                 lib.done();
             }
