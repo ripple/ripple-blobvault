@@ -22,6 +22,24 @@ exports.logs = function(req,res) {
 }
     
 var create = function (req, res) {
+    if (!config.testmode) {
+        if (req.query.signature_blob_id != req.body.blob_id) {
+            res.writeHead(400, {
+                'Content-Type' : 'application/json',
+                'Access-Control-Allow-Origin': '*' 
+            })
+            res.end(JSON.stringify({result:'error', message:'query.signature_blob_id does not match body.blob_id'}));
+            return
+        }
+        if (req.query.signature_account != req.body.address) {
+            res.writeHead(400, {
+                'Content-Type' : 'application/json',
+                'Access-Control-Allow-Origin': '*' 
+            })
+            res.end(JSON.stringify({result:'error', message:'query.signature_account does not match body.address'}));
+            return
+        }
+    }
     var keyresp = libutils.hasKeys(req.body,['encrypted_blobdecrypt_key','blob_id','username','auth_secret','data','email','address','hostlink','encrypted_secret']);
     if (!keyresp.hasAllKeys) {
         res.writeHead(400, {

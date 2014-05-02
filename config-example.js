@@ -22,7 +22,7 @@ exports.quota = 1024;
 exports.patchsize = 1;
 
 // if testmode = true, there is no remote rippled connection made
-// for checking ledger dates
+// and no ecdsa signature check on create
 exports.testmode = false;
 
 // if account is created before this date and funded
