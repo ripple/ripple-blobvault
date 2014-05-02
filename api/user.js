@@ -1,6 +1,6 @@
 var config = require('../config');
 var response = require('response');
-
+var libutis = require('../lib/utils');
 
 exports.store;
 var getUserInfo = function(username, res) {
@@ -10,7 +10,7 @@ var getUserInfo = function(username, res) {
         });
         return;
     }
-    if ((username.length <= 15) || ((username.indexOf('~') === 0) && (username.length <= 16))) {
+    if ((username.length <= config.username_length) || ((username.indexOf('~') === 0) && (username.length <= (config.username_length+1)))) {
         if (username.indexOf('~') === 0) {
             username = username.slice(1);
         }
@@ -23,7 +23,6 @@ var getUserInfo = function(username, res) {
             obj.exists = resp.exists;
             obj.username = username,
             obj.address = resp.address,
-            obj.exists = true;
             obj.emailVerified = resp.emailVerified,
 
             obj.reserved = config.reserved[username.toLowerCase()] || false;
