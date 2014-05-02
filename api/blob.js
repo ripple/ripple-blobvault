@@ -142,8 +142,6 @@ var create = function (req, res) {
         })
     },
     function(lib) { 
-        // XXX Check signature
-        // coordinate with evan 
         // TODO : inner key is required on updates
 
         var data_size = libutils.atob(req.body.data).length;
