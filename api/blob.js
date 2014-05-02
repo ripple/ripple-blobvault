@@ -124,7 +124,7 @@ var create = function (req, res) {
                 if (!count.check()) {
                     process.nextTick(function() {
                         throw { res : res, 
-                        error : new Error("maxcap"),
+                        error : new Error("We have reached the daily signup limit. Please try again tomorrow."),
                         statusCode: 400 }
                     });
                     lib.terminate(id);
