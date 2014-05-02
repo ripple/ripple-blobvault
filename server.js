@@ -5,6 +5,7 @@ var fs = require('fs');
 var express = require('express');
 var store = require('./lib/store')(config.dbtype);
 var hmac = require('./lib/hmac');
+var ecdsa = require('./lib/ecdsa');
 var api = require('./api');
 api.setStore(store);
 hmac.setStore(store);
@@ -26,7 +27,8 @@ var cors = require('cors');
 app.use(cors());
 
 // JSON handlers
-app.post('/v1/user', api.blob.create);
+app.post('/v1/user', ecdsa.middleware, api.blob.create);
+
 app.delete('/v1/user', hmac.middleware, api.blob.delete);
 app.get('/v1/user/:username', api.user.get);
 app.get('/v1/user/:username/verify/:token', api.user.verify);
