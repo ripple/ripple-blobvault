@@ -19,37 +19,21 @@ var getUserInfo = function(username, res) {
             obj.version = config.AUTHINFO_VERSION,
             obj.blobvault = config.url,
             obj.pakdf = config.defaultPakdfSetting
-            if (resp.exists === false) {
-                if (config.reserved[username.toLowerCase()]) {
-                    obj.exists = false;
-                    obj.reserved = true;
-                    // this is a 200 
-                    res.writeHead(200, {
-                        'Content-Type' : 'application/json',
-                        'Access-Control-Allow-Origin': '*' 
-                    });
-                    res.end(JSON.stringify(obj));
-                } else {
-                    obj.exists = false;
-                    obj.reserved = false;
-                    res.writeHead(200, {
-                        'Content-Type' : 'application/json',
-                        'Access-Control-Allow-Origin': '*' 
-                    });
-                    res.end(JSON.stringify(obj));
-                }
-            } else {
-                obj.username = username,
-                obj.address = resp.address,
-                obj.reserved = config.reserved[username.toLowerCase()] || false;
-                obj.exists = true;
-                obj.emailVerified = resp.emailVerified,
-                res.writeHead(200, {
-                    'Content-Type' : 'application/json',
-                    'Access-Control-Allow-Origin': '*' 
-                });
-                res.end(JSON.stringify(obj));
-            }
+
+            obj.exists = resp.exists;
+            obj.username = username,
+            obj.address = resp.address,
+            obj.exists = true;
+            obj.emailVerified = resp.emailVerified,
+
+            obj.reserved = config.reserved[username.toLowerCase()] || false;
+
+            // this is a 200 
+            res.writeHead(200, {
+                'Content-Type' : 'application/json',
+                'Access-Control-Allow-Origin': '*' 
+            });
+            res.end(JSON.stringify(obj));
         });
     } else {
         exports.store.read_where({key:"address",value:username,res:res},
