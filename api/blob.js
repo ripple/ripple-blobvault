@@ -65,7 +65,7 @@ var create = function (req, res) {
     if (!/^[a-zA-Z0-9][a-zA-Z0-9-]{0,18}[a-zA-Z0-9]$/.exec(username)) {
         process.nextTick(function() {
             throw { res : res , 
-            error : new Error("Username must be between 2 and 20 alphanumeric" + " characters or hyphen (-)." + " Can not start or end with a hyphen."),
+            error : new Error("Username must be between 2 and "+config.username_length+" alphanumeric" + " characters or hyphen (-)." + " Can not start or end with a hyphen."),
             statusCode: 400 }
         });
         return;
@@ -102,7 +102,6 @@ var create = function (req, res) {
     q.series([
     function(lib,id) {
         store.read({username:username},function(resp) {
-            console.log("READ RESP",resp)
             if (resp.exists === false) {
                 lib.done();
             } else {
