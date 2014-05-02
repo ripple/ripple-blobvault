@@ -1,6 +1,6 @@
 var config = require('../config');
 var response = require('response');
-var libutis = require('../lib/utils');
+var libutils = require('../lib/utils');
 
 exports.store;
 var getUserInfo = function(username, res) {
@@ -25,7 +25,7 @@ var getUserInfo = function(username, res) {
             obj.address = resp.address,
             obj.emailVerified = resp.emailVerified,
 
-            obj.reserved = config.reserved[username.toLowerCase()] || false;
+            obj.reserved = config.reserved[libutils.normalizeUsername(username)] || false;
 
             // this is a 200 
             res.writeHead(200, {
@@ -62,7 +62,7 @@ var getUserInfo = function(username, res) {
                     res.end(JSON.stringify(obj));
                 } else {
                     obj.exists = false;
-                    obj.reserved = config.reserved[username.toLowerCase()] || false;
+                    obj.reserved = config.reserved[libutils.normalizeUsername(username)] || false;
                     res.writeHead(200, {
                         'Content-Type' : 'application/json',
                         'Access-Control-Allow-Origin': '*' 
