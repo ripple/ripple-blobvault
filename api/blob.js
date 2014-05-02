@@ -79,7 +79,7 @@ var create = function (req, res) {
         return;
     }
 
-    if (config.reserved[username.toLowerCase()]) {
+    if (config.reserved[libutils.normalizeUsername(username)]) {
         process.nextTick(function() {
             throw { res : res, 
             error : new Error("This username is reserved for "+config.reserved[username.toLowerCase()]+'.'),
