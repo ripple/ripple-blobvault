@@ -28,7 +28,7 @@ var getUserInfo = function(username, res) {
             obj.address = resp.address,
             obj.emailVerified = resp.emailVerified,
 
-            obj.reserved = config.reserved[username] || false;
+            obj.reserved = config.reserved[normalized_username] || false;
 
             // this is a 200 
             res.writeHead(200, {
