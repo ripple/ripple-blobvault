@@ -28,6 +28,9 @@ exports.testmode = false;
 // if account is created before this date and funded
 exports.nolimit_date = 'Thu May 1 2014';
 
+// maximum length of a ripple username
+exports.username_length = 20;
+
 // Database settings
 // 'mysql', 'memory', 'postgres'
 exports.dbtype = 'postgres';

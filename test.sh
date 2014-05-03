@@ -6,3 +6,4 @@ node_modules/.bin/mocha --ui tdd -R spec test/test-blob-patch.js
 node_modules/.bin/mocha --ui tdd -R spec test/test-signature.js
 node_modules/.bin/mocha --ui tdd -R spec test/test-usercap.js
 node_modules/.bin/mocha --ui tdd -R spec test/test-quota.js
+node_modules/.bin/mocha --ui tdd -R spec test/test-normalize-reserved.js

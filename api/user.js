@@ -1,6 +1,6 @@
 var config = require('../config');
 var response = require('response');
-
+var libutils = require('../lib/utils');
 
 exports.store;
 var getUserInfo = function(username, res) {
@@ -10,7 +10,7 @@ var getUserInfo = function(username, res) {
         });
         return;
     }
-    if ((username.length <= 15) || ((username.indexOf('~') === 0) && (username.length <= 16))) {
+    if ((username.length <= config.username_length) || ((username.indexOf('~') === 0) && (username.length <= (config.username_length+1)))) {
         if (username.indexOf('~') === 0) {
             username = username.slice(1);
         }
@@ -19,37 +19,20 @@ var getUserInfo = function(username, res) {
             obj.version = config.AUTHINFO_VERSION,
             obj.blobvault = config.url,
             obj.pakdf = config.defaultPakdfSetting
-            if (resp.exists === false) {
-                if (config.reserved[username.toLowerCase()]) {
-                    obj.exists = false;
-                    obj.reserved = true;
-                    // this is a 200 
-                    res.writeHead(200, {
-                        'Content-Type' : 'application/json',
-                        'Access-Control-Allow-Origin': '*' 
-                    });
-                    res.end(JSON.stringify(obj));
-                } else {
-                    obj.exists = false;
-                    obj.reserved = false;
-                    res.writeHead(200, {
-                        'Content-Type' : 'application/json',
-                        'Access-Control-Allow-Origin': '*' 
-                    });
-                    res.end(JSON.stringify(obj));
-                }
-            } else {
-                obj.username = username,
-                obj.address = resp.address,
-                obj.reserved = config.reserved[username.toLowerCase()] || false;
-                obj.exists = true;
-                obj.emailVerified = resp.emailVerified,
-                res.writeHead(200, {
-                    'Content-Type' : 'application/json',
-                    'Access-Control-Allow-Origin': '*' 
-                });
-                res.end(JSON.stringify(obj));
-            }
+
+            obj.exists = resp.exists;
+            obj.username = username,
+            obj.address = resp.address,
+            obj.emailVerified = resp.emailVerified,
+
+            obj.reserved = config.reserved[libutils.normalizeUsername(username)] || false;
+
+            // this is a 200 
+            res.writeHead(200, {
+                'Content-Type' : 'application/json',
+                'Access-Control-Allow-Origin': '*' 
+            });
+            res.end(JSON.stringify(obj));
         });
     } else {
         exports.store.read_where({key:"address",value:username,res:res},
@@ -79,7 +62,7 @@ var getUserInfo = function(username, res) {
                     res.end(JSON.stringify(obj));
                 } else {
                     obj.exists = false;
-                    obj.reserved = config.reserved[username.toLowerCase()] || false;
+                    obj.reserved = config.reserved[libutils.normalizeUsername(username)] || false;
                     res.writeHead(200, {
                         'Content-Type' : 'application/json',
                         'Access-Control-Allow-Origin': '*' 

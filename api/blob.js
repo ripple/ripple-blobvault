@@ -62,10 +62,10 @@ var create = function (req, res) {
     }
 
     var username = req.body.username;
-    if (!/^[a-zA-Z0-9][a-zA-Z0-9-]{0,13}[a-zA-Z0-9]$/.exec(username)) {
+    if (!/^[a-zA-Z0-9][a-zA-Z0-9-]{0,18}[a-zA-Z0-9]$/.exec(username)) {
         process.nextTick(function() {
             throw { res : res , 
-            error : new Error("Username must be between 2 and 15 alphanumeric" + " characters or hyphen (-)." + " Can not start or end with a hyphen."),
+            error : new Error("Username must be between 2 and "+config.username_length+" alphanumeric" + " characters or hyphen (-)." + " Can not start or end with a hyphen."),
             statusCode: 400 }
         });
         return;
@@ -79,7 +79,7 @@ var create = function (req, res) {
         return;
     }
 
-    if (config.reserved[username.toLowerCase()]) {
+    if (config.reserved[libutils.normalizeUsername(username)]) {
         process.nextTick(function() {
             throw { res : res, 
             error : new Error("This username is reserved for "+config.reserved[username.toLowerCase()]+'.'),
@@ -142,8 +142,6 @@ var create = function (req, res) {
         })
     },
     function(lib) { 
-        // XXX Check signature
-        // coordinate with evan 
         // TODO : inner key is required on updates
 
         var data_size = libutils.atob(req.body.data).length;
