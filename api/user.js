@@ -65,7 +65,7 @@ var getUserInfo = function(username, res) {
                     res.end(JSON.stringify(obj));
                 } else {
                     obj.exists = false;
-                    obj.reserved = config.reserved[username] || false;
+                    obj.reserved = false;
                     res.writeHead(200, {
                         'Content-Type' : 'application/json',
                         'Access-Control-Allow-Origin': '*' 
