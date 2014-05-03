@@ -10,6 +10,9 @@ var getUserInfo = function(username, res) {
         });
         return;
     }
+
+    var normalized_username = libutils.normalizeUsername(username);
+
     if ((username.length <= config.username_length) || ((username.indexOf('~') === 0) && (username.length <= (config.username_length+1)))) {
         if (username.indexOf('~') === 0) {
             username = username.slice(1);
@@ -21,11 +24,11 @@ var getUserInfo = function(username, res) {
             obj.pakdf = config.defaultPakdfSetting
 
             obj.exists = resp.exists;
-            obj.username = username,
+            obj.username = resp.username,
             obj.address = resp.address,
             obj.emailVerified = resp.emailVerified,
 
-            obj.reserved = config.reserved[libutils.normalizeUsername(username)] || false;
+            obj.reserved = config.reserved[normalized_username] || false;
 
             // this is a 200 
             res.writeHead(200, {

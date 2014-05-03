@@ -62,6 +62,7 @@ var create = function (req, res) {
     }
 
     var username = req.body.username;
+    var normalized_username = libutils.normalizeUsername(username);
     if (!/^[a-zA-Z0-9][a-zA-Z0-9-]{0,18}[a-zA-Z0-9]$/.exec(username)) {
         process.nextTick(function() {
             throw { res : res , 
@@ -79,10 +80,10 @@ var create = function (req, res) {
         return;
     }
 
-    if (config.reserved[libutils.normalizeUsername(username)]) {
+    if (config.reserved[normalized_username]) {
         process.nextTick(function() {
             throw { res : res, 
-            error : new Error("This username is reserved for "+config.reserved[username.toLowerCase()]+'.'),
+            error : new Error("This username is reserved for "+config.reserved[normalized_username]+'.'),
             statusCode: 400 }
         });
         return;
