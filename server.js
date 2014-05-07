@@ -7,15 +7,12 @@ var store = require('./lib/store')(config.dbtype);
 var hmac = require('./lib/hmac');
 var ecdsa = require('./lib/ecdsa');
 var api = require('./api');
+var lib = require('./lib');
 api.setStore(store);
 hmac.setStore(store);
 
 var app = express();
-app.use(function(req,res,next) {
-    console.log(req.method + " " + req.url);
-    console.log(req.headers);
-    next();
-});
+app.use(lib.inspect);
 
 // app.use(express.limit('1mb')); is deprecated and has no functionality
 // now delegated to raw-body; has a default 1mb limit 
@@ -42,10 +39,6 @@ app.post('/v1/blob/consolidate', hmac.middleware, api.blob.consolidate);
 app.get('/v1/authinfo', api.user.authinfo);
 
 app.get('/logs', api.blob.logs);
-//app.get('/v1/meta', api.meta);
-
-
-
 
 try {
   var server = config.ssl ? https.createServer({
@@ -59,3 +52,23 @@ try {
 } catch (e) {
   console.log("Could not launch SSL server: " + (e.stack ? e.stack : e.toString()));
 }
+
+var Campaign = require('./lib/emailcampaign');
+var emailCampaign = new Campaign(store.db,config.schedule);
+// emailCampaign.start();
+
+process.on('SIGTERM',function() {
+    console.log("caught sigterm");
+    process.exit();
+});
+process.on('SIGINT',function() {
+    console.log("caught sigint");
+    process.exit();
+});
+process.on('exit',function() {
+    console.log("Shutting down.");
+    emailCampaign.stop();
+    if (store.db && store.db.client)
+        store.db.client.pool.destroy();
+    console.log("Done");
+});

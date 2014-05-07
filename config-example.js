@@ -31,6 +31,14 @@ exports.nolimit_date = 'Thu May 1 2014';
 // maximum length of a ripple username
 exports.username_length = 20;
 
+// time of day that emails are sent out to warn unfunded users they may lose their name
+// 24 hour time, midnight = 0
+// set for 8 AM
+exports.schedule = {
+    hour: 8,
+    minute:0
+}
+
 // Database settings
 // 'mysql', 'memory', 'postgres'
 exports.dbtype = 'postgres';

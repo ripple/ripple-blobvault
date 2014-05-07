@@ -10,15 +10,13 @@ var UInt160 = RL.UInt160;
 var remote = new RL.Remote(config.ripplelib);
 remote.connect();
 
+var person1 = {"username":"asdf","auth_secret":"FFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0A","blob_id":"fffd0a0affff0a0affff0a0affff0a0affff0a0affff0a0affff0a0affff0a0a","data":"Zm9v","address":"rwUNHL9AdSupre4tGb7NXZpRS1ift5sR7","email":"bob5050@bob.com","hostlink":"http://localhost:8080/activate","date":"april","encrypted_secret":"r5nUDJLNQfWERYFm1sUSxxhate8r1q","encrypted_blobdecrypt_key":"asdfasdfasdf"}
 
-
-{"username":"bob-5050","auth_secret":"FFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0A","blob_id":"fffd0a0affff0a0affff0a0affff0a0affff0a0affff0a0affff0a0affff0a0a","data":"Zm9v","address":"rwUNHL9AdSupre4tGb7NXZpRS1ift5sR7:","email":"bob5050@bob.com","hostlink":"http://localhost:8080/activate","date":"april","encrypted_secret":"r5nUDJLNQfWERYFm1sUSxxhate8r1q","encrypted_blobdecrypt_key":"asdfasdfasdf"}
-
-{"username":"mycatcupid","auth_secret":"FFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0A","blob_id":"ffef0a0affff0a0affff0a0affff0a0affff0a0affff0a0affff0a0affff0a0a","data":"Zm9v","address":"rJdWmijaRPvHZ9M9PNAqhs88nTnYivTZtq","email":"woot@woot.com","hostlink":"http://localhost:8080/activate","date":"april","encrypted_secret":"r5nUDJLNQfWERYFm1sUSxxhate8r1q","encrypted_blobdecrypt_key":"asdfasdfasdf"}
+var person2 = {"username":"qwerty","auth_secret":"FFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0A","blob_id":"ffef0a0affff0a0affff0a0affff0a0affff0a0affff0a0affff0a0affff0a0a","data":"Zm9v","address":"rJdWmijaRPvHZ9M9PNAqhs88nTnYivTZtq","email":"woot@woot.com","hostlink":"http://localhost:8080/activate","date":"april","encrypted_secret":"r5nUDJLNQfWERYFm1sUSxxhate8r1q","encrypted_blobdecrypt_key":"asdfasdfasdf"}
 
 checkLedger = function(address,cb) {
     if (UInt160.is_valid(address) == false) {
-        console.log("Not a valid ripple address!");
+       console.log("Not a valid ripple address!" + address);
         cb(false);
         return
     }
@@ -40,16 +38,15 @@ checkLedger = function(address,cb) {
             cb(false)
     });
 }
+// 1. find people to campaign,
+// 2. provide 30 day notice
 remote.on('connect',function() {
-    knex('blob')
-        .select() 
-        .then(function(rows) {
-            for (var i = 0; i < rows.length; i++) {
-                var row = rows[i];
-                checkLedger(row.address,function(isFunded) {
-                    console.log("Is Funded?:" + isFunded);
-                });
-            }
+    console.log("CONNECTED");
+    var rows = [person1,person2];
+    for (var i = 0; i < rows.length; i++) {
+        var row = rows[i];
+        checkLedger(row.address,function(isFunded) {
+            console.log("Is Funded?:" + isFunded);
         });
+    }
 });
-
