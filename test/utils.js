@@ -18,12 +18,6 @@ exports.person = {
     encrypted_blobdecrypt_key: 'asdfasdfasdf'
 }
 
-/*
-{"username":"bob-5050","auth_secret":"FFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0A","blob_id":"fffd0a0affff0a0affff0a0affff0a0affff0a0affff0a0affff0a0affff0a0a","data":"Zm9v","address":"rwUNHL9AdSupre4tGb7NXZpRS1ift5sR7:","email":"bob5050@bob.com","hostlink":"http://localhost:8080/activate","date":"april","encrypted_secret":"r5nUDJLNQfWERYFm1sUSxxhate8r1q","encrypted_blobdecrypt_key":"asdfasdfasdf"}
-
-{"username":"mycatcupid","auth_secret":"FFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0A","blob_id":"ffef0a0affff0a0affff0a0affff0a0affff0a0affff0a0affff0a0affff0a0a","data":"Zm9v","address":"rJdWmijaRPvHZ9M9PNAqhs88nTnYivTZtq","email":"woot@woot.com","hostlink":"http://localhost:8080/activate","date":"april","encrypted_secret":"r5nUDJLNQfWERYFm1sUSxxhate8r1q","encrypted_blobdecrypt_key":"asdfasdfasdf"}
-
-*/
 
 exports.createSignature = function (params) {
     var method = params.method;

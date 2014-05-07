@@ -21,7 +21,6 @@ var log = function(obj) {
 var app = express();
 
 app.use(function(req,res,next) {
-    console.log("URL CALL " + req.url);
     next();
 });
 app.use(express.json());
