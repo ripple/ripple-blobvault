@@ -130,6 +130,35 @@ var verify = function(req,res) {
         }
     });
 }
+var email = function(req,res) {
+    var keyresp = libutils.hasKeys(req.body,['email','blob_id','username','hostlink']);
+    if (!keyresp.hasAllKeys) {
+        res.writeHead(400, {
+            'Content-Type' : 'application/json',
+            'Access-Control-Allow-Origin': '*' 
+        })
+        res.end(JSON.stringify({result:'error', message:'Missing keys',missing:keyresp.missing}));
+        return
+    } 
+    if (!libutils.isValidEmail(req.body.email)) {
+        res.writeHead(400, {
+            'Content-Type' : 'application/json',
+            'Access-Control-Allow-Origin': '*' 
+        })
+        res.end(JSON.stringify({result:'error', message:'invalid email address'}));
+        return
+    }
+    exports.store.update_where({set:{key:'email',value:req.body.email},where:{key:'blob_id',value:req.body.blob_id}},function(resp) {
+        var token = libutils.generateToken();
+        email.send({email:req.body.email,hostlink:req.body.hostlink,token:token,name:req.body.username});
+        res.writeHead(200, {
+            'Content-Type' : 'application/json',
+            'Access-Control-Allow-Origin': '*' 
+        })
+        res.end(JSON.stringify({result:'success'}));
+    });
+}
+exports.email = email;
 exports.get = get;
 exports.verify = verify;
 exports.authinfo = authinfo;
