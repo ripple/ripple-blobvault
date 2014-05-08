@@ -25,6 +25,7 @@ app.use(cors());
 
 // JSON handlers
 app.post('/v1/user', ecdsa.middleware, api.blob.create);
+app.post('/v1/user/email', ecdsa.middleware, api.user.email);
 
 app.delete('/v1/user', hmac.middleware, api.blob.delete);
 app.get('/v1/user/:username', api.user.get);
