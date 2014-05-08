@@ -54,7 +54,7 @@ try {
 }
 
 var Campaign = require('./lib/emailcampaign');
-var emailCampaign = new Campaign(store.db,config.schedule);
+var emailCampaign = new Campaign(store.db,config.schedule,config.ripplelib);
 // emailCampaign.start();
 
 process.on('SIGTERM',function() {
