@@ -8,7 +8,7 @@ var hmac = require('./lib/hmac');
 var ecdsa = require('./lib/ecdsa');
 var api = require('./api');
 var lib = require('./lib');
-var limiter = new lib.limiter.resend_email;
+var limiter = lib.limiter.resend_email();
 
 api.setStore(store);
 hmac.setStore(store);
