@@ -76,10 +76,88 @@ test('email verification', function(done) {
                 console.log(rows);
                 if (rows.length) {
                     var email = rows[0].email;
-                    assert.equal('bit@bit.com',email);
+                    assert.equal(email,'bit@bit.com');
                 }
                 lib.done();
             });
+        },
+        // request resend
+        function(lib) {
+            console.log("Beginning start of resend request");
+            request.post({
+                url:'http://localhost:5050/v1/user/email/resend',
+                json: {email:'bit@bit.com',hostlink:'asdf', username:testutils.person.username} 
+                },
+                function(err, resp, body) {
+                    console.log("requested resend", body)
+                    lib.done();
+                }
+            );
+        },
+        // request resend #2
+        function(lib) {
+            console.log("Beginning start of resend request");
+            request.post({
+                url:'http://localhost:5050/v1/user/email/resend',
+                json: {email:'bit@bit.com',hostlink:'asdf', username:testutils.person.username} 
+                },
+                function(err, resp, body) {
+                    console.log("requested resend", body)
+                    lib.done();
+                }
+            );
+        },
+        // request resend #3
+        function(lib) {
+            console.log("Beginning start of resend request");
+            request.post({
+                url:'http://localhost:5050/v1/user/email/resend',
+                json: {email:'bit@bit.com',hostlink:'asdf', username:testutils.person.username} 
+                },
+                function(err, resp, body) {
+                    console.log("requested resend", body)
+                    lib.done();
+                }
+            );
+        },
+        // request resend #4
+        function(lib) {
+            console.log("Beginning start of resend request");
+            request.post({
+                url:'http://localhost:5050/v1/user/email/resend',
+                json: {email:'bit@bit.com',hostlink:'asdf', username:testutils.person.username} 
+                },
+                function(err, resp, body) {
+                    console.log("requested resend", body)
+                    lib.done();
+                }
+            );
+        },
+        // request resend #5
+        function(lib) {
+            console.log("Beginning start of resend request");
+            request.post({
+                url:'http://localhost:5050/v1/user/email/resend',
+                json: {email:'bit@bit.com',hostlink:'asdf', username:testutils.person.username} 
+                },
+                function(err, resp, body) {
+                    console.log("requested resend", body)
+                    lib.done();
+                }
+            );
+        },
+        // request resend #6
+        function(lib) {
+            console.log("Beginning start of resend request");
+            request.post({
+                url:'http://localhost:5050/v1/user/email/resend',
+                json: {email:'bit@bit.com',hostlink:'asdf', username:testutils.person.username} 
+                },
+                function(err, resp, body) {
+                    console.log("requested resend", body)
+                    lib.done();
+                }
+            );
         },
         // delete user after 
         function(lib) {
