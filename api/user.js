@@ -132,6 +132,7 @@ var verify = function(req,res) {
     });
 }
 var email_change = function(req,res) {
+    console.log("email_change");
     var keyresp = libutils.hasKeys(req.body,['email','blob_id','username','hostlink']);
     if (!keyresp.hasAllKeys) {
         res.writeHead(400, {
@@ -151,12 +152,20 @@ var email_change = function(req,res) {
     }
     var token = libutils.generateToken();
     exports.store.update_where({set:{email:req.body.email,email_token:token},where:{key:'id',value:req.body.blob_id}},function(resp) {
-        email.send({email:req.body.email,hostlink:req.body.hostlink,token:token,name:req.body.username});
-        res.writeHead(200, {
-            'Content-Type' : 'application/json',
-            'Access-Control-Allow-Origin': '*' 
-        })
-        res.end(JSON.stringify({result:'success'}));
+        if ((resp.result) && (result.success)) {
+            email.send({email:req.body.email,hostlink:req.body.hostlink,token:token,name:req.body.username});
+            res.writeHead(200, {
+                'Content-Type' : 'application/json',
+                'Access-Control-Allow-Origin': '*' 
+            })
+            res.end(JSON.stringify({result:'success'}));
+        } else {
+            res.writeHead(400, {
+                'Content-Type' : 'application/json',
+                'Access-Control-Allow-Origin': '*' 
+            })
+            res.end(JSON.stringify({result:'error',message:'unspecified error'}));
+        }
     });
 }
 var resend = function(req,res) {
