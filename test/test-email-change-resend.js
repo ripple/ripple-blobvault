@@ -12,6 +12,9 @@ var queuelib = require('queuelib');
 var express = require('express');
 var testutils = require('./utils')
 var assert = require('chai').assert;
+var lib = require('../lib');
+var ecdsa = require('../lib/ecdsa');
+var limiter = lib.limiter.resend_email();
 var q = new queuelib;
 
 var log = function(obj) {
@@ -26,6 +29,8 @@ app.use(function(req,res,next) {
 app.use(express.json());
 app.use(express.urlencoded());
 
+app.post('/v1/user/email', ecdsa.middleware, api.user.emailChange);
+app.post('/v1/user/email/resend', limiter.check, api.user.emailResend);
 app.get('/v1/user/:username',api.user.get);
 app.get('/v1/user/:username/verify/:token',api.user.verify);
 app.post('/v1/user',api.blob.create);
@@ -37,6 +42,7 @@ test('email verification', function(done) {
     q.series([
         function(lib) {
             server.listen(5050,function() {
+                lib.set({old_email:testutils.person.email})
                 lib.done();
             });
         },
@@ -52,45 +58,28 @@ test('email verification', function(done) {
             }
         );
         },
+        // change email address
         function(lib) {
-            store.readall({username:testutils.person.username}, function(resp) {
-                if (resp.length)
-                    lib.set({token:resp[0].email_token});
+        request.post({
+            url:'http://localhost:5050/v1/user/email',
+            json: {email:'bit@bit.com',blob_id:testutils.person.blob_id, hostlink:'asdf', username:testutils.person.username} 
+            },
+            function(err, resp, body) {
+                console.log("Changed email address:", body)
+                lib.done();
+            }
+        );
+        },
+        // inspect it 
+        function(lib) {
+            store.read_where({key:'id',value:testutils.person.blob_id},function(rows) {
+                console.log(rows);
+                if (rows.length) {
+                    var email = rows[0].email;
+                    assert.equal('bit@bit.com',email);
+                }
                 lib.done();
             });
-        },    
-        function(lib) {
-        request.get({
-            url:'http://localhost:5050/v1/user/'+testutils.person.username+'/verify/05bb0cff-3b93-40f3-bf50-35c2e9d3da3b',
-            json:true
-            },
-            function(err, resp, body) {
-                assert.equal(body.message, 'Invalid token','token should be invalid');
-                lib.done();
-            }
-        );
-        },
-        function(lib) {
-        request.get({
-            url:'http://localhost:5050/v1/user/x0x0x0x0x'+testutils.person.username+'/verify/05bb0cff-3b93-40f3-bf50-35c2e9d3da3b',
-            json:true
-            },
-            function(err, resp, body) {
-                assert.equal(body.message, 'No such user','user should not exist');
-                lib.done();
-            }
-        );
-        },
-        function(lib) {
-        request.get({
-            url:'http://localhost:5050/v1/user/'+testutils.person.username+'/verify/'+lib.get('token'),
-            json:true
-            },
-            function(err, resp, body) {
-                assert.equal(body.result, 'success','Correct token supplied');
-                lib.done();
-            }
-        );
         },
         // delete user after 
         function(lib) {
