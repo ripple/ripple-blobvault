@@ -1,6 +1,7 @@
 var config = require('../config');
 var response = require('response');
 var libutils = require('../lib/utils');
+var email = require('../lib/email');
 
 exports.store;
 var getUserInfo = function(username, res) {
@@ -130,7 +131,7 @@ var verify = function(req,res) {
         }
     });
 }
-var email = function(req,res) {
+var email_change = function(req,res) {
     var keyresp = libutils.hasKeys(req.body,['email','blob_id','username','hostlink']);
     if (!keyresp.hasAllKeys) {
         res.writeHead(400, {
@@ -148,8 +149,8 @@ var email = function(req,res) {
         res.end(JSON.stringify({result:'error', message:'invalid email address'}));
         return
     }
-    exports.store.update_where({set:{key:'email',value:req.body.email},where:{key:'blob_id',value:req.body.blob_id}},function(resp) {
-        var token = libutils.generateToken();
+    var token = libutils.generateToken();
+    exports.store.update_where({set:{email:req.body.email,email_token:token},where:{key:'id',value:req.body.blob_id}},function(resp) {
         email.send({email:req.body.email,hostlink:req.body.hostlink,token:token,name:req.body.username});
         res.writeHead(200, {
             'Content-Type' : 'application/json',
@@ -158,7 +159,28 @@ var email = function(req,res) {
         res.end(JSON.stringify({result:'success'}));
     });
 }
-exports.email = email;
+var resend = function(req,res) {
+    var keyresp = libutils.hasKeys(req.body,['email','username','hostlink']);
+    if (!keyresp.hasAllKeys) {
+        res.writeHead(400, {
+            'Content-Type' : 'application/json',
+            'Access-Control-Allow-Origin': '*' 
+        })
+        res.end(JSON.stringify({result:'error', message:'Missing keys',missing:keyresp.missing}));
+        return
+    } 
+    var token = libutils.generateToken();
+    exports.store.update_where({set:{email:req.body.email,email_token:token},where:{key:'username',value:req.body.username}},function(resp) {
+        email.send({email:req.body.email,hostlink:req.body.hostlink,token:token,name:req.body.username});
+        res.writeHead(200, {
+            'Content-Type' : 'application/json',
+            'Access-Control-Allow-Origin': '*' 
+        })
+        res.end(JSON.stringify({result:'success'}));
+    });
+}
+exports.emailResend = resend;
+exports.emailChange = email_change;
 exports.get = get;
 exports.verify = verify;
 exports.authinfo = authinfo;

@@ -256,7 +256,7 @@ exports.patch = function (req, res) {
     function(lib,id) {
         var newquota = size + lib.get('quota'); 
         store.update_where({
-            set:{key:'quota',value:newquota},
+            set:{quota:newquota},
             where:{key:'id',value:req.body.blob_id}},
             function(resp) {
                 if (resp.error) {

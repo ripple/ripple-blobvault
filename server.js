@@ -8,6 +8,8 @@ var hmac = require('./lib/hmac');
 var ecdsa = require('./lib/ecdsa');
 var api = require('./api');
 var lib = require('./lib');
+var limiter = new lib.limiter.resend_email;
+
 api.setStore(store);
 hmac.setStore(store);
 
@@ -25,7 +27,8 @@ app.use(cors());
 
 // JSON handlers
 app.post('/v1/user', ecdsa.middleware, api.blob.create);
-app.post('/v1/user/email', ecdsa.middleware, api.user.email);
+app.post('/v1/user/email', ecdsa.middleware, api.user.emailChange);
+app.post('/v1/user/email/resend', limiter.check, api.user.emailResend);
 
 app.delete('/v1/user', hmac.middleware, api.blob.delete);
 app.get('/v1/user/:username', api.user.get);
