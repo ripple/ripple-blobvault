@@ -1,0 +1,6 @@
+Welcome to Ripple Trade!
+To get started, please verify your email address below:
+_VERIFY_URL_
+Thanks,
+The Ripple Trade team
+If you did not sign up for a Ripple account, please disregard this email.
