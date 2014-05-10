@@ -18,6 +18,7 @@ exports.person = {
     encrypted_blobdecrypt_key: 'asdfasdfasdf'
 }
 
+
 exports.createSignature = function (params) {
     var method = params.method;
     var url = params.url;

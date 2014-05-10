@@ -21,7 +21,6 @@ var log = function(obj) {
 var app = express();
 
 app.use(function(req,res,next) {
-    console.log("URL CALL " + req.url);
     next();
 });
 app.use(express.json());
@@ -56,7 +55,7 @@ test('email verification', function(done) {
         function(lib) {
             store.readall({username:testutils.person.username}, function(resp) {
                 if (resp.length)
-                    GLOBALS.token = resp[0].email_token;
+                    lib.set({token:resp[0].email_token});
                 lib.done();
             });
         },    
@@ -84,7 +83,7 @@ test('email verification', function(done) {
         },
         function(lib) {
         request.get({
-            url:'http://localhost:5050/v1/user/'+testutils.person.username+'/verify/'+GLOBALS.token,
+            url:'http://localhost:5050/v1/user/'+testutils.person.username+'/verify/'+lib.get('token'),
             json:true
             },
             function(err, resp, body) {
