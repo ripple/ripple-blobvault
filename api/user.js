@@ -113,7 +113,7 @@ var email_change = function(req,res) {
         return
     }
     var token = libutils.generateToken();
-    exports.store.update_where({set:{email:req.body.email,email_token:token},where:{key:'id',value:req.body.blob_id}},function(resp) {
+    exports.store.update_where({set:{email_verified:false,email:req.body.email,email_token:token},where:{key:'id',value:req.body.blob_id}},function(resp) {
         if ((resp.result) && (resp.result == 'success')) {
             email.send({email:req.body.email,hostlink:req.body.hostlink,token:token,name:req.body.username});
             response.json({result:'success'}).pipe(res)
