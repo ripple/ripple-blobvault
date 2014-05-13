@@ -7,7 +7,7 @@
     "mysql": "~2.0.0-alpha9",
     "express": "~3.4.0",
     "lodash": "~2.4.1",
-    "response": "^0.13.0",
+    "response": "https://github.com/mikeal/response/archive/master.tar.gz",
     "node-uuid": "^1.4.1",
     "hashish": "0.0.4",
     "queuelib": "0.3.6",
