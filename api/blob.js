@@ -209,11 +209,7 @@ exports.patch = function (req, res) {
 */
     function(lib) {
         store.blobPatch(size,req,res,function(resp) {
-            res.writeHead(200, {
-                'Content-Type' : 'application/json',
-                'Access-Control-Allow-Origin': '*' 
-            })
-            res.end(JSON.stringify(resp));
+            response.json(resp).status(200).pipe(res)
             lib.done();
         });
     }
@@ -222,20 +218,12 @@ exports.patch = function (req, res) {
 exports.consolidate = function (req, res) {
     var keyresp = libutils.hasKeys(req.body,['data','revision','blob_id']);
     if (!keyresp.hasAllKeys) {
-        res.writeHead(400, {
-            'Content-Type' : 'application/json',
-            'Access-Control-Allow-Origin': '*' 
-        })
-        res.end(JSON.stringify({result:'error', message:'Missing keys',missing:keyresp.missing}));
+        response.json({result:'error', message:'Missing keys',missing:keyresp.missing}).status(400).pipe(res)
         return;
     }
     // check valid base64
     if (!libutils.isBase64(req.body.data)) {
-        res.writeHead(400, {
-            'Content-Type' : 'application/json',
-            'Access-Control-Allow-Origin': '*' 
-        })
-        res.end(JSON.stringify({result:'error', message:'data is not valid base64'}));
+        response.json({result:'error', message:'data is not valid base64'}).status(400).pipe(res)
         return
     }
 /*
@@ -256,76 +244,40 @@ exports.consolidate = function (req, res) {
     var size = libutils.atob(req.body.data).length;
     // checking quota
     if (size > config.quota*1024) {
-        res.writeHead(400, {
-            'Content-Type' : 'application/json',
-            'Access-Control-Allow-Origin': '*' 
-        })
-        res.end(JSON.stringify({result:'error', message:'data too large',size:size}));
+        response.json({result:'error', message:'data too large',size:size}).status(400).pipe(res)
         return
     }
     // XXX: write out new quota value
 
     store.blobConsolidate(size,req,res,function(resp) {
-        res.writeHead(200, {
-            'Content-Type' : 'application/json',
-            'Access-Control-Allow-Origin': '*' 
-        })
-        res.end(JSON.stringify(resp));
-        //response.json(resp).pipe(res);
+        response.json(resp).pipe(res)
     });    
 };
 exports.delete = function (req, res) {
     var keyresp = libutils.hasKeys(req.query,['signature_blob_id']);
     if (!keyresp.hasAllKeys) {
-        res.writeHead(400, {
-            'Content-Type' : 'application/json',
-            'Access-Control-Allow-Origin': '*' 
-        })
-        res.end(JSON.stringify({result:'error', message:'Missing keys',missing:keyresp.missing}));
+        response.json({result:'error', message:'Missing keys',missing:keyresp.missing}).status(400).pipe(res)
     } else 
         store.blobDelete(req,res,function(resp) {
-            res.writeHead(200, {
-                'Content-Type' : 'application/json',
-                'Access-Control-Allow-Origin': '*' 
-            })
-            res.end(JSON.stringify(resp));
-            //response.json(resp).pipe(res);
+            response.json(resp).pipe(res)
         });
 };
 exports.get = function (req, res) {
     var keyresp = libutils.hasKeys(req.params,['blob_id']);
     if (!keyresp.hasAllKeys) {
-        res.writeHead(400, {
-            'Content-Type' : 'application/json',
-            'Access-Control-Allow-Origin': '*' 
-        })
-        res.end(JSON.stringify({result:'error', message:'Missing keys',missing:keyresp.missing}));
+        response.json({result:'error', message:'Missing keys',missing:keyresp.missing}).status(400).pipe(res)
     } else 
         store.blobGet(req,res,function(resp) {
-            res.writeHead(200, {
-                'Content-Type' : 'application/json',
-                'Access-Control-Allow-Origin': '*' 
-            })
-            res.end(JSON.stringify(resp));
-            //response.json(resp).pipe(res);
+            response.json(resp).pipe(res)
         });
 };
 
 exports.getPatch = function (req, res) {
     var keyresp = libutils.hasKeys(req.params,['blob_id','patch_id']);
     if (!keyresp.hasAllKeys) {
-        res.writeHead(400, {
-            'Content-Type' : 'application/json',
-            'Access-Control-Allow-Origin': '*' 
-        })
-        res.end(JSON.stringify({result:'error', message:'Missing keys',missing:keyresp.missing}));
+        response.json({result:'error', message:'Missing keys',missing:keyresp.missing}).status(400).pipe(res)
     } else 
     store.blobGetPatch(req,res,function(resp) {
-        res.writeHead(200, {
-            'Content-Type' : 'application/json',
-            'Access-Control-Allow-Origin': '*' 
-        })
-        res.end(JSON.stringify(resp));
-        //response.json(resp).pipe(res);
+        response.json(resp).pipe(res)
     });
 };

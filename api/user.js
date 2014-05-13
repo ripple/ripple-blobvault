@@ -32,11 +32,7 @@ var getUserInfo = function(username, res) {
             obj.reserved = config.reserved[normalized_username] || false;
 
             // this is a 200 
-            res.writeHead(200, {
-                'Content-Type' : 'application/json',
-                'Access-Control-Allow-Origin': '*' 
-            });
-            res.end(JSON.stringify(obj));
+            response.json(obj).pipe(res)
         });
     } else {
         exports.store.read_where({key:"address",value:username,res:res},
