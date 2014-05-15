@@ -57,9 +57,11 @@ try {
   console.log("Could not launch SSL server: " + (e.stack ? e.stack : e.toString()));
 }
 
+/*
 var Campaign = require('./lib/emailcampaign');
 var emailCampaign = new Campaign(store.db,config);
-// emailCampaign.start();
+emailCampaign.start();
+*/
 
 process.on('SIGTERM',function() {
     console.log("caught sigterm");
@@ -71,7 +73,7 @@ process.on('SIGINT',function() {
 });
 process.on('exit',function() {
     console.log("Shutting down.");
-    emailCampaign.stop();
+//    emailCampaign.stop();
     if (store.db && store.db.client)
         store.db.client.pool.destroy();
     console.log("Done");

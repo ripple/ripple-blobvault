@@ -8,16 +8,8 @@ var bindObject = function(obj1,binder) {
     });
 }
 d.on('error',function (obj) {
-    if (obj.res) {
-        if (obj.error !== undefined) {
-            console.log("API Error",obj.error + " " + new Date());
-            obj.res.writeHead(obj.statusCode || 400, {
-                'Content-Type' : 'application/json',
-                'Access-Control-Allow-Origin': '*' 
-            })
-            obj.res.end(JSON.stringify({result:'error',message:obj.error.message}));
-        }
-    }
+    if ((obj.res) && (obj.error !== undefined))
+        response.json({result:'error',message:obj.error.message}).status(obj.statusCode || 400).pipe(obj.res)
 });
 exports.setDomain = function(obj) {
     bindObject(obj);

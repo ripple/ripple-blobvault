@@ -12,91 +12,55 @@ exports.setStore = function(newstore) {
     store = newstore;
 }
 exports.logs = function(req,res) {
-    res.writeHead(200, {
-        'Content-Type' : 'text/html',
-        'Access-Control-Allow-Origin': '*' 
-    });
     count.toHTML_fromdb(function(html) {
-        res.end(html);
+        response.html(html).pipe(res)
     });
 }
     
 var create = function (req, res) {
     if (!config.testmode) {
         if (req.query.signature_blob_id != req.body.blob_id) {
-            res.writeHead(400, {
-                'Content-Type' : 'application/json',
-                'Access-Control-Allow-Origin': '*' 
-            })
-            res.end(JSON.stringify({result:'error', message:'query.signature_blob_id does not match body.blob_id'}));
+            response.json({result:'error', message:'query.signature_blob_id does not match body.blob_id'}).status(400).pipe(res)
             return
         }
         if (req.query.signature_account != req.body.address) {
-            res.writeHead(400, {
-                'Content-Type' : 'application/json',
-                'Access-Control-Allow-Origin': '*' 
-            })
-            res.end(JSON.stringify({result:'error', message:'query.signature_account does not match body.address'}));
+            response.json({result:'error', message:'query.signature_account does not match body.address'}).status(400).pipe(res)
             return
         }
     }
     var keyresp = libutils.hasKeys(req.body,['encrypted_blobdecrypt_key','blob_id','username','auth_secret','data','email','address','hostlink','encrypted_secret']);
     if (!keyresp.hasAllKeys) {
-        res.writeHead(400, {
-            'Content-Type' : 'application/json',
-            'Access-Control-Allow-Origin': '*' 
-        })
-        res.end(JSON.stringify({result:'error', message:'Missing keys',missing:keyresp.missing}));
+        response.json({result:'error', message:'Missing keys',missing:keyresp.missing}).status(400).pipe(res)
         return
     } 
     var blobId = req.body.blob_id;
     blobId = blobId.toLowerCase();
 
     if (!/^[0-9a-f]{64}$/.exec(blobId)) {
-        process.nextTick(function() {
-            throw { res : res, 
-            error : new Error("Blob ID must be 32 bytes hex."),
-            statusCode: 400 }
-        });
+       response.json({result:'error', message:"Blob ID must be 32 bytes hex."}).status(400).pipe(res)
        return;
     }
 
     var username = req.body.username;
     var normalized_username = libutils.normalizeUsername(username);
     if (!/^[a-zA-Z0-9][a-zA-Z0-9-]{0,18}[a-zA-Z0-9]$/.exec(username)) {
-        process.nextTick(function() {
-            throw { res : res , 
-            error : new Error("Username must be between 2 and "+config.username_length+" alphanumeric" + " characters or hyphen (-)." + " Can not start or end with a hyphen."),
-            statusCode: 400 }
-        });
+        response.json({result:'error', message:"Username must be between 2 and "+config.username_length+" alphanumeric" + " characters or hyphen (-)." + " Can not start or end with a hyphen."}).status(400).pipe(res)
         return;
     }
     if (/--/.exec(username)) {
-        process.nextTick(function() {
-            throw { res : res, 
-            error : new Error("Username cannot contain two consecutive hyphens."),
-            statusCode: 400 }
-        });
+        response.json({result:'error',message:"Username cannot contain two consecutive hyphens."}).status(400).pipe(res)
         return;
     }
 
     if (config.reserved[normalized_username]) {
-        process.nextTick(function() {
-            throw { res : res, 
-            error : new Error("This username is reserved for "+config.reserved[normalized_username]+'.'),
-            statusCode: 400 }
-        });
+        response.json({result:'error',message:"This username is reserved for "+config.reserved[normalized_username]}).status(400).pipe(res)
         return;
     }
 
     var authSecret = req.body.auth_secret;
     authSecret = authSecret.toLowerCase();
     if (!/^[0-9a-f]{64}$/.exec(authSecret)) {
-        process.nextTick(function() {
-            throw { res : res, 
-            error : new Error("Auth secret must be 32 bytes hex."),
-            statusCode: 400 }
-        });
+        response.json({result:'error',message:"Auth secret must be 32 bytes hex."}).status(400).pipe(res)
         return;
     }
     var q = new Queue;
@@ -106,13 +70,7 @@ var create = function (req, res) {
             if (resp.exists === false) {
                 lib.done();
             } else {
-                process.nextTick(function() {
-                    res.writeHead(400, {
-                        'Content-Type' : 'application/json',
-                        'Access-Control-Allow-Origin': '*' 
-                    });
-                    res.end(JSON.stringify({result:'error',message:"User already exists"}));
-                });
+                response.json({result:'error',message:"User already exists"}).status(400).pipe(res)
                 lib.terminate(id);
                 return;
             }
@@ -123,11 +81,7 @@ var create = function (req, res) {
         count.checkLedger(req.body.address,function(isFunded) {
             if (!isFunded) { 
                 if (!count.check()) {
-                    process.nextTick(function() {
-                        throw { res : res, 
-                        error : new Error("We have reached the daily signup limit. Please try again tomorrow."),
-                        statusCode: 400 }
-                    });
+                    response.json({result:'error',message:"We have reached the daily signup limit. Please try again tomorrow."}).status(400).pipe(res)
                     lib.terminate(id);
                     return;
                 } else {
@@ -164,20 +118,12 @@ var create = function (req, res) {
         // or funded by the cutoff date
         store.create(params,function(resp) {
             if (resp.error) {
-                res.writeHead(400, {
-                    'Content-Type' : 'application/json',
-                    'Access-Control-Allow-Origin': '*' 
-                });
-                res.end(JSON.stringify({result:'error',message:resp.error.message}));
+                response.json({result:'error',message:resp.error.message}).status(400).pipe(res)
                 lib.done();
                 return;
             }
             email.send({email:params.email,hostlink:params.hostlink,token:params.emailToken,name:username});
-            res.writeHead(201, {
-                'Content-Type' : 'application/json',
-                'Access-Control-Allow-Origin': '*' 
-            })
-            res.end(JSON.stringify({result:'success'}));
+            response.json({result:'success'}).status(201).pipe(res)
             // if account is not funded we set add towards the daily limit
             if (!lib.get('isFunded'))
                 count.adddb();
@@ -192,21 +138,13 @@ exports.create = create;
 exports.patch = function (req, res) {
     var keyresp = libutils.hasKeys(req.body,['blob_id','patch']);
     if (!keyresp.hasAllKeys) {
-        res.writeHead(400, {
-            'Content-Type' : 'application/json',
-            'Access-Control-Allow-Origin': '*' 
-        })
-        res.end(JSON.stringify({result:'error', message:'Missing keys',missing:keyresp.missing}));
+        response.json({result:'error', message:'Missing keys',missing:keyresp.missing}).status(400).pipe(res)
         return
     } 
     // check patch size <= 1kb
     var size = libutils.atob(req.body.patch).length;
     if (size > config.patchsize*1024) {
-        res.writeHead(400, {
-            'Content-Type' : 'application/json',
-            'Access-Control-Allow-Origin': '*' 
-        })
-        res.end(JSON.stringify({result:'error', message:'patch size > 1kb',size:size}))
+        response.json({result:'error', message:'patch size > 1kb',size:size}).status(400).pipe(res)
         return
     }
     // check quota, user cannot submit patch if they >= quota limit
@@ -219,21 +157,13 @@ exports.patch = function (req, res) {
                 lib.set({quota:row.quota});
                 if (row.quota >= config.quota*1024) {
                     console.log("Excceeded quota. row.quota = ",row.quota, " vs config.quota*1024 = ", config.quota*1024);
-                    res.writeHead(400, {
-                        'Content-Type' : 'application/json',
-                        'Access-Control-Allow-Origin': '*' 
-                    })
-                    res.end(JSON.stringify({result:'error', message:'quota exceeded'}))
+                    response.json({result:'error', message:'quota exceeded'}).status(400).pipe(res)
                     lib.terminate(id);
                     return;
                 } else 
                     lib.done();
             } else if (resp.error) {
-                res.writeHead(400, {
-                    'Content-Type' : 'application/json',
-                    'Access-Control-Allow-Origin': '*' 
-                })
-                res.end(JSON.stringify({result:'error', message:resp.error.message}))
+                response.json({result:'error', message:resp.error.message}).status(400).pipe(res)
                 lib.terminate(id);
                 return;
             } 
@@ -242,11 +172,7 @@ exports.patch = function (req, res) {
     function(lib,id) {
         // check valid base64
         if (!libutils.isBase64(req.body.patch)) {
-            res.writeHead(400, {
-                'Content-Type' : 'application/json',
-                'Access-Control-Allow-Origin': '*' 
-            })
-            res.end(JSON.stringify({result:'error', message:'patch is not valid base64'}));
+            response.json({result:'error', message:'patch is not valid base64'}).status(400).pipe(res)
             lib.terminate(id);
             return
         }
@@ -260,11 +186,7 @@ exports.patch = function (req, res) {
             where:{key:'id',value:req.body.blob_id}},
             function(resp) {
                 if (resp.error) {
-                    res.writeHead(400, {
-                        'Content-Type' : 'application/json',
-                        'Access-Control-Allow-Origin': '*' 
-                    })
-                    res.end(JSON.stringify({result:'error', message:resp.error.message}));
+                    response.json({result:'error', message:resp.error.message}).status(400).pipe(res)
                     lib.terminate(id);
                     return;
                 } else {
@@ -287,11 +209,7 @@ exports.patch = function (req, res) {
 */
     function(lib) {
         store.blobPatch(size,req,res,function(resp) {
-            res.writeHead(200, {
-                'Content-Type' : 'application/json',
-                'Access-Control-Allow-Origin': '*' 
-            })
-            res.end(JSON.stringify(resp));
+            response.json(resp).status(200).pipe(res)
             lib.done();
         });
     }
@@ -300,20 +218,12 @@ exports.patch = function (req, res) {
 exports.consolidate = function (req, res) {
     var keyresp = libutils.hasKeys(req.body,['data','revision','blob_id']);
     if (!keyresp.hasAllKeys) {
-        res.writeHead(400, {
-            'Content-Type' : 'application/json',
-            'Access-Control-Allow-Origin': '*' 
-        })
-        res.end(JSON.stringify({result:'error', message:'Missing keys',missing:keyresp.missing}));
+        response.json({result:'error', message:'Missing keys',missing:keyresp.missing}).status(400).pipe(res)
         return;
     }
     // check valid base64
     if (!libutils.isBase64(req.body.data)) {
-        res.writeHead(400, {
-            'Content-Type' : 'application/json',
-            'Access-Control-Allow-Origin': '*' 
-        })
-        res.end(JSON.stringify({result:'error', message:'data is not valid base64'}));
+        response.json({result:'error', message:'data is not valid base64'}).status(400).pipe(res)
         return
     }
 /*
@@ -334,76 +244,40 @@ exports.consolidate = function (req, res) {
     var size = libutils.atob(req.body.data).length;
     // checking quota
     if (size > config.quota*1024) {
-        res.writeHead(400, {
-            'Content-Type' : 'application/json',
-            'Access-Control-Allow-Origin': '*' 
-        })
-        res.end(JSON.stringify({result:'error', message:'data too large',size:size}));
+        response.json({result:'error', message:'data too large',size:size}).status(400).pipe(res)
         return
     }
     // XXX: write out new quota value
 
     store.blobConsolidate(size,req,res,function(resp) {
-        res.writeHead(200, {
-            'Content-Type' : 'application/json',
-            'Access-Control-Allow-Origin': '*' 
-        })
-        res.end(JSON.stringify(resp));
-        //response.json(resp).pipe(res);
+        response.json(resp).pipe(res)
     });    
 };
 exports.delete = function (req, res) {
     var keyresp = libutils.hasKeys(req.query,['signature_blob_id']);
     if (!keyresp.hasAllKeys) {
-        res.writeHead(400, {
-            'Content-Type' : 'application/json',
-            'Access-Control-Allow-Origin': '*' 
-        })
-        res.end(JSON.stringify({result:'error', message:'Missing keys',missing:keyresp.missing}));
+        response.json({result:'error', message:'Missing keys',missing:keyresp.missing}).status(400).pipe(res)
     } else 
         store.blobDelete(req,res,function(resp) {
-            res.writeHead(200, {
-                'Content-Type' : 'application/json',
-                'Access-Control-Allow-Origin': '*' 
-            })
-            res.end(JSON.stringify(resp));
-            //response.json(resp).pipe(res);
+            response.json(resp).pipe(res)
         });
 };
 exports.get = function (req, res) {
     var keyresp = libutils.hasKeys(req.params,['blob_id']);
     if (!keyresp.hasAllKeys) {
-        res.writeHead(400, {
-            'Content-Type' : 'application/json',
-            'Access-Control-Allow-Origin': '*' 
-        })
-        res.end(JSON.stringify({result:'error', message:'Missing keys',missing:keyresp.missing}));
+        response.json({result:'error', message:'Missing keys',missing:keyresp.missing}).status(400).pipe(res)
     } else 
         store.blobGet(req,res,function(resp) {
-            res.writeHead(200, {
-                'Content-Type' : 'application/json',
-                'Access-Control-Allow-Origin': '*' 
-            })
-            res.end(JSON.stringify(resp));
-            //response.json(resp).pipe(res);
+            response.json(resp).pipe(res)
         });
 };
 
 exports.getPatch = function (req, res) {
     var keyresp = libutils.hasKeys(req.params,['blob_id','patch_id']);
     if (!keyresp.hasAllKeys) {
-        res.writeHead(400, {
-            'Content-Type' : 'application/json',
-            'Access-Control-Allow-Origin': '*' 
-        })
-        res.end(JSON.stringify({result:'error', message:'Missing keys',missing:keyresp.missing}));
+        response.json({result:'error', message:'Missing keys',missing:keyresp.missing}).status(400).pipe(res)
     } else 
     store.blobGetPatch(req,res,function(resp) {
-        res.writeHead(200, {
-            'Content-Type' : 'application/json',
-            'Access-Control-Allow-Origin': '*' 
-        })
-        res.end(JSON.stringify(resp));
-        //response.json(resp).pipe(res);
+        response.json(resp).pipe(res)
     });
 };
