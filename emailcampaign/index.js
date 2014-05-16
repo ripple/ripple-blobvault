@@ -30,33 +30,43 @@ var Campaign = function(db,config) {
         // check those users to see if they've funded, then mark it
         function(lib) {
             var rows = lib.get('rows');
-            console.log("Start of qlist",rows)
             var q = new QL;
             q
               .list(rows)
               .forEach(function(row,idx,lib2) {
-                console.log("ForEach row:", row);
                 eclib.checkLedger(row.address,remote,function(isFunded) {
-                    if (isFunded) {
-                        console.log("Is funded. inserting into campaigns")
-                        db('campaigns')
-                        .insert({address:row.address,campaign:'fund-name',isFunded:isFunded})
-                        .then(function() {
-                            console.log("forEachRow DONE!")
-                            row.isFunded = isFunded
-                            lib2.done()
-                        })
-                        .catch(function(e) {
-                            console.log(e)
-                        })
-                    } else {
-                        row.isFunded = isFunded
-                        lib2.done()
-                    }
+                    db('campaigns')
+                    .where('address','=',row.address)
+                    .select()
+                    .then(function(db_rows) {
+                        if (db_rows.length) // then update
+                            return db('campaigns')
+                            .where('address','=',row.address)
+                            .update({isFunded:isFunded})
+                            .then(function() {
+                                rows[idx].isFunded = isFunded;
+                                lib2.done()
+                            })
+                            .catch(function(e) {
+                                console.log(e)
+                            })
+                        else  { // then insert
+                            var curr_time = new Date().getTime()
+                            var data = {start_time:curr_time,address:row.address,campaign:'fund-name',isFunded:isFunded};
+                            return db('campaigns')
+                            .insert(data)
+                            .then(function() {
+                                rows[idx] = data;
+                                lib2.done()
+                            })
+                            .catch(function(e) {
+                                console.log(e)
+                            })
+                        }
+                    })
                 });
               })
               .end(function() {
-                console.log("end of qlist")
                 lib.set({rows:rows})
                 lib.done()
               })
@@ -64,22 +74,22 @@ var Campaign = function(db,config) {
         // mark the unfunded users who have gone past 30 days without funding
         function(lib) {
             console.log("mark account locked step")
+            var curr_time = new Date().getTime()
             var rows = lib.get('rows')
-            rows.forEach(function(row) {
-                if (!row.isFunded) {
+            for (var i = 0; i < rows.length; i++) {
+                var row = rows[i];
+                console.log(row)
+            }
 /*
-                    db('campaigns')
-                    .update({nded:isFunded})
-                    .then(function() {
-                        console.log("forEachRow DONE!")
-                        row.isFunded = isFunded
-                        lib2.done()
-                    });
-*/
+                if ((!row.isFunded) && (row.start_time)) {
+                    var diff = curr_time - row.start_time;
+                    console.log("Diff is :" + diff)
                 }
-            })
+            }
+*/
             lib.done()
         },
+/*
         // get those requiring 30 day notices
         // get those requiring 3 day notices
         function(lib) {
@@ -88,6 +98,7 @@ var Campaign = function(db,config) {
             var set_3days = eclib.getByDuration(3,rows);
             lib.done()
         },
+*/
         function(lib) {
             console.log("Email service all done.");
             check(); // setup the next time
