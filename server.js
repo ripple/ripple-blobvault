@@ -57,11 +57,17 @@ try {
   console.log("Could not launch SSL server: " + (e.stack ? e.stack : e.toString()));
 }
 
-/*
-var Campaign = require('./lib/emailcampaign');
+var Campaign = require('./emailcampaign');
 var emailCampaign = new Campaign(store.db,config);
-emailCampaign.start();
-*/
+emailCampaign.probe_subscribe(function(data) {
+    console.log(data)
+    if (data.action == 'check') {
+        console.log(data.timetill / (1000*60) + " minutes till check")
+    }
+})
+emailCampaign.start(function(){
+    console.log("Email campaign ready");
+})
 
 process.on('SIGTERM',function() {
     console.log("caught sigterm");

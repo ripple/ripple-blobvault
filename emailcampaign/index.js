@@ -13,7 +13,6 @@ var Campaign = function(db,config) {
         var timetill = new Date(now.getFullYear(), now.getMonth(), now.getDate(), config.schedule.hour, config.schedule.minute, 0, 0) - now;
         if (timetill < 0) 
             timetill += 86400000; // one day
-        timetill = 8500;
         self.probe({action:'check',timetill:timetill})
         checktimer = setTimeout(work,timetill);
     };
