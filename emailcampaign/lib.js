@@ -76,6 +76,6 @@ exports.send = function(params) {
     var days = params.days;
     var message = generateMessage(email,days,name);
     server.send(message, function(err, message) {
-        //console.log(err || message);
+        console.log(err || message);
     });
 }
