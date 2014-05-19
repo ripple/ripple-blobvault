@@ -1,0 +1,16 @@
+Dear Ripple Trade user,
+
+We’d like to let you know that the Ripple name you signed up for, %USERNAME%, will expire in %DAYS% days if you do not activate it.
+
+Your Ripple name expires if you do not activate your account within thirty days of signing up for the Ripple name. If your name expires, the name will expire and anybody will be able to claim the name. 
+
+To activate your account, you must fund it with at least 20 XRP. For more information on how to activate an account, please see this help article:
+
+https://support.ripplelabs.com/hc/en-us/articles/200916837-How-to-activate-a-Ripple-account
+
+More information about Ripple names: 
+
+https://support.ripplelabs.com/hc/en-us/articles/202507548-Understanding-Ripple-Names
+
+Thanks,
+The Ripple Trade team

@@ -1,11 +1,18 @@
 var RL = require('ripple-lib');
+var hyperglue = require('hyperglue');
+var config = require('../config');
+var fs = require('fs');
+var contents = fs.readFileSync(__dirname+ '/email.html');
+var contents_txt = fs.readFileSync(__dirname+ '/email.txt', 'utf8');
+
 var UInt160 = RL.UInt160;
 var scan = function(db,cb) {
     db('blob')
         .join('campaigns','blob.address','=','campaigns.address','LEFT OUTER')
         .where('campaigns.isFunded','=',null)
         .orWhere('campaigns.isFunded','=',false)
-        .select('blob.address','campaigns.last_emailed','campaigns.campaign','campaigns.isFunded')
+        .andWhere('campaigns.locked','=','') // we ignore already locked users
+        .select('blob.address','campaigns.locked','blob.email','blob.username','campaigns.start_time','campaigns.last_emailed','campaigns.campaign','campaigns.isFunded')
         .then(function(rows) {
             cb(rows);
         })
@@ -15,14 +22,14 @@ var scan = function(db,cb) {
 }
 exports.scan = scan
 var checkLedger = function(address,remote,cb) {
-    console.log("checkLedger:" + address);
+    //console.log("checkLedger:" + address);
     if (UInt160.is_valid(address) == false) {
        console.log("Not a valid ripple address!" + address);
         cb(false);
         return
     }
     remote.request_account_tx({forward:true,limit:1,ledger_index_min:-1,ledger_index_max:-1,account:address},function(err,resp){
-        console.log(arguments)
+        //console.log(arguments)
         if ((!err) && (resp) && (resp.transactions) && (resp.transactions.length))
             cb(true) 
         else
@@ -30,7 +37,45 @@ var checkLedger = function(address,remote,cb) {
     });
 }
 exports.checkLedger = checkLedger
-var getByDuration = function(days,rows) {
-//    console.log("Days:" , days,rows);
-};
-exports.getByDuration = getByDuration
+
+var email     = require('emailjs');
+var server     = email.server.connect({
+   user:    config.email.user,
+   password:config.email.password,
+   host:    config.email.host,
+   ssl: true
+});
+var generateMessage = function(email,days,name) {
+    var text = contents_txt.replace('%USERNAME%', name).replace('%DAYS%',days);
+    var message    = {
+       text:    text,
+       from:    "you <foo@bar.com>",
+       to:        "someone <foo@bar.com>",
+       subject:    "Your Ripple name "+name+" is expiring in "+days+" days",
+       'Reply-to' : 'support@ripple.com',
+       attachment:
+       [
+        {
+            data:undefined,
+            alternative:true
+        }
+       ]
+    };
+    message.attachment[0].data = hyperglue(contents, {
+    'span.username': name,
+    'span.days' : days
+    }).innerHTML;
+    message.to = "<" + email + ">";
+    message.from = config.email.from;
+    return message;
+}
+exports.send = function(params) {
+    //console.log("Email send params", params);
+    var email = params.email;
+    var name = params.name;
+    var days = params.days;
+    var message = generateMessage(email,days,name);
+    server.send(message, function(err, message) {
+        //console.log(err || message);
+    });
+}

@@ -10,7 +10,7 @@
     "response": "https://github.com/mikeal/response/archive/master.tar.gz",
     "node-uuid": "^1.4.1",
     "hashish": "0.0.4",
-    "queuelib": "0.4.0",
+    "queuelib": "0.4.1",
     "knex": "^0.5.13",
     "pg": "^3.0.1",
     "emailjs": "^0.3.8",
