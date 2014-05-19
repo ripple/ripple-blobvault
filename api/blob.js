@@ -12,9 +12,23 @@ exports.setStore = function(newstore) {
     store = newstore;
 }
 exports.logs = function(req,res) {
-    count.toHTML_fromdb(function(html) {
-        response.html(html).pipe(res)
-    });
+    switch (req.query.format) {
+        case 'html':
+        count.toHTML_fromdb(function(html) {
+            response.html(html).pipe(res)
+        });
+        break;
+        case 'csv':
+        count.toCSV_fromdb(function(html) {
+            response.html(html).pipe(res)
+        });
+        break;
+        default:
+        count.toHTML_fromdb(function(html) {
+            response.html(html).pipe(res)
+        });
+    break;
+    }
 }
     
 var create = function (req, res) {
