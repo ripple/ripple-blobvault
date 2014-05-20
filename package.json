@@ -19,7 +19,7 @@
     "pg": "^3.0.1",
     "queuelib": "0.4.1",
     "response": "https://github.com/mikeal/response/archive/master.tar.gz",
-    "ripple-lib": "https://github.com/emschwartz/ripple-lib/archive/message-signing.tar.gz"
+    "ripple-lib": "https://github.com/ripple/ripple-lib/archive/develop.tar.gz"
   },
   "devDependencies": {
     "request": "^2.34.0",
