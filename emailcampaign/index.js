@@ -157,7 +157,7 @@ var Campaign = function(db,config) {
             ready();
             check();
         });
-        remote.connect();
+        var remote_reconnector = require('../lib/remote-reconnector')(remote);
     };
     this.stop = function() {
         console.log("stopping email campaign");
