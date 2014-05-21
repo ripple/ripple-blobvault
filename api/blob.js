@@ -4,6 +4,7 @@ var config = require('../config');
 var libutils = require('../lib/utils')
 var email = require('../lib/email');
 var Counter = require('../lib/counter');
+var protector = require('timeout-protector')
 var count = new Counter;
 var store;
 
@@ -92,7 +93,11 @@ var create = function (req, res) {
     },
     function(lib,id) {
         // check if account is funded
-        count.checkLedger(req.body.address,function(isFunded) {
+        var cb = function(isFunded) {
+            if (isFunded == 'timeout') {
+                lib.done();
+                return
+            }
             if (!isFunded) { 
                 if (!count.check()) {
                     response.json({result:'error',message:"We have reached the daily signup limit. Please try again tomorrow."}).status(400).pipe(res)
@@ -108,7 +113,8 @@ var create = function (req, res) {
                 console.log("Marking as funded");
                 lib.done({isFunded:true});
             }
-        })
+        }
+        count.checkLedger(req.body.address,protector(cb,5000,'timeout'))
     },
     function(lib) { 
         // TODO : inner key is required on updates

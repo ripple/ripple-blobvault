@@ -37,8 +37,12 @@ var Campaign = function(db,config) {
             async.each(rows,function(row,done) {
                 console.log("campaigns: checking ledger for funding")
                 var mycb = function(isFunded) {
-                    if (isFunded == 'timeout')
-                    return
+                    if (isFunded == 'timeout') {
+                        idx++
+                        console.log(idx + " / " + rows.length)
+                        done()
+                        return
+                    }
                     db('campaigns')
                     .where('address','=',row.address)
                     .select()
