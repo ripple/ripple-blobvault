@@ -3,6 +3,7 @@ var QL = require('queuelib');
 var eclib = require('./lib')
 var Hash = require('hashish')
 var async = require('async')
+var protector = require('timeout-protector')
 
 var Campaign = function(db,config) {
     var self = this;
@@ -34,7 +35,10 @@ var Campaign = function(db,config) {
             var rows = lib.get('rows');
             var idx = 0;
             async.each(rows,function(row,done) {
-                eclib.checkLedger(row.address,remote,function(isFunded) {
+                console.log("campaigns: checking ledger for funding")
+                var mycb = function(isFunded) {
+                    if (isFunded == 'timeout')
+                    return
                     db('campaigns')
                     .where('address','=',row.address)
                     .select()
@@ -44,8 +48,8 @@ var Campaign = function(db,config) {
                             .where('address','=',row.address)
                             .update({isFunded:isFunded})
                             .then(function() {
-                                self.probe({action:'update',row:row})
                                 rows[idx].isFunded = isFunded;
+                                self.probe({action:'update',row:row})
                             })
                             .catch(function(e) {
                                 console.log("campaigns update error",e)
@@ -56,8 +60,8 @@ var Campaign = function(db,config) {
                             return db('campaigns')
                             .insert(data)
                             .then(function() {
-                                self.probe({action:'insert',row:row})
                                 Hash(rows[idx]).update(data);
+                                self.probe({action:'insert',row:rows[idx]})
                             })
                             .catch(function(e) {
                                 console.log("campaigns insert error",e)
@@ -72,7 +76,8 @@ var Campaign = function(db,config) {
                     .catch(function(e) {
                         console.log("campaigns select error",e)
                     })
-                });
+                }
+                eclib.checkLedger(row.address,remote,protector(mycb,5000,'timeout'))
             },function() {
                 console.log("emailcampaign: Check fund finished.")
                 lib.set({rows:rows})
