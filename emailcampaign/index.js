@@ -66,6 +66,7 @@ var Campaign = function(db,config) {
                     })
                     .then(function() {
                         idx++
+                        console.log(idx + " / " + rows.length)
                         done()
                     })
                     .catch(function(e) {
@@ -73,6 +74,7 @@ var Campaign = function(db,config) {
                     })
                 });
             },function() {
+                console.log("emailcampaign: Check fund finished.")
                 lib.set({rows:rows})
                 lib.done()
             })
