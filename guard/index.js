@@ -38,13 +38,13 @@ module.exports = function(store) {
     var locked = function(req,res,next) {
         var address = req.query.address
         if (address === undefined) {
+            console.log("guard: looking up address via blob_id");
             var id = req.query.signature_blob_id || req.body.blob_id;
             if (id) {
                 store.db('blob')
                 .where('id','=',id)
                 .select('address')
                 .then(function(resp) {
-                    console.log(resp)
                     var address = resp[0].address;
                     locked_check(address,function(isLocked,reason) {
                         if (isLocked === true) 
@@ -55,6 +55,7 @@ module.exports = function(store) {
                 })
             }
         } else {
+            console.log("guard: given address");
             locked_check(address,function(isLocked,reason) {
                 if (isLocked === true) 
                     response.json({result:'locked', message:reason}).status(403).pipe(res)
@@ -68,4 +69,4 @@ module.exports = function(store) {
         locked_check: locked_check, // exposed for testing
         locked:locked
     }
-
+}

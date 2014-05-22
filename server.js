@@ -8,7 +8,7 @@ var hmac = require('./lib/hmac');
 var ecdsa = require('./lib/ecdsa');
 var api = require('./api');
 var lib = require('./lib');
-var guard = require('./guard') 
+var guard = require('./guard')(store)
 var limiter = guard.resend_email();
 
 api.setStore(store);
