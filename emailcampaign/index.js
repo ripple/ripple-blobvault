@@ -93,7 +93,7 @@ var Campaign = function(db,config) {
             console.log("mark account locked step")
             var rows = lib.get('rows')
             async.each(rows,function(row,done) {
-                if ((!row.isFunded) && (row.start_time)) {
+                if ((row.isFunded === false) && (row.start_time)) {
                     var curr_time = new Date().getTime()
 // test 7 day notice
 //                    curr_time += (23.2*(1000*60*60*24))
@@ -109,8 +109,9 @@ var Campaign = function(db,config) {
                         db('campaigns')
                         .where('address','=',row.address)
                         .update({locked:'30+ days unfunded'})
-                        .then(function() {
-                            self.probe({action:'lock',row:row})
+                        .then(function(resp) {
+                            if (resp) 
+                                self.probe({action:'lock',row:row})
                             done()        
                         })
 
@@ -119,9 +120,11 @@ var Campaign = function(db,config) {
                         db('campaigns')
                         .where('address','=',row.address)
                         .update({last_emailed:curr_time})
-                        .then(function() {
-                            self.probe({action:'initial notice',row:row})
-                            eclib.send({email:row.email,name:row.username,days:'thirty'})
+                        .then(function(resp) {
+                            if (resp) {
+                                self.probe({action:'initial notice',row:row})
+                                eclib.send({email:row.email,name:row.username,days:'thirty'})
+                            }
                             done()        
                         })
     
@@ -130,9 +133,11 @@ var Campaign = function(db,config) {
                         db('campaigns')
                         .where('address','=',row.address)
                         .update({last_emailed:curr_time})
-                        .then(function() {
-                            self.probe({action:'7 day notice',row:row})
-                            eclib.send({email:row.email,name:row.username,days:'seven'})
+                        .then(function(resp) {
+                            if (resp) {
+                                self.probe({action:'7 day notice',row:row})
+                                eclib.send({email:row.email,name:row.username,days:'seven'})
+                            }
                             done()        
                         })
                     // or possibly send 2 day notice
@@ -140,9 +145,11 @@ var Campaign = function(db,config) {
                         db('campaigns')
                         .where('address','=',row.address)
                         .update({last_emailed:curr_time})
-                        .then(function() {
-                            self.probe({action:'2 day notice',row:row})
-                            eclib.send({email:row.email,name:row.username,days:'two'})
+                        .then(function(resp) {
+                            if (resp) {
+                                self.probe({action:'2 day notice',row:row})
+                                eclib.send({email:row.email,name:row.username,days:'two'})
+                            }
                             done()        
                         })
                     } else
