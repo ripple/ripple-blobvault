@@ -8,7 +8,8 @@ var hmac = require('./lib/hmac');
 var ecdsa = require('./lib/ecdsa');
 var api = require('./api');
 var lib = require('./lib');
-var limiter = lib.limiter.resend_email();
+var guard = require('./guard') 
+var limiter = guard.resend_email();
 
 api.setStore(store);
 hmac.setStore(store);
@@ -30,16 +31,17 @@ app.post('/v1/user', ecdsa.middleware, api.blob.create);
 app.post('/v1/user/email', ecdsa.middleware, api.user.emailChange);
 app.post('/v1/user/email/resend', limiter.check, api.user.emailResend);
 
-app.delete('/v1/user', hmac.middleware, api.blob.delete);
+app.delete('/v1/user', guard.locked, hmac.middleware, api.blob.delete);
 app.get('/v1/user/:username', api.user.get);
 app.get('/v1/user/:username/verify/:token', api.user.verify);
 
 // JSON handlers
 app.get('/v1/blob/:blob_id', api.blob.get);
-app.post('/v1/blob/patch', hmac.middleware, api.blob.patch);
+app.post('/v1/blob/patch', guard.locked, hmac.middleware, api.blob.patch);
 app.get('/v1/blob/:blob_id/patch/:patch_id', api.blob.getPatch);
-app.post('/v1/blob/consolidate', hmac.middleware, api.blob.consolidate);
+app.post('/v1/blob/consolidate', guard.locked, hmac.middleware, api.blob.consolidate);
 
+app.get('/v1/locked', guard.locked);
 app.get('/v1/authinfo', api.user.authinfo);
 
 app.get('/logs', api.blob.logs);

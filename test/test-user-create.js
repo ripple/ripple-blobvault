@@ -35,6 +35,13 @@ test('create then delete',function(done) {
     var server = http.createServer(app);
     q.series([
         function(lib) {
+            store.db('blob')
+            .truncate()
+            .then(function() {
+                lib.done()
+            })
+        },
+        function(lib) {
             server.listen(5050,function() {
                 lib.done();
             });

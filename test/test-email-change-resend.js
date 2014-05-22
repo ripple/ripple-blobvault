@@ -14,7 +14,8 @@ var testutils = require('./utils')
 var assert = require('chai').assert;
 var lib = require('../lib');
 var ecdsa = require('../lib/ecdsa');
-var limiter = lib.limiter.resend_email();
+var guard = require('../guard')(store) 
+var limiter = guard.resend_email();
 var q = new queuelib;
 
 var log = function(obj) {
