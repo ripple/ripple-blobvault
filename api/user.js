@@ -2,6 +2,7 @@ var config = require('../config');
 var response = require('response');
 var libutils = require('../lib/utils');
 var email = require('../lib/email');
+var Queue = require('queuelib')
 
 exports.store;
 var getUserInfo = function(username, res) {
@@ -134,8 +135,52 @@ var resend = function(req,res) {
         response.json({result:'success'}).pipe(res)
     });
 }
+var rename = function(req,res) {
+    var keyresp = libutils.hasKeys(req.body,['blob_id','new_username']);
+    if (!keyresp.hasAllKeys) {
+        response.json({result:'error', message:'Missing keys',missing:keyresp.missing}).status(400).pipe(res)
+        return
+    } 
+    var new_username = req.body.new_username;
+    var new_normalized_username = libutils.normalizeUsername(new_username);
+    if (!/^[a-zA-Z0-9][a-zA-Z0-9-]{0,18}[a-zA-Z0-9]$/.exec(new_username)) {
+        response.json({result:'error', message:"Username must be between 2 and "+config.username_length+" alphanumeric" + " characters or hyphen (-)." + " Can not start or end with a hyphen."}).status(400).pipe(res)
+        return;
+    }
+    if (/--/.exec(new_username)) {
+        response.json({result:'error',message:"Username cannot contain two consecutive hyphens."}).status(400).pipe(res)
+        return;
+    }
+    if (config.reserved[new_normalized_username]) {
+        response.json({result:'error',message:"This username is reserved for "+config.reserved[new_normalized_username]}).status(400).pipe(res)
+        return;
+    }
+
+    var q = new Queue;
+    q.series([
+    function(lib,id) {
+        exports.store.read_where({key:'id',value:req.body.blob_id},
+        function(resp) {
+            if (resp.length) {
+                lib.done();
+            } else {
+                response.json({result:'error',message:"invalid blob_id"}).status(400).pipe(res)
+                lib.terminate(id);
+                return
+            }
+        });
+    },
+    function(lib) {
+        exports.store.update_where({set:{username:new_username,normalized_username:new_normalized_username},where:{key:'id',value:req.body.blob_id}},function(resp) {
+            response.json({result:'success',message:'rename'}).pipe(res)
+            lib.done()
+        })
+    }
+    ])
+}
 exports.emailResend = resend;
 exports.emailChange = email_change;
 exports.get = get;
 exports.verify = verify;
 exports.authinfo = authinfo;
+exports.rename = rename

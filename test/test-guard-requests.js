@@ -25,6 +25,9 @@ var assert = require('chai').assert
 var QL = require('queuelib')
 var q = new QL;
 
+// the way these tests work is that the endpoint is ended with a "reflector"
+// to see if we get through the guard middleware
+
 test('test-locked-through-middleware',function(done) {
     q.series([
     function(lib) {
@@ -89,6 +92,18 @@ test('test-locked-through-middleware',function(done) {
         function(err,resp,body) {
             assert.equal(body.foo,'bar','reflector should be passed through')
             lib.done()
+        })
+    },
+    function(lib) {
+        // we let invalid id pass through the guard
+        request.post({url:'http://localhost:5150/v1/blob/patch',
+        json:{
+            blob_id:'asdf'
+        }},
+        function(err,resp,body) {
+            assert.equal(body.foo,'bar','reflector should be passed through')
+            lib.done()
+            done()
         })
     },
     function(lib) {

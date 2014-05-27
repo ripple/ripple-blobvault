@@ -45,13 +45,18 @@ module.exports = function(store) {
                 .where('id','=',id)
                 .select('address')
                 .then(function(resp) {
-                    var address = resp[0].address;
-                    locked_check(address,function(isLocked,reason) {
-                        if (isLocked === true) 
-                            response.json({result:'locked', message:reason}).status(403).pipe(res)
-                        else 
-                            next()
-                    })
+                    if (resp.length) {
+                        var address = resp[0].address;
+                        locked_check(address,function(isLocked,reason) {
+                            if (isLocked === true) 
+                                response.json({result:'locked', message:reason}).status(403).pipe(res)
+                            else 
+                                next()
+                        })
+                    } else { 
+                        console.log("guard: Skipping invalid blob_id")
+                        next()
+                    }
                 })
             }
         } else {
@@ -59,8 +64,10 @@ module.exports = function(store) {
             locked_check(address,function(isLocked,reason) {
                 if (isLocked === true) 
                     response.json({result:'locked', message:reason}).status(403).pipe(res)
-                else 
+                else if (req.url != '/v1/locked')
                     next()
+                else 
+                    response.json({result:'not locked'}).status(200).pipe(res)
             })
         }
     }
