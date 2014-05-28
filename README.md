@@ -7,7 +7,7 @@ Welcome to the Blobvault v1 API. This API provides access to
 the Ripple Blobvaut.
 
 # Blobvault Links
-+ [This: Raw API Blueprint](https://raw.github.com/apiaryio/api-blueprint/master/examples/1.%20Simplest%20API.md)
++ [This: Raw API Blueprint](https://raw.githubusercontent.com/rook2pawn/ripple-blobvault/master/docs/v1-apiary-api-reference.md)
 + [Blobvault GitHub Repository](https://github.com/ripple/ripple-blobvault)
 
 # Group Creating a user
