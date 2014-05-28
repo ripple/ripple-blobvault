@@ -136,12 +136,13 @@ var resend = function(req,res) {
     });
 }
 var rename = function(req,res) {
-    var keyresp = libutils.hasKeys(req.body,['blob_id','new_username']);
+    var keyresp = libutils.hasKeys(req.body,['blob_id','new_username','new_blob_id']);
     if (!keyresp.hasAllKeys) {
         response.json({result:'error', message:'Missing keys',missing:keyresp.missing}).status(400).pipe(res)
         return
     } 
     var new_username = req.body.new_username;
+    var new_blob_id = req.body.new_blob_id;
     var new_normalized_username = libutils.normalizeUsername(new_username);
     if (!/^[a-zA-Z0-9][a-zA-Z0-9-]{0,18}[a-zA-Z0-9]$/.exec(new_username)) {
         response.json({result:'error', message:"Username must be between 2 and "+config.username_length+" alphanumeric" + " characters or hyphen (-)." + " Can not start or end with a hyphen."}).status(400).pipe(res)
@@ -171,7 +172,7 @@ var rename = function(req,res) {
         });
     },
     function(lib) {
-        exports.store.update_where({set:{username:new_username,normalized_username:new_normalized_username},where:{key:'id',value:req.body.blob_id}},function(resp) {
+        exports.store.update_where({set:{id:new_blob_id,username:new_username,normalized_username:new_normalized_username},where:{key:'id',value:req.body.blob_id}},function(resp) {
             response.json({result:'success',message:'rename'}).pipe(res)
             lib.done()
         })
