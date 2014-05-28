@@ -1,4 +1,6 @@
 var response = require('response')
+var url = require('url')
+
 var resend_email = function() {
     var hash = {}
     var check = function(req,res,next) {
@@ -36,8 +38,20 @@ module.exports = function(store) {
         })
     }
     var locked = function(req,res,next) {
-        var address = req.query.address
-        if (address === undefined) {
+        console.log("guard: locked: req.url" , req.url)
+        var parsed = url.parse(req.url)
+        if (parsed.pathname == '/v1/locked') {
+            var address = req.query.address
+            console.log("guard: given address");
+            locked_check(address,function(isLocked,reason) {
+                if (isLocked === true) 
+                    response.json({result:'locked', message:reason}).status(403).pipe(res)
+                else if (req.url != '/v1/locked')
+                    next()
+                else 
+                    response.json({result:'not locked'}).status(200).pipe(res)
+            })
+        } else {
             console.log("guard: looking up address via blob_id");
             var id = req.query.signature_blob_id || req.body.blob_id;
             if (id) {
@@ -59,16 +73,6 @@ module.exports = function(store) {
                     }
                 })
             }
-        } else {
-            console.log("guard: given address");
-            locked_check(address,function(isLocked,reason) {
-                if (isLocked === true) 
-                    response.json({result:'locked', message:reason}).status(403).pipe(res)
-                else if (req.url != '/v1/locked')
-                    next()
-                else 
-                    response.json({result:'not locked'}).status(200).pipe(res)
-            })
         }
     }
     return {

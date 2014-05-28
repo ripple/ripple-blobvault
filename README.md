@@ -1,35 +1,193 @@
 [![Build Status](https://travis-ci.org/rook2pawn/ripple-blobvault.svg?branch=master)](https://travis-ci.org/rook2pawn/ripple-blobvault)
 
-# Ripple Blobvault
+Format: 1A
 
-User management for Ripple wallets.
+# Blobvault v1
+Welcome to the Blobvault v1 API. This API provides access to
+the Ripple Blobvaut.
 
-See [API Reference](http://docs.blobvaultv1.apiary.io/) for details on how to use the API.
+# Blobvault Links
++ [This: Raw API Blueprint](https://raw.github.com/apiaryio/api-blueprint/master/examples/1.%20Simplest%20API.md)
++ [Blobvault GitHub Repository](https://github.com/ripple/ripple-blobvault)
 
-## Environments
+# Group Creating a user
 
-### Development
+## POST /v1/user
 
-* Use [fig](http://orchardup.github.io/fig/) and [docker](https://www.docker.io/). They
-  will download the base boxes and run the chef   recipes to set up your development
-  environment. Use `fig ps` to find port mappings from the container to your local
-  machine. Docker caches the results of build steps so unless you're editing chef
-  recipes or the recipes change, you should only need to run them once.
++ Request (application/json)
 
-* The development database machine is not exposed to the outside world but may be exposed
-  by editing the appropriate configuration line in fig.yml. Think carefully before doing this
-  the default password for the root account is blank. This database is *not* meant to be exposed.
+        {
+            "address": "",
+            "encrypted_blobdecrypt_key": "",
+            "blob_id" : "",
+            "username" : "",
+            "auth_secret": "",
+            "data" : "",
+            "email" : "",
+            "hostlink" : "",
+            "encrypted_secret" : ""
+        }
++ Response 201 (application/json)
 
-* In order to set up the database or to refresh the schema execute
+         {
+         "result" : "success"
+         }
+         
++ Response 400 (application/json)
 
-  ```bash
-  fig run blobvault ./env/dev-env/build-db.sh
-  ```
+        { 
+        "result" : "error",
+        "message" : ""
+        }
 
-Note that this will drop and clear any tables in the current database.
+# Group Deleting a user
 
-### Production
+## DELETE /v1/user
 
-* Use chef cookbooks at env/chef/cookbooks to configure and deploy the blobvault application
-* Cookbooks use test kitchen to check compatibility. The development environment is emulated by
-  the ubuntu-12.04 environment.
++ Request (application/json)
+
+        {
+            "foo":"bar"
+        }
+
++ Response 200
+
+# Group Looking up a user
+
+## GET /v1/user
+
++ Request (application/json)
+
+        {
+            "foo":"bar"
+        }
+
++ Response 200
+
+# Group Looking up a user via querstring
+
+## GET /v1/authinfo{?username}
+
++ Request (application/json)
+
+        {
+            "foo":"bar"
+        }
+
++ Response 200
+
+# Group Renaming a user
+
+## POST /v1/user/rename
+
++ Request (application/json)
+
+        {
+            "foo":"bar"
+        }
+
++ Response 200
+
+
+# Group Changing email address
+
+## POST /v1/user/email
+
++ Request (application/json)
+
+        {
+            "foo":"bar"
+        }
+
++ Response 200
+
+# Group Resending Email
+
+## POST /v1/user/email/resend
+
++ Request (application/json)
+
+        {
+            "foo":"bar"
+        }
+
++ Response 200
+
+# Group Verifying Email Token
+
+## GET /v1/user/{username}/verify/{token}
+
++ Parameters
+
+    + username ... string
+    + token ... string
+    
++ Response 200 (application/json)
+
+        { 
+            "result" : "success"
+        }
+        
+# Group Retrieve a blob
+
+## GET /v1/blob/{blob_id}
+
++ Response 200 (application/json)
+
+        { 
+            "result" : "success"
+        }
+
+# Group Add a blob patch
+
+## POST /v1/blob/patch
+
++ Response 200 (application/json)
+
+        { 
+            "result" : "success"
+        }
+
+# Group Get a blob Patch
+
+## GET /v1/blob/{blob_id}/patch/{patch_id}
+
+
++ Parameters
+
+    + blob_id ... string
+    + patch_id ... string
+    
++ Response 200 (application/json)
+
+        { 
+            "result" : "success"
+        }
+
+# Group Consolidate a set of blob patches
+
+## POST /v1/blob/consolidate
+
++ Response 200 (application/json)
+
+        { 
+            "result" : "success"
+        }
+        
+
+# Group Checking if a user is locked
+
+## GET /v1/locked{?address}
+
++ Response 403 (application/json)
+
+        { 
+            "result" : "locked"
+            "reason" : ""
+        }
+        
++ Response 200 (application/json)
+
+        { 
+            "result" : "not locked"
+        }
