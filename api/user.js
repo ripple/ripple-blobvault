@@ -173,7 +173,11 @@ var rename = function(req,res) {
     },
     function(lib) {
         exports.store.update_where({set:{id:new_blob_id,username:new_username,normalized_username:new_normalized_username},where:{key:'id',value:req.body.blob_id}},function(resp) {
-            response.json({result:'success',message:'rename'}).pipe(res)
+            console.log("user: rename : update response", resp)
+            if (resp) {
+                response.json({result:'success',message:'rename'}).pipe(res)
+            } else 
+                response.json({result:'error',message:'rename'}).status(400).pipe(res)
             lib.done()
         })
     }
