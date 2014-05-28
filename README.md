@@ -4,7 +4,7 @@ You can read the documentation at [apiary](http://docs.blobvaultv1.apiary.io/)
 
 # Blobvault v1
 Welcome to the Blobvault v1 API. This API provides access to
-the Ripple Blobvaut.
+the Ripple Blobvault.
 
 # Blobvault Links
 + [This: Raw API Blueprint](https://raw.githubusercontent.com/rook2pawn/ripple-blobvault/master/docs/v1-apiary-api-reference.md)
@@ -46,10 +46,6 @@ the Ripple Blobvaut.
 
 + Request (application/json)
 
-        {
-            "foo":"bar"
-        }
-
 + Response 200
 
 # Group Looking up a user
@@ -59,7 +55,6 @@ the Ripple Blobvaut.
 + Request (application/json)
 
         {
-            "foo":"bar"
         }
 
 + Response 200
@@ -71,7 +66,6 @@ the Ripple Blobvaut.
 + Request (application/json)
 
         {
-            "foo":"bar"
         }
 
 + Response 200
@@ -83,7 +77,6 @@ the Ripple Blobvaut.
 + Request (application/json)
 
         {
-            "foo":"bar"
         }
 
 + Response 200
@@ -96,7 +89,6 @@ the Ripple Blobvaut.
 + Request (application/json)
 
         {
-            "foo":"bar"
         }
 
 + Response 200
@@ -108,7 +100,6 @@ the Ripple Blobvaut.
 + Request (application/json)
 
         {
-            "foo":"bar"
         }
 
 + Response 200
