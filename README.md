@@ -1,6 +1,6 @@
 [![Build Status](https://travis-ci.org/rook2pawn/ripple-blobvault.svg?branch=master)](https://travis-ci.org/rook2pawn/ripple-blobvault)
 
-Format: 1A
+You can read the documentation at [apiary](http://docs.blobvaultv1.apiary.io/)
 
 # Blobvault v1
 Welcome to the Blobvault v1 API. This API provides access to
