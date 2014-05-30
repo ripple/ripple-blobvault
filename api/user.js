@@ -136,13 +136,21 @@ var resend = function(req,res) {
     });
 }
 var rename = function(req,res) {
-    var keyresp = libutils.hasKeys(req.body,['blob_id','new_username','new_blob_id','data','revision']);
+    var keyresp = libutils.hasKeys(req.body,['username','blob_id','data','revision','encrypted_secret']);
     if (!keyresp.hasAllKeys) {
         response.json({result:'error', message:'Missing keys',missing:keyresp.missing}).status(400).pipe(res)
         return
     } 
-    var new_username = req.body.new_username;
-    var new_blob_id = req.body.new_blob_id;
+    keyresp = libutils.hasKeys(req.params,['username']);
+    if (!keyresp.hasAllKeys) {
+        response.json({result:'error', message:'Missing keys',missing:keyresp.missing}).status(400).pipe(res)
+        return
+    } 
+    
+    var old_username = req.params.username;
+    var new_username = req.body.username;
+    var new_blob_id = req.body.blob_id;
+    var encrypted_secret = req.body.encrypted_secret;
     var new_normalized_username = libutils.normalizeUsername(new_username);
     if (!/^[a-zA-Z0-9][a-zA-Z0-9-]{0,18}[a-zA-Z0-9]$/.exec(new_username)) {
         response.json({result:'error', message:"Username must be between 2 and "+config.username_length+" alphanumeric" + " characters or hyphen (-)." + " Can not start or end with a hyphen."}).status(400).pipe(res)
@@ -159,13 +167,27 @@ var rename = function(req,res) {
 
     var q = new Queue;
     q.series([
+    // check availability
     function(lib,id) {
-        exports.store.read_where({key:'id',value:req.body.blob_id},
+        exports.store.read_where({key:'username',value:new_username},
+        function(resp) {
+            if (resp.length === 0) {
+                lib.done();
+            } else {
+                response.json({result:'error',message:"name not available"}).status(400).pipe(res)
+                lib.terminate(id);
+                return
+            }
+        })
+    },
+    // check for existance
+    function(lib,id) {
+        exports.store.read_where({key:'username',value:old_username},
         function(resp) {
             if (resp.length) {
                 lib.done();
             } else {
-                response.json({result:'error',message:"invalid blob_id"}).status(400).pipe(res)
+                response.json({result:'error',message:"invalid user"}).status(400).pipe(res)
                 lib.terminate(id);
                 return
             }
@@ -192,7 +214,7 @@ var rename = function(req,res) {
     
     },
     function(lib) {
-        exports.store.update_where({set:{id:new_blob_id,username:new_username,normalized_username:new_normalized_username},where:{key:'id',value:req.body.blob_id}},function(resp) {
+        exports.store.update_where({set:{id:new_blob_id,encrypted_secret:encrypted_secret,username:new_username,normalized_username:new_normalized_username},where:{key:'username',value:old_username}},function(resp) {
             console.log("user: rename : update response", resp)
             if (resp) {
                 response.json({result:'success',message:'rename'}).pipe(res)

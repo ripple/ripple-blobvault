@@ -24,7 +24,7 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded());
 
-app.post('/v1/user/rename',guard.locked,api.user.rename);
+app.post('/v1/user/:username',guard.locked,api.user.rename);
 
 var assert = require('chai').assert;
 var server = http.createServer(app);
@@ -49,18 +49,20 @@ test('test-rename',function(done) {
             lib.done()
         })
     },
+    // we test that a non-existant user cannot be renamed
     function(lib) {
-        request.post({url:'http://localhost:5150/v1/user/rename',
-        json:{data:testutils.person.data,revision:1,new_blob_id:'35435a',blob_id:'00ff',new_username:'bob2'}},function(err,resp,body) {
+        request.post({url:'http://localhost:5150/v1/user/foo',
+        json:{encrypted_secret:testutils.person.encrypted_secret,data:testutils.person.data,revision:1,blob_id:'35435a',username:'bob2'}},function(err,resp,body) {
+            console.log(body)
             assert.equal(resp.statusCode,400)
             assert.equal(body.result,'error')
-            assert.equal(body.message,'invalid blob_id')
+            assert.equal(body.message,'invalid user')
             lib.done()
         })
     },
     function(lib) {
-        request.post({url:'http://localhost:5150/v1/user/rename',
-        json:{data:testutils.person.data,revision:2,new_blob_id:'35435a',blob_id:testutils.person.id,new_username:'bob2'}},function(err,resp,body) {
+        request.post({url:'http://localhost:5150/v1/user/'+testutils.person.username,
+        json:{encrypted_secret:testutils.person.encrypted_secret,data:testutils.person.data,revision:1,blob_id:'35435a',username:'bob2'}},function(err,resp,body) {
             assert.equal(resp.statusCode,200)
             assert.equal(body.result,'success')
             lib.done()
