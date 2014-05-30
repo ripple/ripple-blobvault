@@ -186,7 +186,7 @@ var rename = function(req,res) {
         }
         // we pass revision through req.body
         // quota is updated in consolidate
-        store.blobConsolidate(size,req,res,function(resp) {
+        exports.store.blobConsolidate(size,req,res,function(resp) {
             lib.done()
         });    
     

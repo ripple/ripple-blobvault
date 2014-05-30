@@ -51,7 +51,7 @@ test('test-rename',function(done) {
     },
     function(lib) {
         request.post({url:'http://localhost:5150/v1/user/rename',
-        json:{blob_id:'asdf',new_blob_id:'35435a',new_username:'bob2'}},function(err,resp,body) {
+        json:{data:testutils.person.data,revision:1,new_blob_id:'35435a',blob_id:'00ff',new_username:'bob2'}},function(err,resp,body) {
             assert.equal(resp.statusCode,400)
             assert.equal(body.result,'error')
             assert.equal(body.message,'invalid blob_id')
@@ -60,7 +60,7 @@ test('test-rename',function(done) {
     },
     function(lib) {
         request.post({url:'http://localhost:5150/v1/user/rename',
-        json:{new_blob_id:'35435a',blob_id:testutils.person.id,new_username:'bob2'}},function(err,resp,body) {
+        json:{data:testutils.person.data,revision:2,new_blob_id:'35435a',blob_id:testutils.person.id,new_username:'bob2'}},function(err,resp,body) {
             assert.equal(resp.statusCode,200)
             assert.equal(body.result,'success')
             lib.done()
