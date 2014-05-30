@@ -267,7 +267,9 @@ exports.consolidate = function (req, res) {
         response.json({result:'error', message:'data too large',size:size}).status(400).pipe(res)
         return
     }
-    // XXX: write out new quota value
+
+    // we pass revision through req.body
+    // quota is updated in consolidate
 
     store.blobConsolidate(size,req,res,function(resp) {
         response.json(resp).pipe(res)

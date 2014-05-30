@@ -136,7 +136,7 @@ var resend = function(req,res) {
     });
 }
 var rename = function(req,res) {
-    var keyresp = libutils.hasKeys(req.body,['blob_id','new_username','new_blob_id']);
+    var keyresp = libutils.hasKeys(req.body,['blob_id','new_username','new_blob_id','data','revision']);
     if (!keyresp.hasAllKeys) {
         response.json({result:'error', message:'Missing keys',missing:keyresp.missing}).status(400).pipe(res)
         return
@@ -170,6 +170,26 @@ var rename = function(req,res) {
                 return
             }
         });
+    },
+    function(lib) {
+        // here we do a consolidate
+        // check valid base64
+        if (!libutils.isBase64(req.body.data)) {
+            response.json({result:'error', message:'data is not valid base64'}).status(400).pipe(res)
+            return
+        }
+        var size = libutils.atob(req.body.data).length;
+        // checking quota
+        if (size > config.quota*1024) {
+            response.json({result:'error', message:'data too large',size:size}).status(400).pipe(res)
+            return
+        }
+        // we pass revision through req.body
+        // quota is updated in consolidate
+        store.blobConsolidate(size,req,res,function(resp) {
+            lib.done()
+        });    
+    
     },
     function(lib) {
         exports.store.update_where({set:{id:new_blob_id,username:new_username,normalized_username:new_normalized_username},where:{key:'id',value:req.body.blob_id}},function(resp) {
