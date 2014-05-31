@@ -12,6 +12,11 @@ exports.port = 8080;
 // Public URL for this blobvault (required for authinfo)
 exports.url = "https://blobvault.example.com";
 
+// Federation names provider settings
+exports.federation = {
+    domain: "example.com"
+};
+
 // SSL settings
 exports.ssl = false;
 
