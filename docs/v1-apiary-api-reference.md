@@ -182,15 +182,20 @@ Example: /v1/authinfo?username=foo
         
 # Group Renaming a user - uses ECDSA
 
-## POST /v1/user/rename
+## POST /v1/user/{username}
+
+The /user/<username> represents the old username we want to change
 
 + Request (application/json)
 
         {
-            blob_id: "<blob id>",
-            new_username: "<new username>",
-            new_blob_id: "<new blob id>"
+            blob_id: "<new blob id>",
+            username: "<new username>",
+            data : "<data base64>",
+            revision: "<last known revision>",
+            encrypted_secret : "<encrypted_secret>"
         }
+
 
 + Response 200 (application/json)
 
