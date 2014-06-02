@@ -66,8 +66,17 @@ test('test-rename',function(done) {
             assert.equal(resp.statusCode,200)
             assert.equal(body.result,'success')
             lib.done()
-            done()
         })
+    },
+    function(lib) {
+        store.db('blob')
+        .where('username','=','bob2')
+        .select()
+        .then(function(resp) {
+            assert.equal('35435a',resp[0].id)
+            assert.equal('bob2',resp[0].username)
+            done()
+        });
     }
     ])
 })

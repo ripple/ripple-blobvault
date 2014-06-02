@@ -9,6 +9,7 @@ var Campaign = function(db,config) {
     var self = this;
     // list all users joined with the memoization table campaigns
     var remote = new RL.Remote(config.ripplelib);
+    var checktimer;
     var check = function() {
         var now = new Date();
         var timetill = new Date(now.getFullYear(), now.getMonth(), now.getDate(), config.schedule.hour, config.schedule.minute, 0, 0) - now;
@@ -17,8 +18,8 @@ var Campaign = function(db,config) {
         self.probe({action:'check',timetill:timetill})
         checktimer = setTimeout(work,timetill);
     };
-    var checktimer;
-    var work = function() {
+    // additional time is only set for testing purposes
+    var work = function(additional_time) {
         self.probe({action:'work'})
         var q = new QL;
         q.series([
@@ -90,33 +91,57 @@ var Campaign = function(db,config) {
         },
         // route into either lock, initial 30 day, or 3 day notice
         function(lib) {
-            console.log("mark account locked step")
+            console.log("emailcampaign: mark account locked step")
             var rows = lib.get('rows')
             async.each(rows,function(row,done) {
                 if ((row.isFunded === false) && (row.start_time)) {
                     var curr_time = new Date().getTime()
-// test 7 day notice
-//                    curr_time += (23.2*(1000*60*60*24))
-// test 2 day notice
-//                    curr_time += (28.2*(1000*60*60*24))
-// test locked
-//                    curr_time += (30.2*(1000*60*60*24)) 
+                    if (additional_time !== undefined) {
+                        console.log("test: adding additional time", additional_time)
+                        curr_time += additional_time
+                    }
                     var diff = curr_time - row.start_time;
                     var days = diff / (1000*60*60*24)
 
                     // set lock
-                    if ((days > 30) && (row.last_emailed))
-                        db('campaigns')
-                        .where('address','=',row.address)
-                        .update({locked:'30+ days unfunded'})
-                        .then(function(resp) {
-                            if (resp) 
-                                self.probe({action:'lock',row:row})
-                            done()        
+                    console.log("emailcampaign: set lock test: row:" , row)
+                    // if we have already given notice (last_emailed) and 
+                    // row is not yet locked, then and only then do we 
+                    // move it over to locked table
+                    if ((days > 30) && (row.last_emailed) && (row.locked != true)) {
+                        db.transaction(function(t) {
+                            db('blob')
+                                .transacting(t)
+                                .where('address','=',row.address)
+                                .select()
+                                .then(function(resp) {
+                                    return db('locked_users')
+                                    .insert(resp[0])
+                                    .then()
+                                })
+                                .then(function() {
+                                    return db('blob')
+                                    .where('address','=',row.address)
+                                    .delete()
+                                    .then()
+                                })
+                                .then(function() {
+                                    return db('campaigns')
+                                    .where('address','=',row.address)
+                                    .update({locked:'30+ days unfunded'})
+                                    .then()
+                                })
+                                .then(t.commit, t.rollback);
+                        }).then(function() {
+                            console.log('emailcampaign:lockedusers:move row user saved.' + row.address);
+                            self.probe({action:'locked',row:row})
+                            done()
+                        }, function() {
+                            console.log('emailcampaign:lockedusers:error on move row.' + row.address);
+                            done() 
                         })
-
                     // or send initial notice
-                    else if (!row.last_emailed) {
+                    } else if (!row.last_emailed) {
                         db('campaigns')
                         .where('address','=',row.address)
                         .update({last_emailed:curr_time})
@@ -168,15 +193,24 @@ var Campaign = function(db,config) {
         }
         ]);
     };
-    this.start = function(ready) {
+    this.start = function(ready,test_override) {
         this.probe({action:'start'})
         console.log("starting services.");
-        remote.once('connect',function() {
-            ready();
-            check();
-        });
+        if (test_override === undefined) {
+            remote.once('connect',function() {
+                ready();
+                check();
+            });
+        } else {
+                ready();
+                work();
+        }
         var remote_reconnector = require('../lib/remote-reconnector')(remote);
     };
+    // test related function
+    this._forcework = function(add_time) {
+        work(add_time);
+    }
     this.stop = function() {
         console.log("stopping email campaign");
         this.probe({action:'stop'})

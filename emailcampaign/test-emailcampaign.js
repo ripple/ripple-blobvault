@@ -16,6 +16,8 @@ var ec = new EC(db,config)
 var DAY = 1000*60*60*24;
 
 var donecount = 0;
+
+var actionhistory = [];
 var probe = function(data) {
     switch (data.action) {
         case 'check':
@@ -25,6 +27,40 @@ var probe = function(data) {
         console.log("Unspecified case",data)
         break;
     }
+    if ((data.row) && (data.row.username == user_b.username)) {
+        actionhistory.push(data.action)
+        console.log("ACTION HISTORY:" ,actionhistory)
+        if ((actionhistory.length == 2) && (actionhistory[actionhistory.length -1] == 'initial notice')) {
+            // test 7 day notice
+            ec._forcework(23.2*(1000*60*60*24))
+        } else if ((actionhistory.length == 4) && (actionhistory[actionhistory.length -1] == '7 day notice')) {
+            // test 2 day notice
+            ec._forcework(28.2*(1000*60*60*24))
+        } else if ((actionhistory.length == 6) && (actionhistory[actionhistory.length -1] == '2 day notice')) {
+            // test locked
+            ec._forcework(30.2*(1000*60*60*24))
+            // after this, then testuser Palleen should be moved from blob to locked_users table
+        } else if ((actionhistory.length == 8) && (actionhistory[actionhistory.length -1] == 'locked')) {
+            // now we check that user Palleen is moved
+            db('blob')
+                .where('username','=',user_b.username)
+                .select()
+                .then(function(resp) {
+                    console.log("Checking that pallen is removed from blob", resp)
+                    assert.equal(resp.length,0)
+                })
+                .then(function() {
+                    console.log("Now checking that palleen is moved to locked_users")
+                    db('locked_users')
+                    .where('username','=',user_b.username)
+                    .select()
+                    .then(function(resp) {
+                        console.log("RESP LENGTH should be 1", resp.length)
+                        assert.equal(resp.length, 1)
+                    })
+                })
+        }
+    }
 };
 ec.probe_subscribe(probe)
 
@@ -33,6 +69,11 @@ q.series([
 function(lib) {
     db('campaigns')
         .truncate()
+        .then(function() {
+            return db('locked_users')
+            .truncate()
+            .then()
+        })
         .then(function() {
             return db('blob')
             .truncate()
@@ -59,7 +100,7 @@ function(lib) {
     ec.start(function() {
         console.log("Connected");
         lib.done();
-    });
+    },true); // add test override
 },
 function(lib) {
     lib.done()
