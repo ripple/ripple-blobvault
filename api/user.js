@@ -206,9 +206,8 @@ var rename = function(req,res) {
             response.json({result:'error', message:'data too large',size:size}).status(400).pipe(res)
             return
         }
-        // we pass revision through req.body
         // quota is updated in consolidate
-        exports.store.blobConsolidate(size,req,res,function(resp) {
+        exports.store.blobConsolidate({blob_id:new_blob_id,revision:req.body.revision,data:req.body.data},function(resp) {
             lib.done()
         });    
     

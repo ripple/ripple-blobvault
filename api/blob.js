@@ -268,10 +268,9 @@ exports.consolidate = function (req, res) {
         return
     }
 
-    // we pass revision through req.body
     // quota is updated in consolidate
 
-    store.blobConsolidate(size,req,res,function(resp) {
+    store.blobConsolidate({revision:req.body.revision,blob_id:req.body.blob_id,data:req.body.data},function(resp) {
         response.json(resp).pipe(res)
     });    
 };
