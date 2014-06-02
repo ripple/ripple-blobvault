@@ -2,13 +2,12 @@ var config = require('../config');
 var response = require('response');
 var libutils = require('../lib/utils');
 var email = require('../lib/email');
+var Queue = require('queuelib')
 
 exports.store;
 var getUserInfo = function(username, res) {
     if ("string" !== typeof username) {
-        process.nextTick(function() {
-            throw { res : res, error: new Error("Username is required") }
-        });
+        response.json({result:'error',message:'Username is required'}).status(400).pipe(res)
         return;
     }
 
@@ -32,21 +31,13 @@ var getUserInfo = function(username, res) {
             obj.reserved = config.reserved[normalized_username] || false;
 
             // this is a 200 
-            res.writeHead(200, {
-                'Content-Type' : 'application/json',
-                'Access-Control-Allow-Origin': '*' 
-            });
-            res.end(JSON.stringify(obj));
+            response.json(obj).pipe(res)
         });
     } else {
         exports.store.read_where({key:"address",value:username,res:res},
             function(resp) {
                 if (resp.error) {
-                    res.writeHead(400, {
-                        'Content-Type' : 'application/json',
-                        'Access-Control-Allow-Origin': '*' 
-                    });
-                    res.end(JSON.stringify({result:'error',message:resp.error.message}));
+                    response.json({result:'error',message:resp.error.message}).status(400).pipe(res)
                     return;
                 }
                 var obj = {}
@@ -59,19 +50,11 @@ var getUserInfo = function(username, res) {
                     obj.username = row.username,
                     obj.address = row.address,
                     obj.emailVerified = row.email_verified,
-                    res.writeHead(200, {
-                        'Content-Type' : 'application/json',
-                        'Access-Control-Allow-Origin': '*' 
-                    });
-                    res.end(JSON.stringify(obj));
+                    response.json(obj).pipe(res)
                 } else {
                     obj.exists = false;
                     obj.reserved = false;
-                    res.writeHead(200, {
-                        'Content-Type' : 'application/json',
-                        'Access-Control-Allow-Origin': '*' 
-                    });
-                    res.end(JSON.stringify(obj));
+                    response.json(obj).pipe(res)
                 }
             }
         )
@@ -87,24 +70,16 @@ var verify = function(req,res) {
     var username = req.params.username;
     var token = req.params.token;
     if ("string" !== typeof username) {
-        process.nextTick(function() {
-            throw { res : res, error: new Error("Username is required") }
-        });
+        response.json({result:'error',message:'Username is required'}).status(400).pipe(res)
         return;
     }
     if ("string" !== typeof token) {
-        process.nextTick(function() {
-            throw { res : res, error: new Error("Token is required") }
-        });
+        response.json({result:'error', message:'Token is required'}).status(400).pipe(res)
         return;
     }
     exports.store.read({username:username,res:res},function(resp) {
         if (resp.exists === false) {
-            res.writeHead(404, {
-                'Content-Type' : 'application/json',
-                'Access-Control-Allow-Origin': '*' 
-            });
-            res.end(JSON.stringify({result:'error',message:'No such user'}));
+            response.json({result:'error',message:'No such user'}).status(404).pipe(res)
             return;
         } else {
             var obj = {}
@@ -121,11 +96,7 @@ var verify = function(req,res) {
                     response.json(obj).pipe(res);
                 });
             } else {
-                res.writeHead(400, {
-                    'Content-Type' : 'application/json',
-                    'Access-Control-Allow-Origin': '*' 
-                });
-                res.end(JSON.stringify({result:'error',message:'Invalid token'}));
+                response.json({result:'error',message:'Invalid token'}).status(400).pipe(res)
                 return;
             } 
         }
@@ -135,61 +106,128 @@ var email_change = function(req,res) {
     console.log("email_change");
     var keyresp = libutils.hasKeys(req.body,['email','blob_id','username','hostlink']);
     if (!keyresp.hasAllKeys) {
-        res.writeHead(400, {
-            'Content-Type' : 'application/json',
-            'Access-Control-Allow-Origin': '*' 
-        })
-        res.end(JSON.stringify({result:'error', message:'Missing keys',missing:keyresp.missing}));
+        response.json({result:'error', message:'Missing keys',missing:keyresp.missing}).status(400).pipe(res)
         return
     } 
     if (!libutils.isValidEmail(req.body.email)) {
-        res.writeHead(400, {
-            'Content-Type' : 'application/json',
-            'Access-Control-Allow-Origin': '*' 
-        })
-        res.end(JSON.stringify({result:'error', message:'invalid email address'}));
+        response.json({result:'error', message:'invalid email address'}).status(400).pipe(res)
         return
     }
     var token = libutils.generateToken();
-    exports.store.update_where({set:{email:req.body.email,email_token:token},where:{key:'id',value:req.body.blob_id}},function(resp) {
+    exports.store.update_where({set:{email_verified:false,email:req.body.email,email_token:token},where:{key:'id',value:req.body.blob_id}},function(resp) {
         if ((resp.result) && (resp.result == 'success')) {
             email.send({email:req.body.email,hostlink:req.body.hostlink,token:token,name:req.body.username});
-            res.writeHead(200, {
-                'Content-Type' : 'application/json',
-                'Access-Control-Allow-Origin': '*' 
-            })
-            res.end(JSON.stringify({result:'success'}));
+            response.json({result:'success'}).pipe(res)
         } else {
-            res.writeHead(400, {
-                'Content-Type' : 'application/json',
-                'Access-Control-Allow-Origin': '*' 
-            })
-            res.end(JSON.stringify({result:'error',message:'unspecified error'}));
+            response.json({result:'error',message:'unspecified error'}).status(400).pipe(res)
         }
     });
 }
 var resend = function(req,res) {
     var keyresp = libutils.hasKeys(req.body,['email','username','hostlink']);
     if (!keyresp.hasAllKeys) {
-        res.writeHead(400, {
-            'Content-Type' : 'application/json',
-            'Access-Control-Allow-Origin': '*' 
-        })
-        res.end(JSON.stringify({result:'error', message:'Missing keys',missing:keyresp.missing}));
+        response.json({result:'error', message:'Missing keys',missing:keyresp.missing}).status(400).pipe(res)
         return
     } 
     var token = libutils.generateToken();
     exports.store.update_where({set:{email:req.body.email,email_token:token},where:{key:'username',value:req.body.username}},function(resp) {
         email.send({email:req.body.email,hostlink:req.body.hostlink,token:token,name:req.body.username});
-        res.writeHead(200, {
-            'Content-Type' : 'application/json',
-            'Access-Control-Allow-Origin': '*' 
-        })
-        res.end(JSON.stringify({result:'success'}));
+        response.json({result:'success'}).pipe(res)
     });
+}
+var rename = function(req,res) {
+    var keyresp = libutils.hasKeys(req.body,['username','blob_id','data','revision','encrypted_secret']);
+    if (!keyresp.hasAllKeys) {
+        response.json({result:'error', message:'Missing keys',missing:keyresp.missing}).status(400).pipe(res)
+        return
+    } 
+    keyresp = libutils.hasKeys(req.params,['username']);
+    if (!keyresp.hasAllKeys) {
+        response.json({result:'error', message:'Missing keys',missing:keyresp.missing}).status(400).pipe(res)
+        return
+    } 
+    
+    var old_username = req.params.username;
+    var new_username = req.body.username;
+    var new_blob_id = req.body.blob_id;
+    var encrypted_secret = req.body.encrypted_secret;
+    var new_normalized_username = libutils.normalizeUsername(new_username);
+    if (!/^[a-zA-Z0-9][a-zA-Z0-9-]{0,18}[a-zA-Z0-9]$/.exec(new_username)) {
+        response.json({result:'error', message:"Username must be between 2 and "+config.username_length+" alphanumeric" + " characters or hyphen (-)." + " Can not start or end with a hyphen."}).status(400).pipe(res)
+        return;
+    }
+    if (/--/.exec(new_username)) {
+        response.json({result:'error',message:"Username cannot contain two consecutive hyphens."}).status(400).pipe(res)
+        return;
+    }
+    if (config.reserved[new_normalized_username]) {
+        response.json({result:'error',message:"This username is reserved for "+config.reserved[new_normalized_username]}).status(400).pipe(res)
+        return;
+    }
+
+    var q = new Queue;
+    q.series([
+    // check availability
+    function(lib,id) {
+        exports.store.read_where({key:'username',value:new_username},
+        function(resp) {
+            if (resp.length === 0) {
+                lib.done();
+            } else {
+                response.json({result:'error',message:"name not available"}).status(400).pipe(res)
+                lib.terminate(id);
+                return
+            }
+        })
+    },
+    // check for existance
+    function(lib,id) {
+        exports.store.read_where({key:'username',value:old_username},
+        function(resp) {
+            if (resp.length) {
+                lib.done();
+            } else {
+                response.json({result:'error',message:"invalid user"}).status(400).pipe(res)
+                lib.terminate(id);
+                return
+            }
+        });
+    },
+    function(lib) {
+        // here we do a consolidate
+        // check valid base64
+        if (!libutils.isBase64(req.body.data)) {
+            response.json({result:'error', message:'data is not valid base64'}).status(400).pipe(res)
+            return
+        }
+        var size = libutils.atob(req.body.data).length;
+        // checking quota
+        if (size > config.quota*1024) {
+            response.json({result:'error', message:'data too large',size:size}).status(400).pipe(res)
+            return
+        }
+        // we pass revision through req.body
+        // quota is updated in consolidate
+        exports.store.blobConsolidate(size,req,res,function(resp) {
+            lib.done()
+        });    
+    
+    },
+    function(lib) {
+        exports.store.update_where({set:{id:new_blob_id,encrypted_secret:encrypted_secret,username:new_username,normalized_username:new_normalized_username},where:{key:'username',value:old_username}},function(resp) {
+            console.log("user: rename : update response", resp)
+            if (resp) {
+                response.json({result:'success',message:'rename'}).pipe(res)
+            } else 
+                response.json({result:'error',message:'rename'}).status(400).pipe(res)
+            lib.done()
+        })
+    }
+    ])
 }
 exports.emailResend = resend;
 exports.emailChange = email_change;
 exports.get = get;
 exports.verify = verify;
 exports.authinfo = authinfo;
+exports.rename = rename
