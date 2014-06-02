@@ -9,6 +9,7 @@ var store = require('../lib/store')(config.dbtype);
 api.setStore(store);
 hmac.setStore(store);
 var util = require('util');
+var cors = require('cors')
 
 var queuelib = require('queuelib');
 var express = require('express');
@@ -20,6 +21,7 @@ var log = function(obj) {
 }
 
 var app = express();
+app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded());
 
@@ -32,6 +34,13 @@ test('create then delete',function(done) {
     this.timeout(0); 
     var server = http.createServer(app);
     q.series([
+        function(lib) {
+            store.db('blob')
+            .truncate()
+            .then(function() {
+                lib.done()
+            })
+        },
         function(lib) {
             server.listen(5050,function() {
                 lib.done();
@@ -59,6 +68,7 @@ test('create then delete',function(done) {
             json: testutils.person
             },
             function(err, resp, body) {
+                console.log("Header:", resp.headers)
                 console.log("BODY:",body);
                 assert.equal(resp.statusCode,201,'after proper create request, status code should be 201');
                 lib.done();

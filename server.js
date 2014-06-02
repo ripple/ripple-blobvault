@@ -8,7 +8,8 @@ var hmac = require('./lib/hmac');
 var ecdsa = require('./lib/ecdsa');
 var api = require('./api');
 var lib = require('./lib');
-var limiter = lib.limiter.resend_email();
+var guard = require('./guard')(store)
+var limiter = guard.resend_email();
 
 api.setStore(store);
 hmac.setStore(store);
@@ -27,19 +28,21 @@ app.use(cors());
 
 // JSON handlers
 app.post('/v1/user', ecdsa.middleware, api.blob.create);
-app.post('/v1/user/email', ecdsa.middleware, api.user.emailChange);
+app.post('/v1/user/email', limiter.check, ecdsa.middleware, api.user.emailChange);
 app.post('/v1/user/email/resend', limiter.check, api.user.emailResend);
+app.post('/v1/user/:username', guard.locked, ecdsa.middleware, api.user.rename);
 
-app.delete('/v1/user', hmac.middleware, api.blob.delete);
+app.delete('/v1/user', guard.locked, hmac.middleware, api.blob.delete);
 app.get('/v1/user/:username', api.user.get);
 app.get('/v1/user/:username/verify/:token', api.user.verify);
 
 // JSON handlers
 app.get('/v1/blob/:blob_id', api.blob.get);
-app.post('/v1/blob/patch', hmac.middleware, api.blob.patch);
+app.post('/v1/blob/patch', guard.locked, hmac.middleware, api.blob.patch);
 app.get('/v1/blob/:blob_id/patch/:patch_id', api.blob.getPatch);
-app.post('/v1/blob/consolidate', hmac.middleware, api.blob.consolidate);
+app.post('/v1/blob/consolidate', guard.locked, hmac.middleware, api.blob.consolidate);
 
+app.get('/v1/locked', guard.locked);
 app.get('/v1/authinfo', api.user.authinfo);
 
 app.get('/logs', api.blob.logs);
@@ -57,9 +60,17 @@ try {
   console.log("Could not launch SSL server: " + (e.stack ? e.stack : e.toString()));
 }
 
-var Campaign = require('./lib/emailcampaign');
+var Campaign = require('./emailcampaign');
 var emailCampaign = new Campaign(store.db,config);
-// emailCampaign.start();
+emailCampaign.probe_subscribe(function(data) {
+    console.log(data)
+    if (data.action == 'check') {
+        console.log(data.timetill / (1000*60) + " minutes till check")
+    }
+})
+emailCampaign.start(function(){
+    console.log("Email campaign ready");
+})
 
 process.on('SIGTERM',function() {
     console.log("caught sigterm");
@@ -71,7 +82,7 @@ process.on('SIGINT',function() {
 });
 process.on('exit',function() {
     console.log("Shutting down.");
-    emailCampaign.stop();
+//    emailCampaign.stop();
     if (store.db && store.db.client)
         store.db.client.pool.destroy();
     console.log("Done");
