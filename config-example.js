@@ -39,6 +39,13 @@ exports.schedule = {
     minute:0
 }
 
+
+// authy phone verification
+exports.phone = {
+    url : '',
+    key : ''
+}
+
 // Database settings
 // 'mysql', 'memory', 'postgres'
 exports.dbtype = 'postgres';
