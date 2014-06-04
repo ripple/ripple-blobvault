@@ -62,7 +62,8 @@ In this example we use GET but it can apply to any HTTP Method for any route mar
             "data" : "",
             "email" : "",
             "hostlink" : "",
-            "encrypted_secret" : ""
+            "encrypted_secret" : "",
+            "origin" : "<origin field e.g. Ripple Trade>"
         }
 + Response 201 (application/json)
 
@@ -277,6 +278,28 @@ The /user/<username> represents the old username we want to change
             "result" : "success"
         }
         
+# Group Adding KYC Detail
+
+Choose any number of the following to add
+
+## POST /v1/user/{username}/kyc
+
++ Request (application/json)
+
+        {
+            "phone" : "<phone number>",
+            "country" : "<country>",
+            "region" : "<region>",
+            "city" : "<city>"
+        }
+        
++ Response 200 (application/json)
+
+        { 
+            "result" : "success"
+        }
+
+        
 # Group Retrieve a blob
 
 ## GET /v1/blob/{blob_id}
@@ -358,6 +381,14 @@ The /user/<username> represents the old username we want to change
 
 ## POST /v1/blob/consolidate
 
++ Request (application/json)
+
+        { data : "<data>",
+          revision : "<revision number>",
+          blob_id : "<blob_id>"
+        }
+
+
 + Response 200 (application/json)
 
         { 
@@ -387,3 +418,4 @@ The /user/<username> represents the old username we want to change
         { 
             "result" : "not locked"
         }
+

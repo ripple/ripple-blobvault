@@ -103,10 +103,10 @@ test('test-locked-through-middleware',function(done) {
         function(err,resp,body) {
             assert.equal(body.foo,'bar','reflector should be passed through')
             lib.done()
-            done()
         })
     },
     function(lib) {
+        // we let valid id pass through the guard
         request.post({url:'http://localhost:5150/v1/blob/patch',
         json:{
             blob_id:testutils.person.id

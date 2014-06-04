@@ -224,6 +224,52 @@ var rename = function(req,res) {
     }
     ])
 }
+var kyc = function(req,res) {
+    var params = {};
+    if (req.body.phone) 
+        params.phone = req.body.phone
+    if (req.body.country) 
+        params.country = req.body.country
+    if (req.body.region) 
+        params.region = req.body.region
+    if (req.body.city) 
+        params.city = req.body.city
+    for (key in params) {
+        if (params[key].length > 100) {
+            response.json({result:'error',message:'field too long'}).status(400).pipe(res)
+            return
+        }
+    }
+    var q = new Queue;
+    q.series([
+    // check for existance
+    function(lib,id) {
+        exports.store.read_where({key:'username',value:req.params.username},
+        function(resp) {
+            if (resp.length) {
+                lib.done();
+            } else {
+                response.json({result:'error',message:"invalid user"}).status(400).pipe(res)
+                lib.terminate(id);
+                return
+            }
+        });
+    },
+    function(lib) {
+    exports.store.update_where({set:params,where:{key:'username',value:req.params.username}},
+        function(resp) {
+            console.log("kyc: update:resp:",resp)
+            if (resp) {
+                response.json({result:'success'}).pipe(res)
+            } else {
+                response.json({result:'error',message:'update error'}).status(400).pipe(res)
+            }
+        })
+    }
+    ])
+}
+
+exports.kyc = kyc;
 exports.emailResend = resend;
 exports.emailChange = email_change;
 exports.get = get;

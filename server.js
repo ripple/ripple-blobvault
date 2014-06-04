@@ -31,6 +31,7 @@ app.post('/v1/user', ecdsa.middleware, api.blob.create);
 app.post('/v1/user/email', limiter.check, ecdsa.middleware, api.user.emailChange);
 app.post('/v1/user/email/resend', limiter.check, api.user.emailResend);
 app.post('/v1/user/:username', guard.locked, ecdsa.middleware, api.user.rename);
+app.post('/v1/user/kyc', api.user.kyc);
 
 app.delete('/v1/user', guard.locked, hmac.middleware, api.blob.delete);
 app.get('/v1/user/:username', api.user.get);
