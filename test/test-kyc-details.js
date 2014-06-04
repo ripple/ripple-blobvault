@@ -52,7 +52,20 @@ test('test-kyc-details',function(done) {
         request.post({url:'http://localhost:5150/v1/user/'+testutils.person.username + '/kyc',
         json: {country:'US',phone:'555-555-1212'}}
         ,function(err,resp,body) {
-            console.log(body)
+            assert.equal(body.result,'success')
+            lib.done()
+        })
+    },
+    function(lib) {
+        store.db('blob')
+        .where('username','=',testutils.person.username)
+        .select()
+        .then(function(resp) {
+            var row = resp[0];
+            assert.equal(row.phone,'555-555-1212')
+            assert.equal(row.country,'US')
+            lib.done()
+            done()
         })
     }
     ])

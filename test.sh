@@ -9,4 +9,6 @@ node_modules/.bin/mocha --ui tdd -R spec test/test-quota.js &&
 node_modules/.bin/mocha --ui tdd -R spec test/test-normalize-reserved.js &&
 node_modules/.bin/mocha --ui tdd -R spec test/test-email-change-resend.js &&
 node_modules/.bin/mocha --ui tdd -R spec test/test-rename.js &&
-node_modules/.bin/mocha --ui tdd -R spec test/test-guard.js
+node_modules/.bin/mocha --ui tdd -R spec test/test-guard.js &&
+node_modules/.bin/mocha --ui tdd -R spec test/test-guard-requests.js &&
+node_modules/.bin/mocha --ui tdd -R spec test/test-kyc-details.js
