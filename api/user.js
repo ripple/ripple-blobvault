@@ -309,7 +309,8 @@ var phonevalidate = function(req,res) {
         }
     })
 }
-exports.phone = { request : phonerequest, validate: phonevalidate }
+exports.phoneRequest = phonerequest;
+exports.phoneValidate = phonevalidate;
 exports.profile = profiledetail;
 exports.emailResend = resend;
 exports.emailChange = email_change;
