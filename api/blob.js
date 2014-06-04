@@ -119,6 +119,8 @@ var create = function (req, res) {
     function(lib) { 
         // TODO : inner key is required on updates
 
+        var create_date = new Date();
+        var create_timestamp = create_date.getTime();
         var data_size = libutils.atob(req.body.data).length;
         var params = {
             res:res,
@@ -132,7 +134,9 @@ var create = function (req, res) {
             email:req.body.email,
             emailToken:libutils.generateToken(),
             hostlink : req.body.hostlink,
-            encrypted_secret:req.body.encrypted_secret
+            encrypted_secret:req.body.encrypted_secret,
+            create_date : create_date,
+            create_timestamp : create_timestamp 
         };
         // if we reached here, we are either unfunded but within limit cap
         // or funded by the cutoff date
