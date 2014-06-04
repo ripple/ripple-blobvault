@@ -1,4 +1,5 @@
 var config = require('../config');
+var request = require('request');
 var response = require('response');
 var libutils = require('../lib/utils');
 var email = require('../lib/email');
@@ -224,7 +225,7 @@ var rename = function(req,res) {
     }
     ])
 }
-var kyc = function(req,res) {
+var profiledetail = function(req,res) {
     var params = {};
     if (req.body.phone) 
         params.phone = req.body.phone
@@ -269,7 +270,47 @@ var kyc = function(req,res) {
     ])
 }
 
-exports.kyc = kyc;
+var phonerequest = function(req,res) {
+    var keyresp = libutils.hasKeys(req.body,['via','phone_number','country_code']);
+    if (!keyresp.hasAllKeys) {
+        response.json({result:'error', message:'Missing keys',missing:keyresp.missing}).status(400).pipe(res)
+        return
+    } 
+/*
+    keyresp = libutils.hasKeys(req.params,['username']);
+    if (!keyresp.hasAllKeys) {
+        response.json({result:'error', message:'Missing keys',missing:keyresp.missing}).status(400).pipe(res)
+        return
+    } 
+*/
+    var produrl = config.phone.url+'/protected/json/phones/verification/start?api_key='+config.phone.key
+    var obj = { via:req.body.via, phone_number:req.body.phone_number,country_code:req.body.country_code }
+    request.post({url:produrl,json:true,body:qs.stringify(obj)},function(err,resp,body) {
+        if (body.success === true) {
+            response.json({result:'success'}).pipe(res)
+        } else  {
+            response.json({result:'error'}).status(400).pipe(res)
+        }
+    });
+}
+var phonevalidate = function(req,res) {
+    var keyresp = libutils.hasKeys(req.body,['token','phone_number','country_code']);
+    if (!keyresp.hasAllKeys) {
+        response.json({result:'error', message:'Missing keys',missing:keyresp.missing}).status(400).pipe(res)
+        return
+    } 
+    var obj = {api_key:config.phone.key,phone_number:req.body.phone_number,country_code:req.body.country_code,verification_code:req.body.token}
+    var produrl = config.phone.url+'/protected/json/phones/verification/check'
+    request.get({url:produrl,qs:obj,json:true},function(err,resp,body) {
+        if (body.success === true) {
+            response.json({result:'success'}).pipe(res)
+        } else  {
+            response.json({result:'error'}).status(400).pipe(res)
+        }
+    })
+}
+exports.phone = { request : phonerequest, validate: phonevalidate }
+exports.profile = profiledetail;
 exports.emailResend = resend;
 exports.emailChange = email_change;
 exports.get = get;

@@ -31,7 +31,7 @@ app.post('/v1/user', ecdsa.middleware, api.blob.create);
 app.post('/v1/user/email', limiter.check, ecdsa.middleware, api.user.emailChange);
 app.post('/v1/user/email/resend', limiter.check, api.user.emailResend);
 app.post('/v1/user/:username', guard.locked, ecdsa.middleware, api.user.rename);
-app.post('/v1/user/kyc', api.user.kyc);
+app.post('/v1/user/profile', api.user.kyc);
 
 app.delete('/v1/user', guard.locked, hmac.middleware, api.blob.delete);
 app.get('/v1/user/:username', api.user.get);
@@ -42,6 +42,9 @@ app.get('/v1/blob/:blob_id', api.blob.get);
 app.post('/v1/blob/patch', guard.locked, hmac.middleware, api.blob.patch);
 app.get('/v1/blob/:blob_id/patch/:patch_id', api.blob.getPatch);
 app.post('/v1/blob/consolidate', guard.locked, hmac.middleware, api.blob.consolidate);
+
+app.post('/v1/user/:username/phone', api.user.phone.request)
+app.post('/v1/user/:username/phone/validate', api.user.phone.validate)
 
 app.get('/v1/locked', guard.locked);
 app.get('/v1/authinfo', api.user.authinfo);
