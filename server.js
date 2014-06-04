@@ -43,8 +43,8 @@ app.post('/v1/blob/patch', guard.locked, hmac.middleware, api.blob.patch);
 app.get('/v1/blob/:blob_id/patch/:patch_id', api.blob.getPatch);
 app.post('/v1/blob/consolidate', guard.locked, hmac.middleware, api.blob.consolidate);
 
-app.post('/v1/user/:username/phone', api.user.phone.request)
-app.post('/v1/user/:username/phone/validate', api.user.phone.validate)
+app.post('/v1/user/:username/phone', api.user.phoneRequest)
+app.post('/v1/user/:username/phone/validate', api.user.phoneValidate)
 
 app.get('/v1/locked', guard.locked);
 app.get('/v1/authinfo', api.user.authinfo);
