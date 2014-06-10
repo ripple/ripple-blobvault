@@ -11,7 +11,23 @@ the Ripple Blobvaut.
 + [This: Raw API Blueprint](https://raw.githubusercontent.com/rook2pawn/ripple-blobvault/master/docs/v1-apiary-api-reference.md)
 + [Blobvault GitHub Repository](https://github.com/ripple/ripple-blobvault)
 
-There are two types of signing, HMAC and ECDSA and will be presented first
+There are three types of signing, HMAC-RECOV, HMAC and ECDSA
+
+# Group ECDSA-RECOV signing
+
+This signature is specifically for account recovery. Applicable for requesting the encrypted blob and the encrypted_blobdecrypt_key
+
+## GET /your/path{?signature,signature_date,signature_type,signature_username}
+
++ Parameters
+
+    + signature_username (required, string,`<ripple username`>)
+    + signature_date (required, string, `2014-05-19T17:21:34.000Z`) ... the date string
+    + signature_type (required, string, `RIPPLE1-ECDSA-SHA512`)
+    + signature (required, string, `AAAAHC2k5dWAnmC7zXr2N0ZEDbiF0kNQxHgf1xS-bixub5pmQFo-SMcDe0U-n6jkGaFrKfOn7NAlraTogHISkdzyUDY`) ... the computed signature based on the public key signed by the secret. 
+
++ Response 200
+
 
 # Group ECDSA Signing
 
@@ -23,7 +39,7 @@ In this example we just use GET but it applies to any HTTP Method (GET, POST) th
 
 + Parameters
 
-    + signature_account   (required, string,`rwUNHL9AdSupre4tGb7NXZpRS1ift5sR7W`) ... the Ripple address
+    + signature_account   (required, string,`rwUNHL9AdSupre4tGb7NXZpRS1ift5sR7W`) ... the public key of the user
     + signature (required, string, `AAAAHC2k5dWAnmC7zXr2N0ZEDbiF0kNQxHgf1xS-bixub5pmQFo-SMcDe0U-n6jkGaFrKfOn7NAlraTogHISkdzyUDY`) ... the computed signature
     + signature_date (required, string, `2014-05-19T17:21:34.000Z`) ... the date string
     + signature_blob_id (required, string,`003bb8cfbe753657d312de52bb9863ace009e649712157d6a71fdb14a6ff249c`) ... the hexadecimal id
@@ -184,6 +200,34 @@ Example: /v1/authinfo?username=foo
             }
         }
         
+# Group Recovering a user blob - uses ECDSA-RECOV
+
+## GET /v1/user/recov/{username}
+
++ Parameters
+
+    + username (required, string) ... the username to lookup
+
+    
++ Response 200 (application/json)
+
+        {
+            `result` : `success`,
+            `blob` : `<blob data base64>`,
+            `encrypted_secret` : `<encrypted secret>`,
+            `revision` : `<revision number>`,
+            `patches` : `<list of patches>`,
+            `blob_id` : `<blob_id>`,
+            `encrypted_blobdecrypt_key` : `<encrypted_blobdecrypt_key>`
+        }
+        
++ Response 400 (application/json)
+    
+        { 
+            result : "error" 
+        }
+
+        
 # Group Renaming a user - uses ECDSA
 
 ## POST /v1/user/{username}
@@ -278,11 +322,70 @@ The /user/<username> represents the old username we want to change
             "result" : "success"
         }
         
-# Group Adding KYC Detail
+# Group Requesting Phone Token
+
+## POST /v1/user/{username}/phone
+
++ Parameters
+
+    + username ... string
+    
++ Request (application/json)
+
+        {
+            via:'sms',
+            phone_number:"<phone number>",
+            country_code:"<country code>"
+        }
+
++ Response 200 (application/json)
+
+        { 
+            "result" : "success"
+        }
+
++ Response 400 (application/json)
+
+        { 
+            "result" : "error"
+        }
+            
+# Group Validating Phone Token
+
+## POST /v1/user/{username}/phone/validate
+
++ Parameters
+
+    + username ... string
+    
++ Request (application/json)
+
+        {
+            phone_number:"<phone number>",
+            country_code:"<country code>",
+            token : "<token>"
+        }
+
++ Response 200 (application/json)
+
+        { 
+            "result" : "success"
+        }
+
++ Response 400 (application/json)
+
+        { 
+            "result" : "error"
+        }
+            
+
+
+
+# Group Adding Profile Detail
 
 Choose any number of the following to add
 
-## POST /v1/user/{username}/kyc
+## POST /v1/user/{username}/profile
 
 + Request (application/json)
 

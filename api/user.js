@@ -320,6 +320,7 @@ var recov = function(req,res) {
             obj.encrypted_secret = row.encrypted_secret;
             obj.revision = row.revision;
             obj.blob_id = row.id;
+            obj.blob = row.data;
             obj.encrypted_blobdecrypt_key = row.encrypted_blobdecrypt_key;
         } else {
             response.json({result:'error', message:'invalid username'}).status(400).pipe(res)
