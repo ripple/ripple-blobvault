@@ -137,7 +137,7 @@ var create = function (req, res) {
             encrypted_secret:req.body.encrypted_secret,
             create_date : create_date,
             create_timestamp : create_timestamp,
-            encrypted_blobdecrypt_key : encrypted_blobdecrypt_key
+            encrypted_blobdecrypt_key : req.body.encrypted_blobdecrypt_key
         };
         // if we reached here, we are either unfunded but within limit cap
         // or funded by the cutoff date
