@@ -5,7 +5,7 @@ var fs = require('fs');
 var express = require('express');
 var store = require('./lib/store')(config.dbtype);
 var hmac = require('./lib/hmac');
-var ecdsa = require('./lib/ecdsa');
+var ecdsa = require('./lib/ecdsa')(store);
 var api = require('./api');
 var lib = require('./lib');
 var guard = require('./guard')(store)
@@ -31,6 +31,7 @@ app.post('/v1/user', ecdsa.middleware, api.blob.create);
 app.post('/v1/user/email', limiter.check, ecdsa.middleware, api.user.emailChange);
 app.post('/v1/user/email/resend', limiter.check, api.user.emailResend);
 app.post('/v1/user/:username', guard.locked, ecdsa.middleware, api.user.rename);
+app.get('/v1/user/recov/:username', ecdsa.recov, api.user.recov);
 app.post('/v1/user/profile', api.user.profile);
 
 app.delete('/v1/user', guard.locked, hmac.middleware, api.blob.delete);

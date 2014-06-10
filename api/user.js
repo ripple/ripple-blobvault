@@ -309,6 +309,34 @@ var phonevalidate = function(req,res) {
         }
     })
 }
+
+var recov = function(req,res) {
+    var obj = {}
+    exports.store.db('blob').where('username','=',req.params.username)
+    .select()
+    .then(function(resp) {
+        if (resp.length) {
+            var row = resp[0];
+            obj.encrypted_secret = row.encrypted_secret;
+            obj.revision = row.revision;
+            obj.blob_id = row.id;
+            obj.encrypted_blobdecrypt_key = row.encrypted_blobdecrypt_key;
+        } else {
+            response.json({result:'error', message:'invalid username'}).status(400).pipe(res)
+            return;
+        }
+    })
+    .then(function() {
+        exports.store.db('blob_patches').where('blob_id','=',obj.blob_id)
+        .select()
+        .then(function(resp) {
+            obj.patches = resp;
+            obj.result = 'success';
+            response.json(obj).pipe(res)
+        })
+    })
+}
+exports.recov = recov;
 exports.phoneRequest = phonerequest;
 exports.phoneValidate = phonevalidate;
 exports.profile = profiledetail;
