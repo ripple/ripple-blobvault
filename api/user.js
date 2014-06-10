@@ -186,6 +186,7 @@ var rename = function(req,res) {
         exports.store.read_where({key:'username',value:old_username},
         function(resp) {
             if (resp.length) {
+                lib.set({old_blob_id:resp[0].id})
                 lib.done();
             } else {
                 response.json({result:'error',message:"invalid user"}).status(400).pipe(res)
@@ -208,7 +209,8 @@ var rename = function(req,res) {
             return
         }
         // quota is updated in consolidate
-        exports.store.blobConsolidate({blob_id:new_blob_id,revision:req.body.revision,data:req.body.data},function(resp) {
+        console.log('user: rename or alter fields: blobConsolidate on old_blob_id:', lib.get('old_blob_id'))
+        exports.store.blobConsolidate({blob_id:lib.get('old_blob_id'),revision:req.body.revision,data:req.body.data},function(resp) {
             lib.done()
         });    
     
