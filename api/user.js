@@ -214,7 +214,11 @@ var rename = function(req,res) {
     
     },
     function(lib) {
-        exports.store.update_where({set:{id:new_blob_id,encrypted_secret:encrypted_secret,username:new_username,normalized_username:new_normalized_username},where:{key:'username',value:old_username}},function(resp) {
+        var obj = {id:new_blob_id,encrypted_secret:encrypted_secret,username:new_username,normalized_username:new_normalized_username};
+        if (req.body.encrypted_blobdecrypt_key) {
+            obj.encrypted_blobdecrypt_key = req.body.encrypted_blobdecrypt_key;
+        }
+        exports.store.update_where({set:obj,where:{key:'username',value:old_username}},function(resp) {
             console.log("user: rename : update response", resp)
             if (resp) {
                 response.json({result:'success',message:'rename'}).pipe(res)
