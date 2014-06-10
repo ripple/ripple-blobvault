@@ -317,10 +317,10 @@ var recov = function(req,res) {
     .then(function(resp) {
         if (resp.length) {
             var row = resp[0];
-            obj.encrypted_secret = row.encrypted_secret;
+            obj.encrypted_secret = row.encrypted_secret.toString('base64')
             obj.revision = row.revision;
             obj.blob_id = row.id;
-            obj.blob = row.data;
+            obj.blob = row.data.toString('base64')
             obj.encrypted_blobdecrypt_key = row.encrypted_blobdecrypt_key;
         } else {
             response.json({result:'error', message:'invalid username'}).status(400).pipe(res)
@@ -331,7 +331,7 @@ var recov = function(req,res) {
         exports.store.db('blob_patches').where('blob_id','=',obj.blob_id)
         .select()
         .then(function(resp) {
-            obj.patches = resp;
+            obj.patches = resp.map(function(patch) { return patch.data.toString('base64') })
             obj.result = 'success';
             response.json(obj).pipe(res)
         })
