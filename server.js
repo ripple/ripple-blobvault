@@ -30,7 +30,8 @@ app.use(cors());
 app.post('/v1/user', ecdsa.middleware, api.blob.create);
 app.post('/v1/user/email', limiter.check, ecdsa.middleware, api.user.emailChange);
 app.post('/v1/user/email/resend', limiter.check, api.user.emailResend);
-app.post('/v1/user/:username', guard.locked, ecdsa.middleware, api.user.rename);
+app.post('/v1/user/:username/rename', guard.locked, ecdsa.middleware, api.user.rename);
+app.post('/v1/user/:username/recov-set', guard.locked, ecdsa.middleware, api.user.recovset);
 app.get('/v1/user/recov/:username', ecdsa.recov, api.user.recov);
 app.post('/v1/user/profile', api.user.profile);
 

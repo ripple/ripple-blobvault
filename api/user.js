@@ -209,7 +209,7 @@ var rename = function(req,res) {
             return
         }
         // quota is updated in consolidate
-        console.log('user: rename or alter fields: blobConsolidate on old_blob_id:', lib.get('old_blob_id'))
+        console.log('user: rename : blobConsolidate on old_blob_id:', lib.get('old_blob_id'))
         exports.store.blobConsolidate({blob_id:lib.get('old_blob_id'),revision:req.body.revision,data:req.body.data},function(resp) {
             lib.done()
         });    
@@ -343,6 +343,70 @@ var recov = function(req,res) {
         })
     })
 }
+var recovset = function(req,res) {
+    var keyresp = libutils.hasKeys(req.body,['blob_id','data','revision','encrypted_secret','encrypted_blobdecrypt_key']);
+    if (!keyresp.hasAllKeys) {
+        response.json({result:'error', message:'Missing keys',missing:keyresp.missing}).status(400).pipe(res)
+        return
+    } 
+    keyresp = libutils.hasKeys(req.params,['username']);
+    if (!keyresp.hasAllKeys) {
+        response.json({result:'error', message:'Missing keys',missing:keyresp.missing}).status(400).pipe(res)
+        return
+    } 
+    var username = req.params.username;
+    var new_blob_id = req.body.blob_id;
+    var encrypted_secret = req.body.encrypted_secret;
+
+    var q = new Queue;
+    q.series([
+    // check for existance
+    function(lib,id) {
+        exports.store.read_where({key:'username',value:username},
+        function(resp) {
+            if (resp.length) {
+                lib.set({old_blob_id:resp[0].id})
+                lib.done();
+            } else {
+                response.json({result:'error',message:"invalid user"}).status(400).pipe(res)
+                lib.terminate(id);
+                return
+            }
+        });
+    },
+    function(lib) {
+        // here we do a consolidate
+        // check valid base64
+        if (!libutils.isBase64(req.body.data)) {
+            response.json({result:'error', message:'data is not valid base64'}).status(400).pipe(res)
+            return
+        }
+        var size = libutils.atob(req.body.data).length;
+        // checking quota
+        if (size > config.quota*1024) {
+            response.json({result:'error', message:'data too large',size:size}).status(400).pipe(res)
+            return
+        }
+        // quota is updated in consolidate
+        console.log('user: recovset: blobConsolidate on old_blob_id:', lib.get('old_blob_id'))
+        exports.store.blobConsolidate({blob_id:lib.get('old_blob_id'),revision:req.body.revision,data:req.body.data},function(resp) {
+            lib.done()
+        });    
+    
+    },
+    function(lib) {
+        var obj = {id:new_blob_id,encrypted_secret:encrypted_secret,encrypted_blobdecrypt_key:req.body.encrypted_blobdecrypt_key}
+        exports.store.update_where({set:obj,where:{key:'username',value:username}},function(resp) {
+            console.log("user: recovset : update response", resp)
+            if (resp) {
+                response.json({result:'success',message:'recov-set'}).pipe(res)
+            } else 
+                response.json({result:'error',message:'recov-set'}).status(400).pipe(res)
+            lib.done()
+        })
+    }
+    ])
+}
 exports.recov = recov;
 exports.phoneRequest = phonerequest;
 exports.phoneValidate = phonevalidate;
@@ -353,3 +417,4 @@ exports.get = get;
 exports.verify = verify;
 exports.authinfo = authinfo;
 exports.rename = rename
+exports.recovset = recovset;
