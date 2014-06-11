@@ -343,7 +343,7 @@ var recov = function(req,res) {
         })
     })
 }
-var recovset = function(req,res) {
+var updatekeys = function(req,res) {
     var keyresp = libutils.hasKeys(req.body,['blob_id','data','revision','encrypted_secret','encrypted_blobdecrypt_key']);
     if (!keyresp.hasAllKeys) {
         response.json({result:'error', message:'Missing keys',missing:keyresp.missing}).status(400).pipe(res)
@@ -388,7 +388,7 @@ var recovset = function(req,res) {
             return
         }
         // quota is updated in consolidate
-        console.log('user: recovset: blobConsolidate on old_blob_id:', lib.get('old_blob_id'))
+        console.log('user: updatekeys: blobConsolidate on old_blob_id:', lib.get('old_blob_id'))
         exports.store.blobConsolidate({blob_id:lib.get('old_blob_id'),revision:req.body.revision,data:req.body.data},function(resp) {
             lib.done()
         });    
@@ -397,7 +397,7 @@ var recovset = function(req,res) {
     function(lib) {
         var obj = {id:new_blob_id,encrypted_secret:encrypted_secret,encrypted_blobdecrypt_key:req.body.encrypted_blobdecrypt_key}
         exports.store.update_where({set:obj,where:{key:'username',value:username}},function(resp) {
-            console.log("user: recovset : update response", resp)
+            console.log("user: updatekeys : update response", resp)
             if (resp) {
                 response.json({result:'success',message:'recov-set'}).pipe(res)
             } else 
@@ -417,4 +417,4 @@ exports.get = get;
 exports.verify = verify;
 exports.authinfo = authinfo;
 exports.rename = rename
-exports.recovset = recovset;
+exports.updatekeys = updatekeys;
