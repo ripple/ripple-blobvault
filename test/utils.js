@@ -15,7 +15,8 @@ exports.person = {
     hostlink: 'http://localhost:8080/activate',
     date: 'april',
     encrypted_secret : 'r5nUDJLNQfWERYFm1sUSxxhate8r1q',
-    encrypted_blobdecrypt_key: 'asdfasdfasdf'
+    encrypted_blobdecrypt_key: 'asdfasdfasdf',
+    domain:'rippletrade.com'
 }
 
 

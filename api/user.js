@@ -399,9 +399,9 @@ var updatekeys = function(req,res) {
         exports.store.update_where({set:obj,where:{key:'username',value:username}},function(resp) {
             console.log("user: updatekeys : update response", resp)
             if (resp) {
-                response.json({result:'success',message:'recov-set'}).pipe(res)
+                response.json({result:'success',message:'updatekeys'}).pipe(res)
             } else 
-                response.json({result:'error',message:'recov-set'}).status(400).pipe(res)
+                response.json({result:'error',message:'updatekeys'}).status(400).pipe(res)
             lib.done()
         })
     }

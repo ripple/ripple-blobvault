@@ -43,11 +43,18 @@ var create = function (req, res) {
             return
         }
     }
-    var keyresp = libutils.hasKeys(req.body,['encrypted_blobdecrypt_key','blob_id','username','auth_secret','data','email','address','hostlink','encrypted_secret']);
+    var keyresp = libutils.hasKeys(req.body,['encrypted_blobdecrypt_key','blob_id','username','auth_secret','data','email','address','hostlink','encrypted_secret','domain']);
     if (!keyresp.hasAllKeys) {
         response.json({result:'error', message:'Missing keys',missing:keyresp.missing}).status(400).pipe(res)
         return
     } 
+
+    var domain = req.body.domain;
+    if (domain.length > 255) {
+        response.json({result:'error', message:'Domain string too long'}).status(400).pipe(res)
+        return
+    }
+
     var blobId = req.body.blob_id;
     blobId = blobId.toLowerCase();
 
@@ -137,7 +144,8 @@ var create = function (req, res) {
             encrypted_secret:req.body.encrypted_secret,
             create_date : create_date,
             create_timestamp : create_timestamp,
-            encrypted_blobdecrypt_key : req.body.encrypted_blobdecrypt_key
+            encrypted_blobdecrypt_key : req.body.encrypted_blobdecrypt_key,
+            domain:domain
         };
         // if we reached here, we are either unfunded but within limit cap
         // or funded by the cutoff date
@@ -292,10 +300,29 @@ exports.get = function (req, res) {
     var keyresp = libutils.hasKeys(req.params,['blob_id']);
     if (!keyresp.hasAllKeys) {
         response.json({result:'error', message:'Missing keys',missing:keyresp.missing}).status(400).pipe(res)
-    } else 
-        store.blobGet(req,res,function(resp) {
-            response.json(resp).pipe(res)
-        });
+    } else {
+        var q = new Queue;
+        q.series([
+            function(lib) {
+                store.blobGet({blob_id:req.params.blob_id},function(resp) {
+                    lib.set({blobget:resp})
+                    lib.done()
+                });
+            },
+            function(lib) {
+                store.identifyMissingFields({blob_id:req.params.blob_id},function(resp) {
+                    lib.set({missingfields:resp})
+                    lib.done()
+                });
+            },
+            function(lib) {
+                var obj = lib.get('blobget')
+                obj.missing_fields = lib.get('missingfields');
+                response.json(obj).pipe(res)
+                lib.done()
+            }
+        ])
+    }
 };
 
 exports.getPatch = function (req, res) {
