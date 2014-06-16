@@ -1,3 +1,4 @@
+var reporter = require('../lib/reporter');
 var response = require('response');
 var Queue = require('queuelib');
 var config = require('../config');
@@ -112,12 +113,12 @@ var create = function (req, res) {
                     return;
                 } else {
                     // account is NOT funded but within the limit cap
-                    console.log(req.body.address + " is not funded but within the limit cap");
+                    reporter.log(req.body.address + " is not funded but within the limit cap");
                     lib.done();
                 }
             } else {
                 // mark as funded
-                console.log("Marking as funded");
+                reporter.log("Marking as funded");
                 lib.done({isFunded:true});
             }
         }
@@ -189,7 +190,7 @@ exports.patch = function (req, res) {
                 var row = resp[0];
                 lib.set({quota:row.quota});
                 if (row.quota >= config.quota*1024) {
-                    console.log("Excceeded quota. row.quota = ",row.quota, " vs config.quota*1024 = ", config.quota*1024);
+                    reporter.log("Excceeded quota. row.quota = ",row.quota, " vs config.quota*1024 = ", config.quota*1024);
                     response.json({result:'error', message:'quota exceeded'}).status(400).pipe(res)
                     lib.terminate(id);
                     return;
@@ -234,7 +235,7 @@ exports.patch = function (req, res) {
         store.read_where({key:'id',value:req.body.blob_id},function(resp) {
             if (resp.length) {
                 var row = resp[0];
-                console.log("quota:", row.quota);
+                reporter.log("quota:", row.quota);
             }
             lib.done();
         })
@@ -266,8 +267,8 @@ exports.consolidate = function (req, res) {
             store.read_where({key:'id', value:req.body.blob_id},function(resp) {
                 if (resp.length) {
                     var row = resp[0];
-                    console.log("OLD REVISION: ", row);
-                    console.log("Attempted revision", req.body.revision);
+                    reporter.log("OLD REVISION: ", row);
+                    reporter.log("Attempted revision", req.body.revision);
                 }
                 lib.done();
             });
