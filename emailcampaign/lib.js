@@ -1,3 +1,4 @@
+var reporter = require('../lib/reporter');
 var RL = require('ripple-lib');
 var hyperglue = require('hyperglue');
 var config = require('../config');
@@ -17,19 +18,19 @@ var scan = function(db,cb) {
             cb(rows);
         })
         .catch(function(e) {
-            console.log("Caught E:", e);
+            reporter.log("Caught E:", e);
         });
 }
 exports.scan = scan
 var checkLedger = function(address,remote,cb) {
-    //console.log("checkLedger:" + address);
+    //reporter.log("checkLedger:" + address);
     if (UInt160.is_valid(address) == false) {
-       console.log("Not a valid ripple address!" + address);
+       reporter.log("Not a valid ripple address!" + address);
         cb(false);
         return
     }
     remote.request_account_tx({forward:true,limit:1,ledger_index_min:-1,ledger_index_max:-1,account:address},function(err,resp){
-        //console.log(arguments)
+        //reporter.log(arguments)
         if ((!err) && (resp) && (resp.transactions) && (resp.transactions.length))
             cb(true) 
         else
@@ -70,12 +71,12 @@ var generateMessage = function(email,days,name) {
     return message;
 }
 exports.send = function(params) {
-    //console.log("Email send params", params);
+    //reporter.log("Email send params", params);
     var email = params.email;
     var name = params.name;
     var days = params.days;
     var message = generateMessage(email,days,name);
     server.send(message, function(err, message) {
-        console.log(err || message);
+        reporter.log(err || message);
     });
 }

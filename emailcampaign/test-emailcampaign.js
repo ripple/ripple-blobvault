@@ -1,3 +1,4 @@
+var reporter = require('../lib/reporter');
 var EC = require('../emailcampaign');
 var config = require('../config');
 var QL = require('queuelib');
@@ -21,15 +22,15 @@ var actionhistory = [];
 var probe = function(data) {
     switch (data.action) {
         case 'check':
-        console.log("Time till next check:"+ (data.timetill/(1000*60)) + " minutes")
+        reporter.log("Time till next check:"+ (data.timetill/(1000*60)) + " minutes")
         break;
         default :
-        console.log("Unspecified case",data)
+        reporter.log("Unspecified case",data)
         break;
     }
     if ((data.row) && (data.row.username == user_b.username)) {
         actionhistory.push(data.action)
-        console.log("ACTION HISTORY:" ,actionhistory)
+        reporter.log("ACTION HISTORY:" ,actionhistory)
         if ((actionhistory.length == 2) && (actionhistory[actionhistory.length -1] == 'initial notice')) {
             // test 7 day notice
             ec._forcework(23.2*(1000*60*60*24))
@@ -46,16 +47,16 @@ var probe = function(data) {
                 .where('username','=',user_b.username)
                 .select()
                 .then(function(resp) {
-                    console.log("Checking that pallen is removed from blob", resp)
+                    reporter.log("Checking that pallen is removed from blob", resp)
                     assert.equal(resp.length,0)
                 })
                 .then(function() {
-                    console.log("Now checking that palleen is moved to locked_users")
+                    reporter.log("Now checking that palleen is moved to locked_users")
                     db('locked_users')
                     .where('username','=',user_b.username)
                     .select()
                     .then(function(resp) {
-                        console.log("RESP LENGTH should be 1", resp.length)
+                        reporter.log("RESP LENGTH should be 1", resp.length)
                         assert.equal(resp.length, 1)
                     })
                 })
@@ -82,7 +83,7 @@ function(lib) {
             })
         })
         .catch(function(e) {
-            console.log(e);
+            reporter.log(e);
         });
 },
 function(lib) {
@@ -98,7 +99,7 @@ function(lib) {
 },
 function(lib) {
     ec.start(function() {
-        console.log("Connected");
+        reporter.log("Connected");
         lib.done();
     },true); // add test override
 },

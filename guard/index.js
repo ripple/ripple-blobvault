@@ -1,3 +1,4 @@
+var reporter = require('../lib/reporter');
 var response = require('response')
 var url = require('url')
 
@@ -38,11 +39,11 @@ module.exports = function(store) {
         })
     }
     var locked = function(req,res,next) {
-        console.log("guard: locked: req.url" , req.url)
+        reporter.log("guard: locked: req.url" , req.url)
         var parsed = url.parse(req.url)
         if (parsed.pathname == '/v1/locked') {
             var address = req.query.address
-            console.log("guard: given address");
+            reporter.log("guard: given address");
             locked_check(address,function(isLocked,reason) {
                 if (isLocked === true) 
                     response.json({result:'locked', message:reason}).status(403).pipe(res)
@@ -52,7 +53,7 @@ module.exports = function(store) {
                     response.json({result:'not locked'}).status(200).pipe(res)
             })
         } else {
-            console.log("guard: looking up address via blob_id");
+            reporter.log("guard: looking up address via blob_id");
             var id = req.query.signature_blob_id || req.body.blob_id;
             if (id) {
                 store.db('blob')
@@ -68,7 +69,7 @@ module.exports = function(store) {
                                 next()
                         })
                     } else { 
-                        console.log("guard: Skipping invalid blob_id")
+                        reporter.log("guard: Skipping invalid blob_id")
                         next()
                     }
                 })

@@ -1,3 +1,4 @@
+var reporter = require('../lib/reporter');
 var config = require('../config');
 var request = require('request');
 var response = require('response');
@@ -84,8 +85,8 @@ var verify = function(req,res) {
             return;
         } else {
             var obj = {}
-            console.log("Token provided by user: ->"+ token + "<-");
-            console.log("Token in database       ->"+ resp.emailToken + "<-");
+            reporter.log("Token provided by user: ->"+ token + "<-");
+            reporter.log("Token in database       ->"+ resp.emailToken + "<-");
             if (token === resp.emailToken) {
                 // update emailVerified
                 // TODO all fields have to be normalized the same
@@ -104,7 +105,7 @@ var verify = function(req,res) {
     });
 }
 var email_change = function(req,res) {
-    console.log("email_change");
+    reporter.log("email_change");
     var keyresp = libutils.hasKeys(req.body,['email','blob_id','username','hostlink']);
     if (!keyresp.hasAllKeys) {
         response.json({result:'error', message:'Missing keys',missing:keyresp.missing}).status(400).pipe(res)
@@ -209,7 +210,7 @@ var rename = function(req,res) {
             return
         }
         // quota is updated in consolidate
-        console.log('user: rename : blobConsolidate on old_blob_id:', lib.get('old_blob_id'))
+        reporter.log('user: rename : blobConsolidate on old_blob_id:', lib.get('old_blob_id'))
         exports.store.blobConsolidate({blob_id:lib.get('old_blob_id'),revision:req.body.revision,data:req.body.data},function(resp) {
             lib.done()
         });    
@@ -221,7 +222,7 @@ var rename = function(req,res) {
             obj.encrypted_blobdecrypt_key = req.body.encrypted_blobdecrypt_key;
         }
         exports.store.update_where({set:obj,where:{key:'username',value:old_username}},function(resp) {
-            console.log("user: rename : update response", resp)
+            reporter.log("user: rename : update response", resp)
             if (resp) {
                 response.json({result:'success',message:'rename'}).pipe(res)
             } else 
@@ -265,7 +266,7 @@ var profiledetail = function(req,res) {
     function(lib) {
     exports.store.update_where({set:params,where:{key:'username',value:req.params.username}},
         function(resp) {
-            console.log("kyc: update:resp:",resp)
+            reporter.log("kyc: update:resp:",resp)
             if (resp) {
                 response.json({result:'success'}).pipe(res)
             } else {
@@ -388,7 +389,7 @@ var updatekeys = function(req,res) {
             return
         }
         // quota is updated in consolidate
-        console.log('user: updatekeys: blobConsolidate on old_blob_id:', lib.get('old_blob_id'))
+        reporter.log('user: updatekeys: blobConsolidate on old_blob_id:', lib.get('old_blob_id'))
         exports.store.blobConsolidate({blob_id:lib.get('old_blob_id'),revision:req.body.revision,data:req.body.data},function(resp) {
             lib.done()
         });    
@@ -397,11 +398,11 @@ var updatekeys = function(req,res) {
     function(lib) {
         var obj = {id:new_blob_id,encrypted_secret:encrypted_secret,encrypted_blobdecrypt_key:req.body.encrypted_blobdecrypt_key}
         exports.store.update_where({set:obj,where:{key:'username',value:username}},function(resp) {
-            console.log("user: updatekeys : update response", resp)
+            reporter.log("user: updatekeys : update response", resp)
             if (resp) {
-                response.json({result:'success',message:'recov-set'}).pipe(res)
+                response.json({result:'success',message:'updatekeys'}).pipe(res)
             } else 
-                response.json({result:'error',message:'recov-set'}).status(400).pipe(res)
+                response.json({result:'error',message:'updatekeys'}).status(400).pipe(res)
             lib.done()
         })
     }

@@ -227,21 +227,59 @@ Example: /v1/authinfo?username=foo
             result : "error" 
         }
 
-        
-# Group Renaming a user - uses ECDSA
+# Group Setting a user blob and fields - uses ECDSA
 
-## POST /v1/user/{username}
+This is meant to be used for either resetting the blob after client blob recovery, or
+this can be used password change, where all the listed fields in the request must be changed.
 
-The /user/<username> represents the old username we want to change
+## POST /v1/user/{username}/updatekeys
+
++ Parameters 
+
+    +  username (required, string) ... represents the old username we want to change
 
 + Request (application/json)
 
         {
-            blob_id: "<new blob id>",
-            username: "<new username>",
-            data : "<data base64>",
-            revision: "<last known revision>",
-            encrypted_secret : "<encrypted_secret>"
+            `blob_id`: `<new blob id>`,
+            `data` : `<data base64>`,
+            `revision`: `<last known revision>`,
+            `encrypted_secret` : `<encrypted_secret>`,
+            `encrypted_blobdecrypt_key` : `<encrypted_blobdecrypt_key>`
+        }
+
+
++ Response 200 (application/json)
+
+        {   
+            result : 'success'
+        }
+
+
++ Response 400 (application/json)
+    
+        { 
+            result : "error" 
+        }
+
+
+        
+# Group Renaming a user - uses ECDSA
+
+## POST /v1/user/{username}/rename
+
++ Parameters 
+
+    +  username (required, string) ... represents the old username we want to change
+
++ Request (application/json)
+
+        {
+            `blob_id`: `<new blob id>`,
+            `username`: `<new username>`,
+            `data` : `<data base64>`,
+            `revision`: `<last known revision>`,
+            `encrypted_secret` : `<encrypted_secret>`
         }
 
 
@@ -378,8 +416,6 @@ The /user/<username> represents the old username we want to change
             "result" : "error"
         }
             
-
-
 
 # Group Adding Profile Detail
 

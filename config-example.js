@@ -46,6 +46,11 @@ exports.phone = {
     key : ''
 }
 
+// run campaign logic
+// should be true from only one instance
+exports.campaigns = false;
+
+
 // Database settings
 // 'mysql', 'memory', 'postgres'
 exports.dbtype = 'postgres';

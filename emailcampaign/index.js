@@ -1,3 +1,4 @@
+var reporter = require('../lib/reporter');
 var RL = require('ripple-lib');
 var QL = require('queuelib');
 var eclib = require('./lib')
@@ -36,11 +37,12 @@ var Campaign = function(db,config) {
             var rows = lib.get('rows');
             var idx = 0;
             async.each(rows,function(row,done) {
-                console.log("campaigns: checking ledger for funding")
+                reporter.log("campaigns: checking ledger for funding")
                 var mycb = function(isFunded) {
                     if (isFunded == 'timeout') {
+                        rows[idx].isFunded = null;
                         idx++
-                        console.log(idx + " / " + rows.length)
+                        reporter.log(idx + " / " + rows.length)
                         done()
                         return
                     }
@@ -57,7 +59,7 @@ var Campaign = function(db,config) {
                                 self.probe({action:'update',row:row})
                             })
                             .catch(function(e) {
-                                console.log("campaigns update error",e)
+                                reporter.log("campaigns update error",e)
                             })
                         else  { // then insert
                             var curr_time = new Date().getTime()
@@ -69,42 +71,42 @@ var Campaign = function(db,config) {
                                 self.probe({action:'insert',row:rows[idx]})
                             })
                             .catch(function(e) {
-                                console.log("campaigns insert error",e)
+                                reporter.log("campaigns insert error",e)
                             })
                         }
                     })
                     .then(function() {
                         idx++
-                        console.log(idx + " / " + rows.length)
+                        reporter.log(idx + " / " + rows.length)
                         done()
                     })
                     .catch(function(e) {
-                        console.log("campaigns select error",e)
+                        reporter.log("campaigns select error",e)
                     })
                 }
                 eclib.checkLedger(row.address,remote,protector(mycb,5000,'timeout'))
             },function() {
-                console.log("emailcampaign: Check fund finished.")
+                reporter.log("emailcampaign: Check fund finished.")
                 lib.set({rows:rows})
                 lib.done()
             })
         },
         // route into either lock, initial 30 day, or 3 day notice
         function(lib) {
-            console.log("emailcampaign: mark account locked step")
+            reporter.log("emailcampaign: mark account locked step")
             var rows = lib.get('rows')
             async.each(rows,function(row,done) {
                 if ((row.isFunded === false) && (row.start_time)) {
                     var curr_time = new Date().getTime()
                     if (additional_time !== undefined) {
-                        console.log("test: adding additional time", additional_time)
+                        reporter.log("test: adding additional time", additional_time)
                         curr_time += additional_time
                     }
                     var diff = curr_time - row.start_time;
                     var days = diff / (1000*60*60*24)
 
                     // set lock
-                    console.log("emailcampaign: set lock test: row:" , row)
+                    reporter.log("emailcampaign: set lock test: row:" , row)
                     // if we have already given notice (last_emailed) and 
                     // row is not yet locked, then and only then do we 
                     // move it over to locked table
@@ -133,11 +135,11 @@ var Campaign = function(db,config) {
                                 })
                                 .then(t.commit, t.rollback);
                         }).then(function() {
-                            console.log('emailcampaign:lockedusers:move row user saved.' + row.address);
+                            reporter.log('emailcampaign:lockedusers:move row user saved.' + row.address);
                             self.probe({action:'locked',row:row})
                             done()
                         }, function() {
-                            console.log('emailcampaign:lockedusers:error on move row.' + row.address);
+                            reporter.log('emailcampaign:lockedusers:error on move row.' + row.address);
                             done() 
                         })
                     // or send initial notice
@@ -187,7 +189,7 @@ var Campaign = function(db,config) {
         },
         function(lib) {
             self.probe({action:'done'})
-            console.log("Email service all done.");
+            reporter.log("Email service all done.");
             check(); // setup the next time
             lib.done();
         }
@@ -195,7 +197,7 @@ var Campaign = function(db,config) {
     };
     this.start = function(ready,test_override) {
         this.probe({action:'start'})
-        console.log("starting services.");
+        reporter.log("starting services.");
         if (test_override === undefined) {
             remote.once('connect',function() {
                 ready();
@@ -212,7 +214,7 @@ var Campaign = function(db,config) {
         work(add_time);
     }
     this.stop = function() {
-        console.log("stopping email campaign");
+        reporter.log("stopping email campaign");
         this.probe({action:'stop'})
         remote.disconnect()
         clearTimeout(checktimer);

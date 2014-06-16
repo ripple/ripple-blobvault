@@ -7,7 +7,7 @@ var store = require('./lib/store')(config.dbtype);
 var hmac = require('./lib/hmac');
 var ecdsa = require('./lib/ecdsa')(store);
 var api = require('./api');
-var lib = require('./lib');
+var reporter = require('./lib/reporter');
 var guard = require('./guard')(store)
 var limiter = guard.resend_email();
 
@@ -15,7 +15,7 @@ api.setStore(store);
 hmac.setStore(store);
 
 var app = express();
-app.use(lib.inspect);
+app.use(reporter.inspect);
 
 // app.use(express.limit('1mb')); is deprecated and has no functionality
 // now delegated to raw-body; has a default 1mb limit 
@@ -61,35 +61,39 @@ try {
   }, app) : http.createServer(app);
   var port = config.port || (config.ssl ? 443 : 8080);
   server.listen(port, config.host);
-  console.log("Blobvault listening on port "+port);
+  reporter.log("Blobvault listening on port "+port);
 } catch (e) {
-  console.log("Could not launch SSL server: " + (e.stack ? e.stack : e.toString()));
+  reporter.log("Could not launch SSL server: " + (e.stack ? e.stack : e.toString()));
 }
 
-var Campaign = require('./emailcampaign');
-var emailCampaign = new Campaign(store.db,config);
-emailCampaign.probe_subscribe(function(data) {
-    console.log(data)
-    if (data.action == 'check') {
-        console.log(data.timetill / (1000*60) + " minutes till check")
-    }
-})
-emailCampaign.start(function(){
-    console.log("Email campaign ready");
-})
+if (config.campaigns === true) {
+    var Campaign = require('./emailcampaign');
+    var emailCampaign = new Campaign(store.db,config);
+    emailCampaign.probe_subscribe(function(data) {
+        reporter.log(data)
+        if (data.action == 'check') {
+            reporter.log(data.timetill / (1000*60) + " minutes till check")
+        }
+    })
+    emailCampaign.start(function(){
+        reporter.log("Email campaign ready");
+    })
+} else {
+    reporter.log("campaigns not running") 
+}
 
 process.on('SIGTERM',function() {
-    console.log("caught sigterm");
+    reporter.log("caught sigterm");
     process.exit();
 });
 process.on('SIGINT',function() {
-    console.log("caught sigint");
+    reporter.log("caught sigint");
     process.exit();
 });
 process.on('exit',function() {
-    console.log("Shutting down.");
+    reporter.log("Shutting down.");
 //    emailCampaign.stop();
     if (store.db && store.db.client)
         store.db.client.pool.destroy();
-    console.log("Done");
+    reporter.log("Done");
 });

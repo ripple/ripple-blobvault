@@ -69,6 +69,7 @@ test('create , patch, patch, get specific patch #2, delete', function(done) {
                 url:url,
                 json:body
             },function(err, resp, body) {
+                    console.log("body base 64" , body)
                     assert.deepEqual(body,{result:'error',message:'patch is not valid base64'});
                     lib.done();
             });
@@ -102,6 +103,7 @@ test('create , patch, patch, get specific patch #2, delete', function(done) {
         },
         // do another patch
         function(lib) {
+            console.log("Do another patch")
             var body = { patch : libutils.btoa("bar"), blob_id:testutils.person.blob_id  }; // req.body = { patch : 'bar' }
             var sig = testutils.createSignature({method:'POST',url:'/v1/blob/patch',secret:testutils.person.auth_secret,date:testutils.person.date,body:body});
             var url = 'http://localhost:5050/v1/blob/patch?signature=' + sig + '&signature_date='+testutils.person.date + '&signature_blob_id='+ testutils.person.blob_id;
@@ -115,6 +117,7 @@ test('create , patch, patch, get specific patch #2, delete', function(done) {
         },
         // Get patch #2 
         function(lib) {
+            console.log("Get patch #2");
             request.get({
                 url:'http://localhost:5050/v1/blob/'+testutils.person.blob_id+'/patch/2',
                 json:true
@@ -144,6 +147,7 @@ test('create , patch, patch, get specific patch #2, delete', function(done) {
 */
         // Consolidate patches
         function(lib) {
+            console.log("Consolidate patches")
             var body = { data : libutils.btoa("foo and bar"), revision: 3, blob_id:testutils.person.blob_id  }; 
             var sig = testutils.createSignature({method:'POST',url:'/v1/blob/consolidate',secret:testutils.person.auth_secret,date:testutils.person.date,body:body});
             var url = 'http://localhost:5050/v1/blob/consolidate?signature=' + sig + '&signature_date='+testutils.person.date + '&signature_blob_id='+ testutils.person.blob_id;
@@ -158,17 +162,19 @@ test('create , patch, patch, get specific patch #2, delete', function(done) {
         // Check that blob is now at revision 3 and there are 0 patches since they were 
         // consolidated 
         function(lib) {
+            console.log("Check that blob is now at revision 3 and there are 0 patches since they were consolidated ")
             request.get({
                 url:'http://localhost:5050/v1/blob/'+testutils.person.blob_id,
                 json:true
             },function(err, resp, body) {
-                    console.log(body);
+                    console.log("BLOB RESPOSE",body);
                     assert.equal(body.revision, 3, 'revision should be equal to 3');
                     lib.done();
             });
         },
         // delete user after 
         function(lib) {
+            console.log("delete user after ")
             var sig = testutils.createSignature({method:'DELETE',url:'/v1/user',secret:testutils.person.auth_secret,date:testutils.person.date});
             var url = 'http://localhost:5050/v1/user?signature=' + sig + '&signature_date='+testutils.person.date + '&signature_blob_id='+ testutils.person.blob_id;
             request.del({
