@@ -17,7 +17,7 @@
     "mysql": "~2.0.0-alpha9",
     "node-uuid": "^1.4.1",
     "pg": "^3.0.1",
-    "queuelib": "0.4.1",
+    "queuelib": "0.5.1",
     "request": "^2.36.0",
     "response": "https://github.com/mikeal/response/archive/master.tar.gz",
     "ripple-lib": "https://github.com/ripple/ripple-lib/archive/5b0dd33fa87fd3386ad42bf7ed93adaa1a3e7c2e.tar.gz",
