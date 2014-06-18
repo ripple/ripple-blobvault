@@ -21,6 +21,7 @@ var Campaign = function(db,config) {
     };
     // additional time is only set for testing purposes
     var work = function(additional_time) {
+        console.log("work")
         self.probe({action:'work'})
         var q = new QL;
         q.series([
@@ -36,14 +37,15 @@ var Campaign = function(db,config) {
         function(lib) {
             var rows = lib.get('rows');
             var idx = 0;
-            async.each(rows,function(row,done) {
+            var qe = new QL;
+            qe.forEach(rows,function(row,lib2) {
                 reporter.log("campaigns: checking ledger for funding")
                 var mycb = function(isFunded) {
                     if (isFunded == 'timeout') {
                         rows[idx].isFunded = null;
                         idx++
                         reporter.log(idx + " / " + rows.length)
-                        done()
+                        lib2.done()
                         return
                     }
                     db('campaigns')
@@ -78,24 +80,26 @@ var Campaign = function(db,config) {
                     .then(function() {
                         idx++
                         reporter.log(idx + " / " + rows.length)
-                        done()
+                        lib2.done()
                     })
                     .catch(function(e) {
                         reporter.log("campaigns select error",e)
+                        lib2.done()
                     })
                 }
                 eclib.checkLedger(row.address,remote,protector(mycb,5000,'timeout'))
             },function() {
                 reporter.log("emailcampaign: Check fund finished.")
                 lib.set({rows:rows})
-                lib.done()
-            })
+                lib.done() 
+            },1000)
         },
         // route into either lock, initial 30 day, or 3 day notice
         function(lib) {
             reporter.log("emailcampaign: mark account locked step")
             var rows = lib.get('rows')
-            async.each(rows,function(row,done) {
+            var qe = new QL;
+            qe.forEach(rows,function(row,lib2) {
                 if ((row.isFunded === false) && (row.start_time)) {
                     var curr_time = new Date().getTime()
                     if (additional_time !== undefined) {
@@ -137,10 +141,11 @@ var Campaign = function(db,config) {
                         }).then(function() {
                             reporter.log('emailcampaign:lockedusers:move row user saved.' + row.address);
                             self.probe({action:'locked',row:row})
-                            done()
-                        }, function() {
+                            lib2.done()
+                        }, function(e) {
+                            console.log(e)
                             reporter.log('emailcampaign:lockedusers:error on move row.' + row.address);
-                            done() 
+                            lib2.done() 
                         })
                     // or send initial notice
                     } else if (!row.last_emailed) {
@@ -152,7 +157,7 @@ var Campaign = function(db,config) {
                                 self.probe({action:'initial notice',row:row})
                                 eclib.send({email:row.email,name:row.username,days:'thirty'})
                             }
-                            done()        
+                            lib2.done()        
                         })
     
                     // or possibly send 7 day notice
@@ -165,7 +170,7 @@ var Campaign = function(db,config) {
                                 self.probe({action:'7 day notice',row:row})
                                 eclib.send({email:row.email,name:row.username,days:'seven'})
                             }
-                            done()        
+                            lib2.done()        
                         })
                     // or possibly send 2 day notice
                     } else if ((days < 29) && (days >= 28)) {
@@ -177,15 +182,16 @@ var Campaign = function(db,config) {
                                 self.probe({action:'2 day notice',row:row})
                                 eclib.send({email:row.email,name:row.username,days:'two'})
                             }
-                            done()        
+                            lib2.done()        
                         })
                     } else
-                        done()
+                        lib2.done()
                 } else 
-                    done()
+                    lib2.done()
             },function() {
+                reporter.log("campaigns: all done mailing step")
                 lib.done()
-            })
+            },2000)
         },
         function(lib) {
             self.probe({action:'done'})
