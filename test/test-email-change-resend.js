@@ -38,6 +38,7 @@ app.post('/v1/user',api.blob.create);
 app.delete('/v1/user',hmac.middleware, api.blob.delete);
 // we just test that the token secret is created
 test('email verification', function(done) {
+    this.timeout(0)
     var server = http.createServer(app);
     var GLOBALS = {};
     q.series([
