@@ -36,14 +36,12 @@ var Campaign = function(db,config) {
         // check those users to see if they've funded, then mark it
         function(lib) {
             var rows = lib.get('rows');
-            var idx = 0;
             var qe = new QL;
-            qe.forEach(rows,function(row,lib2) {
+            qe.forEach(rows,function(row,idx,lib2) {
                 reporter.log("campaigns: checking ledger for funding")
                 var mycb = function(isFunded) {
                     if (isFunded == 'timeout') {
                         rows[idx].isFunded = null;
-                        idx++
                         reporter.log(idx + " / " + rows.length)
                         lib2.done()
                         return
@@ -78,7 +76,6 @@ var Campaign = function(db,config) {
                         }
                     })
                     .then(function() {
-                        idx++
                         reporter.log(idx + " / " + rows.length)
                         lib2.done()
                     })
@@ -99,7 +96,7 @@ var Campaign = function(db,config) {
             reporter.log("emailcampaign: mark account locked step")
             var rows = lib.get('rows')
             var qe = new QL;
-            qe.forEach(rows,function(row,lib2) {
+            qe.forEach(rows,function(row,idx,lib2) {
                 if ((row.isFunded === false) && (row.start_time)) {
                     var curr_time = new Date().getTime()
                     if (additional_time !== undefined) {
