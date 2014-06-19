@@ -33,9 +33,9 @@ app.post('/v1/user/email/resend', limiter.check, api.user.emailResend);
 app.post('/v1/user/:username/rename', guard.locked, ecdsa.middleware, api.user.rename);
 app.post('/v1/user/:username/updatekeys', guard.locked, ecdsa.middleware, api.user.updatekeys);
 app.get('/v1/user/recov/:username', ecdsa.recov, api.user.recov);
-app.post('/v1/user/profile', api.user.profile);
+app.post('/v1/user/:username/profile', hmac.middleware, api.user.profile);
 
-app.delete('/v1/user', guard.locked, hmac.middleware, api.blob.delete);
+app.delete('/v1/user/:username', guard.locked, hmac.middleware, api.blob.delete);
 app.get('/v1/user/:username', api.user.get);
 app.get('/v1/user/:username/verify/:token', api.user.verify);
 
