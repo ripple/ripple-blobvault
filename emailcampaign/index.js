@@ -45,6 +45,9 @@ var Campaign = function(db,config) {
                         reporter.log(idx + " / " + rows.length)
                         lib2.done()
                         return
+                    } else if (isFunded == row[idx].isFunded) {
+                        lib2.done()
+                        return
                     }
                     db('campaigns')
                     .where('address','=',row.address)
@@ -91,9 +94,8 @@ var Campaign = function(db,config) {
                 lib.done() 
             },1000)
         },
-        // route into either lock, initial 30 day, or 3 day notice
         function(lib) {
-            reporter.log("emailcampaign: mark account locked step")
+            reporter.log("emailcampaign: route to locked, initial 30 day, 7 day, or 2 day notice step")
             var rows = lib.get('rows')
             var qe = new QL;
             qe.forEach(rows,function(row,idx,lib2) {
@@ -112,6 +114,10 @@ var Campaign = function(db,config) {
                     // row is not yet locked, then and only then do we 
                     // move it over to locked table
                     if ((days > 30) && (row.last_emailed) && (row.locked == '')) {
+
+                        // delete this line if uncommenting the locked step
+                        lib2.done()
+/*
                         reporter.log("emailcampaign: moving ", row, " to locked!")
                         db.transaction(function(t) {
                             db('blob')
@@ -144,6 +150,7 @@ var Campaign = function(db,config) {
                             reporter.log('emailcampaign:lockedusers:error : ', e,'  on move row ' + row.address);
                             lib2.done() 
                         })
+*/
                     // or send initial notice
                     } else if (!row.last_emailed) {
                         db('campaigns')
