@@ -30,25 +30,24 @@ app.use(cors());
 app.post('/v1/user', ecdsa.middleware, api.blob.create);
 app.post('/v1/user/email', limiter.check, ecdsa.middleware, api.user.emailChange);
 app.post('/v1/user/email/resend', limiter.check, api.user.emailResend);
-app.post('/v1/user/:username/rename', guard.locked, ecdsa.middleware, api.user.rename);
-app.post('/v1/user/:username/updatekeys', guard.locked, ecdsa.middleware, api.user.updatekeys);
+app.post('/v1/user/:username/rename', ecdsa.middleware, api.user.rename);
+app.post('/v1/user/:username/updatekeys', ecdsa.middleware, api.user.updatekeys);
 app.get('/v1/user/recov/:username', ecdsa.recov, api.user.recov);
 app.post('/v1/user/:username/profile', hmac.middleware, api.user.profile);
 
-app.delete('/v1/user/:username', guard.locked, ecdsa.middleware, api.blob.delete);
+app.delete('/v1/user/:username', ecdsa.middleware, api.blob.delete);
 app.get('/v1/user/:username', api.user.get);
 app.get('/v1/user/:username/verify/:token', api.user.verify);
 
 // JSON handlers
 app.get('/v1/blob/:blob_id', api.blob.get);
-app.post('/v1/blob/patch', guard.locked, hmac.middleware, api.blob.patch);
+app.post('/v1/blob/patch', hmac.middleware, api.blob.patch);
 app.get('/v1/blob/:blob_id/patch/:patch_id', api.blob.getPatch);
-app.post('/v1/blob/consolidate', guard.locked, hmac.middleware, api.blob.consolidate);
+app.post('/v1/blob/consolidate', hmac.middleware, api.blob.consolidate);
 
 app.post('/v1/user/:username/phone', api.user.phoneRequest)
 app.post('/v1/user/:username/phone/validate', api.user.phoneValidate)
 
-app.get('/v1/locked', guard.locked);
 app.get('/v1/authinfo', api.user.authinfo);
 
 app.get('/logs', api.blob.logs);
