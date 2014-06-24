@@ -30,7 +30,7 @@ var checkLedger = function(address,remote,cb) {
         return
     }
     remote.request_account_tx({forward:true,limit:1,ledger_index_min:-1,ledger_index_max:-1,account:address},function(err,resp){
-        //reporter.log(arguments)
+        reporter.log("REQUEST ACCOUNT TX RESP:", arguments)
         if ((!err) && (resp) && (resp.transactions) && (resp.transactions.length))
             cb(true) 
         else
@@ -76,7 +76,8 @@ exports.send = function(params) {
     var name = params.name;
     var days = params.days;
     var message = generateMessage(email,days,name);
+    reporter.log("campaign:message to .send", message)
     server.send(message, function(err, message) {
-        reporter.log(err || message);
+        reporter.log("EMAILJS:", err || message);
     });
 }

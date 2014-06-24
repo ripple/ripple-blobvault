@@ -38,7 +38,7 @@ var Campaign = function(db,config) {
             var rows = lib.get('rows');
             var qe = new QL;
             qe.forEach(rows,function(row,idx,lib2) {
-                reporter.log("campaigns: checking ledger for funding")
+                reporter.log("campaigns: checking ledger for funding", row)
                 var mycb = function(isFunded) {
                     if (isFunded == 'timeout') {
                         rows[idx].isFunded = null;
@@ -107,11 +107,12 @@ var Campaign = function(db,config) {
                     var days = diff / (1000*60*60*24)
 
                     // set lock
-                    reporter.log("emailcampaign: set lock test: row:" , row)
+                    reporter.log("emailcampaign: set lock test: days:" , days, "row:" , row)
                     // if we have already given notice (last_emailed) and 
                     // row is not yet locked, then and only then do we 
                     // move it over to locked table
-                    if ((days > 30) && (row.last_emailed) && (row.locked != true)) {
+                    if ((days > 30) && (row.last_emailed) && (row.locked == '')) {
+                        reporter.log("emailcampaign: moving ", row, " to locked!")
                         db.transaction(function(t) {
                             db('blob')
                                 .transacting(t)
@@ -140,8 +141,7 @@ var Campaign = function(db,config) {
                             self.probe({action:'locked',row:row})
                             lib2.done()
                         }, function(e) {
-                            console.log(e)
-                            reporter.log('emailcampaign:lockedusers:error on move row.' + row.address);
+                            reporter.log('emailcampaign:lockedusers:error : ', e,'  on move row ' + row.address);
                             lib2.done() 
                         })
                     // or send initial notice
@@ -181,8 +181,10 @@ var Campaign = function(db,config) {
                             }
                             lib2.done()        
                         })
-                    } else
+                    } else {
+                        reporter.log("emailcampaigns: no action taken for ", row.username)
                         lib2.done()
+                    }
                 } else 
                     lib2.done()
             },function() {
