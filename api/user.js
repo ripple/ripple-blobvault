@@ -7,6 +7,10 @@ var email = require('../lib/email');
 var Queue = require('queuelib')
 
 exports.store;
+exports.setStore = function(s) {
+    exports.store = s;
+    reporter.store = s;
+}
 var getUserInfo = function(username, res) {
     if ("string" !== typeof username) {
         response.json({result:'error',message:'Username is required'}).status(400).pipe(res)
@@ -188,6 +192,7 @@ var rename = function(req,res) {
         function(resp) {
             if (resp.length) {
                 lib.set({old_blob_id:resp[0].id})
+                lib.set({address:resp[0].address})
                 lib.done();
             } else {
                 response.json({result:'error',message:"invalid user"}).status(400).pipe(res)
@@ -222,8 +227,15 @@ var rename = function(req,res) {
             obj.encrypted_blobdecrypt_key = req.body.encrypted_blobdecrypt_key;
         }
         exports.store.update_where({set:obj,where:{key:'username',value:old_username}},function(resp) {
-            reporter.log("user: rename : update response", resp)
+            var insertobj = {
+                address : lib.get('address'),
+                from_username : old_username,
+                to_username : new_username,
+                timestamp : new Date().getTime(),
+                fulldate : new Date()
+            }
             if (resp) {
+                reporter.log({table:'name_change_history',obj:insertobj})
                 response.json({result:'success',message:'rename'}).pipe(res)
             } else 
                 response.json({result:'error',message:'rename'}).status(400).pipe(res)
