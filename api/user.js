@@ -369,7 +369,6 @@ var updatekeys = function(req,res) {
     // check for existance
     function(lib,id) {
         exports.store.read_where({key:'normalized_username',value:libutils.normalizeUsername(username)},function(resp) {
-        function(resp) {
             if (resp.length) {
                 lib.set({old_blob_id:resp[0].id})
                 lib.done();
