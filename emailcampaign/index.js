@@ -114,10 +114,6 @@ var Campaign = function(db,config) {
                     // row is not yet locked, then and only then do we 
                     // move it over to locked table
                     if ((days > 30) && (row.last_emailed) && (row.locked == '')) {
-
-                        // delete this line if uncommenting the locked step
-                        lib2.done()
-/*
                         reporter.log("emailcampaign: moving ", row, " to locked!")
                         db.transaction(function(t) {
                             db('blob')
@@ -150,7 +146,6 @@ var Campaign = function(db,config) {
                             reporter.log('emailcampaign:lockedusers:error : ', e,'  on move row ' + row.address);
                             lib2.done() 
                         })
-*/
                     // or send initial notice
                     } else if (!row.last_emailed) {
                         db('campaigns')
