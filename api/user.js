@@ -12,13 +12,12 @@ var getUserInfo = function(username, res) {
         response.json({result:'error',message:'Username is required'}).status(400).pipe(res)
         return;
     }
-
+    if (username.indexOf('~') === 0) {
+        username = username.slice(1);
+    }
     var normalized_username = libutils.normalizeUsername(username);
 
-    if ((username.length <= config.username_length) || ((username.indexOf('~') === 0) && (username.length <= (config.username_length+1)))) {
-        if (username.indexOf('~') === 0) {
-            username = username.slice(1);
-        }
+    if (username.length <= config.username_length) {
         exports.store.read({username:username,res:res},function(resp) {
             var obj = {}
             obj.version = config.AUTHINFO_VERSION,
@@ -319,9 +318,7 @@ var phonevalidate = function(req,res) {
 
 var recov = function(req,res) {
     var obj = {}
-    exports.store.db('blob').where('username','=',req.params.username)
-    .select()
-    .then(function(resp) {
+    exports.store.read_where({key:'normalized_username',value:libutils.normalizeUsername(req.params.username)},function(resp) {
         if (resp.length) {
             var row = resp[0];
             obj.encrypted_secret = row.encrypted_secret.toString('base64')
@@ -333,11 +330,7 @@ var recov = function(req,res) {
             response.json({result:'error', message:'invalid username'}).status(400).pipe(res)
             return;
         }
-    })
-    .then(function() {
-        exports.store.db('blob_patches').where('blob_id','=',obj.blob_id)
-        .select()
-        .then(function(resp) {
+        exports.store.read_where({table:'blob_patches',key:'blob_id',value:obj.blob_id},function(resp) {
             obj.patches = resp.map(function(patch) { return patch.data.toString('base64') })
             obj.result = 'success';
             response.json(obj).pipe(res)
@@ -363,7 +356,7 @@ var updatekeys = function(req,res) {
     q.series([
     // check for existance
     function(lib,id) {
-        exports.store.read_where({key:'username',value:username},
+        exports.store.read_where({key:'normalized_username',value:libutils.normalizeUsername(username)},function(resp) {
         function(resp) {
             if (resp.length) {
                 lib.set({old_blob_id:resp[0].id})
@@ -397,7 +390,7 @@ var updatekeys = function(req,res) {
     },
     function(lib) {
         var obj = {id:new_blob_id,encrypted_secret:encrypted_secret,encrypted_blobdecrypt_key:req.body.encrypted_blobdecrypt_key}
-        exports.store.update_where({set:obj,where:{key:'username',value:username}},function(resp) {
+        exports.store.update_where({set:obj,where:{key:'normalized_username',value:libutils.normalizeUsername(username)}},function(resp) {
             reporter.log("user: updatekeys : update response", resp)
             if (resp) {
                 response.json({result:'success',message:'updatekeys'}).pipe(res)

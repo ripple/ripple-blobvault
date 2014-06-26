@@ -7,6 +7,7 @@ var rp = 'rwUNHL9AdSupre4tGb7NXZpRS1ift5sR7W';
 
 exports.person = {
     username : 'bob5050',
+    normalized_username: 'bob5050',
     auth_secret :'FFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0A',
     blob_id : 'ffff0a0affff0a0affff0a0affff0a0affff0a0affff0a0affff0a0affff0a0a',
     data : libutils.btoa('foo'),
