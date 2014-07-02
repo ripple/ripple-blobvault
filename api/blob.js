@@ -306,8 +306,13 @@ exports.get = function (req, res) {
         q.series([
             function(lib) {
                 store.blobGet({blob_id:req.params.blob_id},function(resp) {
-                    lib.set({blobget:resp})
-                    lib.done()
+                    if (!resp.error) {
+                        lib.set({blobget:resp})
+                        lib.done()
+                    } else {
+                        response.json(resp.error).status(404).pipe(res)
+                        lib.terminate()
+                    }
                 });
             },
             function(lib) {
