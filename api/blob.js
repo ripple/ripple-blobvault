@@ -319,21 +319,25 @@ exports.get = function (req, res) {
             },
             function(lib) {
                 var _blob = lib.get('blobget');
+                    console.log("THE BLOB: ", _blob)
                 if (_blob["2fa_enabled"] === true) {
                     if (device_id !== undefined) {
                         store.read_where({table:'twofactor',key:'device_id',value:device_id},
                         function(resp2) {
                             if (resp2.length) {
                                 var row = resp2[0];
-                                if (row.is_auth) { 
+                                if (row.is_auth) {
                                     lib.done()
+                                    return
                                 } else {
                                     // send via, masked phone, 
+                                    console.log("NO AUTHORIZATION")
                                     response.json({result:'error',twofactor:{via:_blob["2fa_via"], masked_phone:libutils.maskphone(_blob["2fa_phone"])},message:'Two factor auth enabled but device is not authorized'}).status(404).pipe(res)
                                     lib.terminate()
                                     return
                                 }
                             } else {
+                                console.log("NO RECORD IN twofactor")
                                 response.json({result:'error',twofactor:{via:_blob["2fa_via"], masked_phone:libutils.maskphone(_blob["2fa_phone"])},message:'Two factor auth enabled but no auth result for that device id'}).status(404).pipe(res)
                                 lib.terminate()
                                 return
@@ -341,11 +345,13 @@ exports.get = function (req, res) {
                             lib.done()
                         })
                     } else {
+                        console.log("NO DEVICE ID SENT")
                         response.json({result:'error',twofactor:{via:_blob["2fa_via"], masked_phone:libutils.maskphone(_blob["2fa_phone"])},message:'Two factor auth required. No device id supplied'}).status(404).pipe(res)
                         lib.terminate()
                         return
                     }
                 } else {
+                    console.log("2FA NOT ENABLED")
                     lib.done()
                 }
             },
@@ -356,45 +362,45 @@ exports.get = function (req, res) {
                 });
             },
             function(lib) {
-                if (device_id) {
-                    var twofactor = {};
-                    store.read_where({table:'twofactor',key:'device_id',value:device_id},
-                    function(resp2) {
-                        if ((!resp2.error) && (resp2.length)) {
-                            var row = resp2[0];
-                            twofactor.is_auth = row.is_auth;
-                            twofactor.device_id = row.device_id;
-                            
-                            store.read_where({key:'id',value:blob_id},function(resp3) {
-                                if (resp3.length) {
-                                    var _blob = resp3[0]
-                                    twofactor.enabled = _blob["2fa_enabled"];
-                                    twofactor.remember_me = _blob["2fa_remember_me"];
-                                    twofactor.via = _blob["2fa_via"];
-                                    twofactor.masked_phone = libutils.maskphone(_blob["2fa_phone"])
-                                    lib.set({twofactor:twofactor})
-                                    lib.done() 
-                                }
-                                else {
-                                    response.json({result:'error',message:'blobget error in retrieving two factor information'}).status(404).pipe(res)
-                                    lib.terminate()
-                                }
-                            })
-                        }                        
-                    })
-                } else {
-                    lib.done()
-                }
+                var twofactor = {};
+                store.read_where({table:'twofactor',key:'device_id',value:device_id},
+                function(resp2) {
+                    if ((!resp2.error) && (resp2.length)) {
+                        var row = resp2[0];
+                        twofactor.is_auth = row.is_auth;
+                        twofactor.device_id = row.device_id;
+
+                        store.read_where({key:'id',value:blob_id},function(resp3) {
+                            if (resp3.length) {
+                                var _blob = resp3[0]
+                                twofactor.enabled = _blob["2fa_enabled"];
+                                twofactor.remember_me = _blob["2fa_remember_me"];
+                                twofactor.via = _blob["2fa_via"];
+                                twofactor.masked_phone = libutils.maskphone(_blob["2fa_phone"])
+                                lib.set({twofactor:twofactor})
+                                lib.done()
+                            }
+                            else {
+                                response.json({result:'error',message:'blobget error in retrieving two factor information'}).status(404).pipe(res)
+                                lib.terminate()
+                            }
+                        })
+                    } else {
+                        response.json({result:'error',message:'blobget error in retrieving two factor information'}).status(404).pipe(res)
+                        lib.terminate()
+                    }
+                })
             },
             function(lib) {
                 var obj = lib.get('blobget')
                 obj.missing_fields = lib.get('missingfields');
                 var tf = lib.get('twofactor')
-                if (tf) 
+                if ((tf) && (obj.2fa_enabled))
                     obj.twofactor = tf;
                 response.json(obj).pipe(res)
                 lib.done()
             }
+
         ])
     }
 };
