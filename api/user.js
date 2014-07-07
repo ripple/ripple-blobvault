@@ -1,4 +1,5 @@
 var reporter = require('../lib/reporter');
+var qs = require('querystring')
 var config = require('../config');
 var request = require('request');
 var response = require('response');
@@ -412,6 +413,181 @@ var updatekeys = function(req,res) {
     }
     ])
 }
+
+var set2fa = function(req,res) {
+    var keyresp = libutils.hasKeys(req.query,['signature_blob_id']);
+    if (!keyresp.hasAllKeys) {
+        response.json({result:'error', message:'Missing keys',missing:keyresp.missing}).status(400).pipe(res)
+        return
+    } 
+    keyresp = libutils.hasKeys(req.body,['remember_me','enabled','phone','via','country_code']);
+    if (!keyresp.hasAllKeys) {
+        response.json({result:'error', message:'Missing keys',missing:keyresp.missing}).status(400).pipe(res)
+        return
+    } 
+    var blob_id = req.query.signature_blob_id;
+    var remember_me = req.body.remember_me;
+    var enabled = req.body.enabled;
+    var phone = req.body.phone;
+    var country_code = req.body.country_code;
+    var via = req.body.via;
+    
+    var obj = { "2fa_remember_me" : remember_me,
+                "2fa_enabled" : enabled,
+                "2fa_phone" : phone,
+                "2fa_via" : via,
+                "2fa_country_code" : country_code
+            }; 
+    exports.store.update_where({set:obj,where:{key:'id',value:blob_id}},function(resp) {
+        if (resp.result) {
+            if (resp.result == 'success') 
+                response.json({result:'success'}).pipe(res)
+            else if (resp.result == 'error') 
+                response.json({result:'error',message:'error setting 2fa'}).status(400).pipe(res)
+            return
+        } else {
+            response.json({result:'error',message:'error setting 2fa'}).status(400).pipe(res)
+        }
+    })
+}
+var get2fa = function(req,res) {
+    console.log("GET 2FA")
+    var keyresp = libutils.hasKeys(req.query,['signature_blob_id']);
+    if (!keyresp.hasAllKeys) {
+        response.json({result:'error', message:'Missing keys',missing:keyresp.missing}).status(400).pipe(res)
+        return
+    } 
+    var device_id = req.query.device_id || undefined;
+    var blob_id = req.query.signature_blob_id;
+    
+    exports.store.read_where({key:'id',value:blob_id},function(resp) {
+        var blobsettings = resp;
+        if (device_id !== undefined) {
+            exports.store.read_where({table:'twofactor',key:'device_id',value:device_id},
+            function(resp) {
+            })
+        }
+        if (blobsettings.length) {
+            var row = blobsettings[0]
+            console.log("THE ROW:",row)
+            var phone = row["2fa_phone"]
+            var masked_phone = libutils.maskphone(phone);
+            
+            var obj = { via:row["2fa_via"],country_code:row["2fa_country_code"],enabled:row["2fa_enabled"],remember_me:row["2fa_remember_me"],masked_phone:masked_phone}
+            obj.success = true;
+            console.log("THE OBJ:",obj)
+            response.json(obj).pipe(res)
+        } else {
+            response.json({result:'error',message:'error getting 2fa settings'}).status(400).pipe(res)
+        }
+    })
+}
+
+var request2faToken = function(req,res) {
+    var blob_id = req.params.blob_id;
+    
+    exports.store.read_where({key:'id',value:blob_id},function(resp) {
+        if (resp.length) {
+            var row = resp[0];
+            var via = row["2fa_via"];
+            var country_code = row["2fa_country_code"];
+            var phone_number = row["2fa_phone"];
+            if ((!phone_number) && (!country_code) && (!via)) {
+                response.json({result:'error',message:'error on request 2fa token'}).status(400).pipe(res)
+                return
+            } else {
+                var produrl = config.phone.url+'/protected/json/phones/verification/start?api_key='+config.phone.key
+                var obj = { via:via, phone_number:phone_number,country_code:country_code }
+                request.post({url:produrl,json:true,body:qs.stringify(obj)},function(err,resp,body) {
+                    if (body.success === true) {
+                        response.json({result:'success'}).pipe(res)
+                    } else  {
+                        response.json({result:'error'}).status(400).pipe(res)
+                    }
+                });
+            }
+            
+        } else 
+            response.json({result:'error',message:'error on request 2fa token'}).status(400).pipe(res)
+    });
+}
+
+var verify2faToken = function(req,res) {
+    var blob_id = req.params.blob_id;
+
+    var keyresp = libutils.hasKeys(req.body,['device_id','token']);
+    if (!keyresp.hasAllKeys) {
+        response.json({result:'error', message:'Missing keys',missing:keyresp.missing}).status(400).pipe(res)
+        return
+    } 
+    var device_id = req.body.device_id;
+    var token  = req.body.token;
+    reporter.log("verify2faToken:device_id:",device_id," token:",token)
+    var q = new Queue;
+    q.series([
+    function(lib) {
+        exports.store.read_where({table:'twofactor',key:'device_id',value:device_id},
+        function(resp) {
+            if (resp.length) {
+                var row = resp[0];
+                if (row.is_auth) {
+                    reporter.log("verify2fa: already is_auth. no need to verify")
+                    response.json({result:'success'}).pipe(res)
+                    lib.terminate()
+                } else 
+                    reporter.log("verify2fa: is NOT is_auth. contacting verification")
+                    lib.done()
+            }
+            lib.done()
+        })
+    },
+    function(lib) {
+        exports.store.read_where({key:'id',value:blob_id},function(resp) {
+            if (resp.length) {
+                var row = resp[0];
+                var via = row["2fa_via"];
+                var country_code = row["2fa_country_code"];
+                var phone_number = row["2fa_phone"];
+                if ((!phone_number) && (!country_code) && (!via)) {
+                    response.json({result:'error',message:'error on validate 2fa token'}).status(400).pipe(res)
+                    lib.done()
+                    return
+                } else {
+                    var obj = {api_key:config.phone.key,phone_number:phone_number,country_code:country_code,verification_code:token}
+                    var produrl = config.phone.url+'/protected/json/phones/verification/check'
+                    request.get({url:produrl,qs:obj,json:true},function(err,resp,body) {
+                        reporter.log("auth provider response on verify:",body)
+                        if (body.success === true) {
+                            var currtime = new Date().getTime()
+                            exports.store.insert_or_update_where({table:'twofactor',where:{key:'device_id',value:device_id},set:{blob_id:blob_id,is_auth:true,device_id:device_id,last_auth_timestamp:new Date().getTime()}},
+                            function(resp2) {
+                                reporter.log("verify2fa success:",resp2)
+                                response.json({result:'success'}).pipe(res)
+                                lib.done()
+                            })
+                        } else  {
+                            exports.store.insert_or_update_where({table:'twofactor',where:{key:'device_id',value:device_id},set:{blob_id:blob_id,is_auth:false,device_id:device_id}},
+                            function(resp2) {
+                                reporter.log("verify2fa set incorrect code:",resp2)
+                                response.json({result:'error'}).status(400).pipe(res)
+                                lib.done()
+                            });
+                        }
+                    })
+                }
+            } else  {
+                response.json({result:'error',message:'error on validate 2fa token'}).status(400).pipe(res)
+                lib.done()
+            }
+        });
+    }
+    ])
+}
+
+exports.request2faToken = request2faToken;
+exports.verify2faToken = verify2faToken;
+exports.set2fa = set2fa;
+exports.get2fa = get2fa;
 exports.recov = recov;
 exports.phoneRequest = phonerequest;
 exports.phoneValidate = phonevalidate;

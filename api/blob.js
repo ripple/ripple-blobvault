@@ -299,13 +299,15 @@ exports.delete = function (req, res) {
 };
 exports.get = function (req, res) {
     var keyresp = libutils.hasKeys(req.params,['blob_id']);
+    var blob_id = req.params.blob_id;
+    var device_id = req.query.device_id;
     if (!keyresp.hasAllKeys) {
         response.json({result:'error', message:'Missing keys',missing:keyresp.missing}).status(400).pipe(res)
     } else {
         var q = new Queue;
         q.series([
             function(lib) {
-                store.blobGet({blob_id:req.params.blob_id},function(resp) {
+                store.blobGet({blob_id:blob_id},function(resp) {
                     if (!resp.error) {
                         lib.set({blobget:resp})
                         lib.done()
@@ -316,14 +318,48 @@ exports.get = function (req, res) {
                 });
             },
             function(lib) {
-                store.identifyMissingFields({blob_id:req.params.blob_id},function(resp) {
+                store.identifyMissingFields({blob_id:blob_id},function(resp) {
                     lib.set({missingfields:resp})
                     lib.done()
                 });
             },
             function(lib) {
+                if (device_id) {
+                    var twofactor = {};
+                    store.read_where({table:'twofactor',key:'device_id',value:device_id},
+                    function(resp2) {
+                        if ((!resp2.error) && (resp2.length)) {
+                            var row = resp2[0];
+                            twofactor.is_auth = row.is_auth;
+                            twofactor.device_id = row.device_id;
+                            
+                            store.read_where({key:'id',value:blob_id},function(resp3) {
+                                if (resp3.length) {
+                                    var _blob = resp3[0]
+                                    twofactor.enabled = _blob["2fa_enabled"];
+                                    twofactor.remember_me = _blob["2fa_remember_me"];
+                                    twofactor.via = _blob["2fa_via"];
+                                    twofactor.masked_phone = libutils.maskphone(_blob["2fa_phone"])
+                                    lib.set({twofactor:twofactor})
+                                    lib.done() 
+                                }
+                                else {
+                                    response.json({result:'error',message:'blobget error in retrieving two factor information'}).status(404).pipe(res)
+                                    lib.terminate()
+                                }
+                            })
+                        }                        
+                    })
+                } else {
+                    lib.done()
+                }
+            },
+            function(lib) {
                 var obj = lib.get('blobget')
                 obj.missing_fields = lib.get('missingfields');
+                var tf = lib.get('twofactor')
+                if (tf) 
+                    obj.twofactor = tf;
                 response.json(obj).pipe(res)
                 lib.done()
             }

@@ -48,6 +48,13 @@ app.post('/v1/blob/consolidate', hmac.middleware, api.blob.consolidate);
 app.post('/v1/user/:username/phone', api.user.phoneRequest)
 app.post('/v1/user/:username/phone/validate', api.user.phoneValidate)
 
+// 2FA
+app.post('/v1/blob/:blob_id/2fa', ecdsa.middleware, api.user.set2fa)
+app.get('/v1/blob/:blob_id/2fa', ecdsa.middleware, api.user.get2fa)
+
+app.post('/v1/blob/:blob_id/2fa/requestToken', api.user.request2faToken)
+app.post('/v1/blob/:blob_id/2fa/verifyToken', api.user.verify2faToken)
+
 app.get('/v1/authinfo', api.user.authinfo);
 
 app.get('/logs', api.blob.logs);

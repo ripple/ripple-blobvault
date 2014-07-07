@@ -17,7 +17,9 @@ exports.person = {
     date: 'april',
     encrypted_secret : 'r5nUDJLNQfWERYFm1sUSxxhate8r1q',
     encrypted_blobdecrypt_key: 'asdfasdfasdf',
-    domain:'rippletrade.com'
+    domain:'rippletrade.com',
+ //   phone:'555-555-5555'
+    phone:'510-910-9958'
 }
 
 
