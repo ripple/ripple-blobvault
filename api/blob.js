@@ -318,6 +318,33 @@ exports.get = function (req, res) {
                 });
             },
             function(lib) {
+                var _blob = lib.get('blobget');
+                if ((_blob["2fa_enabled"] === true) && (device_id !== undefined)) {
+                    store.read_where({table:'twofactor',key:'device_id',value:device_id},
+                    function(resp2) {
+                        if (resp2.length) {
+                            var row = resp2[0];
+                            if (row.is_auth) { 
+                                lib.done()
+                            } else {
+                                response.json({result:'error',message:'Two factor auth enabled but device is not authorized').status(404).pipe(res)
+                                lib.terminate()
+                                return
+                            }
+                        } else {
+                            response.json({result:'error',message:'Two factor auth enabled but no auth result for that device id').status(404).pipe(res)
+                            lib.terminate()
+                            return
+                        }
+                        lib.done()
+                    })
+                } else {
+                    response.json({result:'error',message:'Two factor auth required. No device id supplied').status(404).pipe(res)
+                    lib.terminate()
+                    return
+                }
+            },
+            function(lib) {
                 store.identifyMissingFields({blob_id:blob_id},function(resp) {
                     lib.set({missingfields:resp})
                     lib.done()
