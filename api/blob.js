@@ -318,7 +318,15 @@ exports.get = function (req, res) {
                 });
             },
             function(lib) {
-                var _blob = lib.get('blobget');
+                store.read_where({key:'id',value:blob_id},function(resp) {
+                    if (resp.length) {
+                        lib.set({"_blob":resp[0]})
+                    }
+                    lib.done()
+                })
+            }
+            function(lib) {
+                var _blob = lib.get('_blob');
                     console.log("THE BLOB: ", _blob)
                 if (_blob["2fa_enabled"] === true) {
                     if (device_id !== undefined) {
@@ -363,6 +371,7 @@ exports.get = function (req, res) {
             },
             function(lib) {
                 var twofactor = {};
+                var _blob = lib.get('_blob');
                 store.read_where({table:'twofactor',key:'device_id',value:device_id},
                 function(resp2) {
                     if ((!resp2.error) && (resp2.length)) {
