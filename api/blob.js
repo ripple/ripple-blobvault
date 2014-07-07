@@ -324,7 +324,7 @@ exports.get = function (req, res) {
                     }
                     lib.done()
                 })
-            }
+            },
             function(lib) {
                 var _blob = lib.get('_blob');
                     console.log("THE BLOB: ", _blob)
