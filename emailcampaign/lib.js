@@ -62,6 +62,9 @@ var generateMessage = function(email,days,name) {
         }
        ]
     };
+    if ((config.is_staging !== undefined) && (config.is_staging)) {
+        message.subject = '[Staging] ' + message.subject;
+    }
     message.attachment[0].data = hyperglue(contents, {
     'span.username': name,
     'span.days' : days
@@ -71,7 +74,6 @@ var generateMessage = function(email,days,name) {
     return message;
 }
 exports.send = function(params) {
-    //reporter.log("Email send params", params);
     var email = params.email;
     var name = params.name;
     var days = params.days;

@@ -39,6 +39,8 @@ exports.schedule = {
     minute:0
 }
 
+// if you want to mark emails as being originated from a staging environment
+exports.is_staging = false;
 
 // authy phone verification
 exports.phone = {

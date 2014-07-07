@@ -19,7 +19,7 @@ app.use(express.urlencoded());
 app.get('/v1/blob/:blob_id', api.blob.get);
 app.post('/v1/blob/:blob_id/2fa', api.user.set2fa)
 app.get('/v1/blob/:blob_id/2fa', api.user.get2fa)
-app.post('/v1/blob/:blob_id/2fa/requestToken', api.user.request2faToken)
+app.get('/v1/blob/:blob_id/2fa/requestToken', api.user.request2faToken)
 app.post('/v1/blob/:blob_id/2fa/verifyToken', api.user.verify2faToken)
 
 var server = http.createServer(app)

@@ -251,7 +251,7 @@ Ex. /v1/blob/<blobid>/2FA?device_id=57261be82601452ada0f2795bc709734
 
 This is not a signed request but requires the blob id. No device ID required.
 
-## POST /v1/blob/{blob_id}/2fa/requestToken
+## GET /v1/blob/{blob_id}/2fa/requestToken
 
 + Response 200 (application/json)
 
