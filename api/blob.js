@@ -395,7 +395,7 @@ exports.get = function (req, res) {
                 var obj = lib.get('blobget')
                 obj.missing_fields = lib.get('missingfields');
                 var tf = lib.get('twofactor')
-                if ((tf) && (obj.2fa_enabled))
+                if ((tf) && (obj["2fa_enabled"]))
                     obj.twofactor = tf;
                 response.json(obj).pipe(res)
                 lib.done()
