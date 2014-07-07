@@ -345,6 +345,8 @@ exports.get = function (req, res) {
                         lib.terminate()
                         return
                     }
+                } else {
+                    lib.done()
                 }
             },
             function(lib) {
