@@ -327,19 +327,19 @@ exports.get = function (req, res) {
                             if (row.is_auth) { 
                                 lib.done()
                             } else {
-                                response.json({result:'error',message:'Two factor auth enabled but device is not authorized').status(404).pipe(res)
+                                response.json({result:'error',message:'Two factor auth enabled but device is not authorized'}).status(404).pipe(res)
                                 lib.terminate()
                                 return
                             }
                         } else {
-                            response.json({result:'error',message:'Two factor auth enabled but no auth result for that device id').status(404).pipe(res)
+                            response.json({result:'error',message:'Two factor auth enabled but no auth result for that device id'}).status(404).pipe(res)
                             lib.terminate()
                             return
                         }
                         lib.done()
                     })
                 } else {
-                    response.json({result:'error',message:'Two factor auth required. No device id supplied').status(404).pipe(res)
+                    response.json({result:'error',message:'Two factor auth required. No device id supplied'}).status(404).pipe(res)
                     lib.terminate()
                     return
                 }
