@@ -243,7 +243,7 @@ Ex. /v1/blob/<blobid>/2FA?device_id=57261be82601452ada0f2795bc709734
             "result" : "success",
             "device_id" : "<device_id>", (if device id is supplied)
             "is_auth" : true, (if device id is supplied)
-            "remember_me" : true,
+            "remember_me" : true,  
             "enabled" : true,
             "country_code": "<country_code",
             "masked_phone" : "<masked phone number>",
@@ -640,19 +640,19 @@ Choose any number of the following to add
         }
 
 
-# Group Checking if a user is locked
+# Group Service Health
 
-## GET /v1/locked{?address}
+## GET /health
 
-+ Response 403 (application/json)
-
-        { 
-            "result" : "locked"
-            "reason" : ""
-        }
-        
 + Response 200 (application/json)
 
-        { 
-            "result" : "not locked"
+        {
+            status : 'ok'
+        }
+    
++ Response 500 (application/json)
+
+        {
+            status : 'not ok'
+            
         }
