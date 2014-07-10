@@ -34,7 +34,7 @@ var health = function(db, remote) {
         status : function(req,res) {
             var out = (is_ok) ? 'ok' : 'not ok'
             var st = (is_ok) ? 200 : 500
-            response.json({status:out}).status(st).pipe(res)
+            response.json({result:out}).status(st).pipe(res)
         }
     }
 }
