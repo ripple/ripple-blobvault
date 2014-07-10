@@ -11,6 +11,9 @@ var reporter = require('./lib/reporter');
 var guard = require('./guard')(store)
 var limiter = guard.resend_email();
 
+var health = require('./health')(store.db)
+health.start()
+
 api.setStore(store);
 hmac.setStore(store);
 
@@ -56,7 +59,7 @@ app.get('/v1/blob/:blob_id/2fa/requestToken', api.user.request2faToken)
 app.post('/v1/blob/:blob_id/2fa/verifyToken', api.user.verify2faToken)
 
 app.get('/v1/authinfo', api.user.authinfo);
-
+app.get('/health', health.status);
 app.get('/logs', api.blob.logs);
 
 try {
