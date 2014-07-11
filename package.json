@@ -20,7 +20,7 @@
     "queuelib": "1.0.0",
     "request": "^2.36.0",
     "response": "https://github.com/mikeal/response/archive/master.tar.gz",
-    "ripple-lib": "",
+    "ripple-lib": "https://github.com/rook2pawn/ripple-lib/archive/develop.tar.gz",
     "timeout-protector": "0.0.1"
   },
   "devDependencies": {
