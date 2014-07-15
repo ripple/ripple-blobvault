@@ -11,6 +11,9 @@ var reporter = require('./lib/reporter');
 var guard = require('./guard')(store)
 var limiter = guard.resend_email();
 
+var Ddos= require('ddos');
+var ddos = new Ddos;
+
 var health = require('./health')(store.db)
 health.start()
 
@@ -18,6 +21,7 @@ api.setStore(store);
 hmac.setStore(store);
 
 var app = express();
+app.use(ddos.express)
 app.use(reporter.inspect);
 
 // app.use(express.limit('1mb')); is deprecated and has no functionality

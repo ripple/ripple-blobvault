@@ -8,6 +8,7 @@
     "concat-stream": "^1.4.5",
     "cors": "^2.2.0",
     "csv-write-stream": "^0.1.2",
+    "ddos": "^0.1.2",
     "emailjs": "^0.3.8",
     "express": "~3.4.0",
     "hashish": "0.0.4",
