@@ -465,20 +465,29 @@ var get2fa = function(req,res) {
         if (device_id !== undefined) {
             exports.store.read_where({table:'twofactor',key:'device_id',value:device_id},
             function(resp) {
+                var deviceidrow;
+                if (resp.length) {
+                    deviceidrow = resp[0]
+                } 
+                if (blobsettings.length) {
+                    var row = blobsettings[0]
+                    console.log("THE ROW:",row)
+                    var phone = row["2fa_phone"]
+                    var masked_phone = libutils.maskphone(phone);
+                    
+                    var obj = { via:row["2fa_via"],country_code:row["2fa_country_code"],enabled:row["2fa_enabled"],remember_me:row["2fa_remember_me"],masked_phone:masked_phone}
+                    obj.success = true;
+                    if (deviceidrow) {
+                        obj.remember_me = deviceidrow.remember_me;
+                        obj.device_id = deviceidrow.device_id;
+                        obj.is_auth = deviceidrow.is_auth; 
+                    }
+                    console.log("THE OBJ:",obj)
+                    response.json(obj).pipe(res)
+                } else {
+                    response.json({result:'error',message:'error getting 2fa settings'}).status(400).pipe(res)
+                }
             })
-        }
-        if (blobsettings.length) {
-            var row = blobsettings[0]
-            console.log("THE ROW:",row)
-            var phone = row["2fa_phone"]
-            var masked_phone = libutils.maskphone(phone);
-            
-            var obj = { via:row["2fa_via"],country_code:row["2fa_country_code"],enabled:row["2fa_enabled"],remember_me:row["2fa_remember_me"],masked_phone:masked_phone}
-            obj.success = true;
-            console.log("THE OBJ:",obj)
-            response.json(obj).pipe(res)
-        } else {
-            response.json({result:'error',message:'error getting 2fa settings'}).status(400).pipe(res)
         }
     })
 }
