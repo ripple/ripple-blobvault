@@ -487,6 +487,20 @@ var get2fa = function(req,res) {
                     response.json({result:'error',message:'error getting 2fa settings'}).status(400).pipe(res)
                 }
             })
+        } else {
+            if (blobsettings.length) {
+                var row = blobsettings[0]
+                console.log("THE ROW:",row)
+                var phone = row["2fa_phone"]
+                var masked_phone = libutils.maskphone(phone);
+                
+                var obj = { via:row["2fa_via"],country_code:row["2fa_country_code"],enabled:row["2fa_enabled"],remember_me:row["2fa_remember_me"],masked_phone:masked_phone}
+                obj.success = true;
+                console.log("THE OBJ:",obj)
+                response.json(obj).pipe(res)
+            } else {
+                response.json({result:'error',message:'error getting 2fa settings'}).status(400).pipe(res)
+            }
         }
     })
 }
