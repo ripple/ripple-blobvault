@@ -55,7 +55,6 @@ test('test-2fa',function(done) {
     // this is to set the settings for 2fa for this user
     function(lib) {
         request.post({url:'http://localhost:5150/v1/blob/'+testutils.person.id+'/2fa?signature_blob_id='+testutils.person.id,json:{
-            remember_me : true,
             enabled : true,
             phone : testutils.person.phone,
             country_code:'1',
@@ -75,7 +74,6 @@ test('test-2fa',function(done) {
             assert.deepEqual(body, { via: 'sms',
     country_code:'1',
   enabled: true,
-  remember_me: true,
   masked_phone: '***-***-'.concat(testutils.person.phone.substr(-4)),
   success: true })
             lib.done();

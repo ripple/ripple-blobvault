@@ -420,19 +420,18 @@ var set2fa = function(req,res) {
         response.json({result:'error', message:'Missing keys',missing:keyresp.missing}).status(400).pipe(res)
         return
     } 
-    keyresp = libutils.hasKeys(req.body,['remember_me','enabled','phone','via','country_code']);
+    keyresp = libutils.hasKeys(req.body,['enabled','phone','via','country_code']);
     if (!keyresp.hasAllKeys) {
         response.json({result:'error', message:'Missing keys',missing:keyresp.missing}).status(400).pipe(res)
         return
     } 
     var blob_id = req.query.signature_blob_id;
-    var remember_me = req.body.remember_me;
     var enabled = req.body.enabled;
     var phone = req.body.phone;
     var country_code = req.body.country_code;
     var via = req.body.via;
     
-    var obj = { "2fa_remember_me" : remember_me,
+    var obj = { 
                 "2fa_enabled" : enabled,
                 "2fa_phone" : phone,
                 "2fa_via" : via,
@@ -524,16 +523,25 @@ var request2faToken = function(req,res) {
 var verify2faToken = function(req,res) {
     var blob_id = req.params.blob_id;
 
-    var keyresp = libutils.hasKeys(req.body,['device_id','token']);
+    var keyresp = libutils.hasKeys(req.body,['remember_me', 'device_id','token']);
     if (!keyresp.hasAllKeys) {
         response.json({result:'error', message:'Missing keys',missing:keyresp.missing}).status(400).pipe(res)
         return
     } 
     var device_id = req.body.device_id;
     var token  = req.body.token;
-    reporter.log("verify2faToken:device_id:",device_id," token:",token)
+    var remember_me = req.body.remember_me;
+    reporter.log("verify2faToken:device_id:",device_id," token:",token," remember_me:",remember_me)
     var q = new Queue;
     q.series([
+    function(lib) {
+        if (remember_me !== undefined)
+            exports.store.update_where({table:'twofactor',where:{device_id:device_id},set:{remember_me:remember_me}},function(resp) {
+                lib.done()
+            })
+        else 
+            lib.done()
+    },
     function(lib) {
         exports.store.read_where({table:'twofactor',key:'device_id',value:device_id},
         function(resp) {
