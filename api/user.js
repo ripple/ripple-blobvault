@@ -420,23 +420,26 @@ var set2fa = function(req,res) {
         response.json({result:'error', message:'Missing keys',missing:keyresp.missing}).status(400).pipe(res)
         return
     } 
-    keyresp = libutils.hasKeys(req.body,['enabled','phone','via','country_code']);
+    /*keyresp = libutils.hasKeys(req.body,['enabled','phone','via','country_code']);
     if (!keyresp.hasAllKeys) {
         response.json({result:'error', message:'Missing keys',missing:keyresp.missing}).status(400).pipe(res)
         return
     } 
+    */
     var blob_id = req.query.signature_blob_id;
     var enabled = req.body.enabled;
     var phone = req.body.phone;
     var country_code = req.body.country_code;
     var via = req.body.via;
-    
-    var obj = { 
-                "2fa_enabled" : enabled,
-                "2fa_phone" : phone,
-                "2fa_via" : via,
-                "2fa_country_code" : country_code
-            }; 
+    var obj = {}
+    if (enabled) 
+        obj["2fa_enabled"] = enabled;
+    if (phone) 
+        obj["2fa_phone"] = phone;
+    if (via) 
+        obj["2fa_via"] = via;
+    if (country_code) 
+        obj["2fa_country_code"] = country_code;
     exports.store.update_where({set:obj,where:{key:'id',value:blob_id}},function(resp) {
         if (resp.result) {
             if (resp.result == 'success') 
