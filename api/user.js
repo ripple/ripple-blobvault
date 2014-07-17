@@ -432,13 +432,13 @@ var set2fa = function(req,res) {
     var country_code = req.body.country_code;
     var via = req.body.via;
     var obj = {}
-    if (enabled) 
+    if (enabled !== undefined) 
         obj["2fa_enabled"] = enabled;
-    if (phone) 
+    if (phone !== undefined) 
         obj["2fa_phone"] = phone;
-    if (via) 
+    if (via !== undefined) 
         obj["2fa_via"] = via;
-    if (country_code) 
+    if (country_code !== undefined) 
         obj["2fa_country_code"] = country_code;
     exports.store.update_where({set:obj,where:{key:'id',value:blob_id}},function(resp) {
         if (resp.result) {
