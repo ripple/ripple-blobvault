@@ -10,6 +10,7 @@ var UInt160 = RL.UInt160;
 var scan = function(db,cb) {
     db('blob')
         .join('campaigns','blob.address','=','campaigns.address','LEFT OUTER')
+        .whereNotNull('blob.email')
         .where('campaigns.isFunded','=',null)
         .orWhere('campaigns.isFunded','=',false)
         .andWhere('campaigns.locked','=','') // we ignore already locked users
