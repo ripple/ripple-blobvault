@@ -478,7 +478,7 @@ var get2fa = function(req,res) {
                     var masked_phone = libutils.maskphone(phone);
                     
                     var obj = { via:row["2fa_via"],country_code:row["2fa_country_code"],enabled:row["2fa_enabled"],remember_me:row["2fa_remember_me"],masked_phone:masked_phone}
-                    obj.success = true;
+                    obj.result = 'success';
                     if (deviceidrow) {
                         obj.remember_me = deviceidrow.remember_me;
                         obj.device_id = deviceidrow.device_id;
