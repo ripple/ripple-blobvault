@@ -477,7 +477,7 @@ var get2fa = function(req,res) {
                     var phone = row["2fa_phone"]
                     var masked_phone = libutils.maskphone(phone);
                     
-                    var obj = { via:row["2fa_via"],country_code:row["2fa_country_code"],enabled:row["2fa_enabled"],remember_me:row["2fa_remember_me"],masked_phone:masked_phone}
+                    var obj = { via:row["2fa_via"],country_code:row["2fa_country_code"],enabled:row["2fa_enabled"],remember_me:row["2fa_remember_me"],phone:phone,masked_phone:masked_phone}
                     obj.result = 'success';
                     if (deviceidrow) {
                         obj.remember_me = deviceidrow.remember_me;
@@ -497,7 +497,7 @@ var get2fa = function(req,res) {
                 var phone = row["2fa_phone"]
                 var masked_phone = libutils.maskphone(phone);
                 
-                var obj = { via:row["2fa_via"],country_code:row["2fa_country_code"],enabled:row["2fa_enabled"],remember_me:row["2fa_remember_me"],masked_phone:masked_phone}
+                var obj = { via:row["2fa_via"],country_code:row["2fa_country_code"],enabled:row["2fa_enabled"],remember_me:row["2fa_remember_me"],phone:phone,masked_phone:masked_phone}
                 obj.success = true;
                 console.log("THE OBJ:",obj)
                 response.json(obj).pipe(res)
