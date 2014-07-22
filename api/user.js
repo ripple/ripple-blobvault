@@ -431,15 +431,27 @@ var set2fa = function(req,res) {
     var phone = req.body.phone;
     var country_code = req.body.country_code;
     var via = req.body.via;
+
+    // do not allow enabled 2fa if phone is not verified, RT-1945
+    if ((enabled === true) && (phone !== undefined)) {
+        response.json({result:'error',message:'enabled cannot be set if phone number is not verified'}).status(400).pipe(res)
+        return
+    } 
+
+
     var obj = {}
     if (enabled !== undefined) 
         obj["2fa_enabled"] = enabled;
-    if (phone !== undefined) 
+    if (phone !== undefined) {
+        obj['phone_verified'] = false; 
         obj["2fa_phone"] = phone;
+    }
     if (via !== undefined) 
         obj["2fa_via"] = via;
     if (country_code !== undefined) 
         obj["2fa_country_code"] = country_code;
+
+    
     exports.store.update_where({set:obj,where:{key:'id',value:blob_id}},function(resp) {
         if (resp.result) {
             if (resp.result == 'success') 
@@ -593,11 +605,15 @@ var verify2faToken = function(req,res) {
                         reporter.log("auth provider response on verify:",body)
                         if (body.success === true) {
                             var currtime = new Date().getTime()
-                            exports.store.insert_or_update_where({table:'twofactor',where:{key:'device_id',value:device_id},set:{blob_id:blob_id,is_auth:true,device_id:device_id,last_auth_timestamp:new Date().getTime()}},
-                            function(resp2) {
-                                reporter.log("verify2fa success:",resp2)
-                                response.json({result:'success'}).pipe(res)
-                                lib.done()
+                            exports.store.update_where({
+                            where:{key:'id',value:blob_id},
+                            set:{phone_verified:true}}, function(resp) {
+                                exports.store.insert_or_update_where({table:'twofactor',where:{key:'device_id',value:device_id},set:{blob_id:blob_id,is_auth:true,device_id:device_id,last_auth_timestamp:new Date().getTime()}},
+                                function(resp2) {
+                                    reporter.log("verify2fa success:",resp2)
+                                    response.json({result:'success'}).pipe(res)
+                                    lib.done()
+                                })
                             })
                         } else  {
                             exports.store.insert_or_update_where({table:'twofactor',where:{key:'device_id',value:device_id},set:{blob_id:blob_id,is_auth:false,device_id:device_id}},

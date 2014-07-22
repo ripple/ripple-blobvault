@@ -377,11 +377,18 @@ exports.get = function (req, res) {
                 });
             },
             function(lib) {
+                var _blob = lib.get('_blob');
                 var obj = lib.get('blobget')
                 obj.missing_fields = lib.get('missingfields');
                 var tf = lib.get('twofactor')
-                if (tf && obj["2fa_enabled"])
+                if (tf && obj["2fa_enabled"]) {
                     obj.twofactor = tf;
+                    // if two factor is enabled but phone is not verified we include 
+                    // a message stating the phne needs to be verified in order for 2fa 
+                    // to work
+                    if (!_blob.phone_verified)
+                        obj.message = 'Two factor auth is enabled but the phone needs to be verified in order for two factor to work.'
+                }
                 response.json(obj).pipe(res)
                 lib.done()
             }
