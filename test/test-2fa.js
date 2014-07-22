@@ -75,7 +75,8 @@ test('test-2fa',function(done) {
     country_code:'1',
   enabled: true,
   masked_phone: '***-***-'.concat(testutils.person.phone.substr(-4)),
-  success: true })
+  phone:testutils.person.phone,
+  result:'success'})
             lib.done();
         })
     },
