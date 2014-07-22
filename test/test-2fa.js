@@ -42,6 +42,7 @@ test('test-2fa',function(done) {
         testutils.person.id = testutils.person.blob_id;
         delete testutils.person.blob_id
         delete testutils.person.date
+        testutils.person.phone_verified = true
         store.db('blob')
         .truncate()
         .then(function() {
@@ -60,6 +61,7 @@ test('test-2fa',function(done) {
             country_code:'1',
             via : "sms"
         }},function(err,resp, body) {
+            console.log(body)
             assert.equal(body.result,'success')
             lib.done()
         });

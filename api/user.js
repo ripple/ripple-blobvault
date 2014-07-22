@@ -432,37 +432,59 @@ var set2fa = function(req,res) {
     var country_code = req.body.country_code;
     var via = req.body.via;
 
-    // do not allow enabled 2fa if phone is not verified, RT-1945
-    if ((enabled === true) && (phone !== undefined)) {
-        response.json({result:'error',message:'enabled cannot be set if phone number is not verified'}).status(400).pipe(res)
-        return
-    } 
+    var q = new Queue;
 
-
-    var obj = {}
-    if (enabled !== undefined) 
-        obj["2fa_enabled"] = enabled;
-    if (phone !== undefined) {
-        obj['phone_verified'] = false; 
-        obj["2fa_phone"] = phone;
-    }
-    if (via !== undefined) 
-        obj["2fa_via"] = via;
-    if (country_code !== undefined) 
-        obj["2fa_country_code"] = country_code;
-
-    
-    exports.store.update_where({set:obj,where:{key:'id',value:blob_id}},function(resp) {
-        if (resp.result) {
-            if (resp.result == 'success') 
-                response.json({result:'success'}).pipe(res)
-            else if (resp.result == 'error') 
+    q.series([
+    function(lib) {
+        exports.store.read_where({key:'id',value:blob_id},function(resp) {
+            if (resp.length) {
+                lib.set({_blob:resp[0]})
+                lib.done()
+            } else {
                 response.json({result:'error',message:'error setting 2fa'}).status(400).pipe(res)
+                lib.terminate();
+                return;
+            }
+        })
+    },
+    function(lib) {
+        // do not allow enabled 2fa if phone is not verified, RT-1945
+        var _blob = lib.get('_blob');
+        if ((!_blob.phone_verified) && (enabled === true)) {
+            response.json({result:'error',message:'enabled cannot be set if phone number is not verified'}).status(400).pipe(res)
+            lib.terminate()
             return
         } else {
-            response.json({result:'error',message:'error setting 2fa'}).status(400).pipe(res)
+            lib.done()
         }
-    })
+    },
+
+    function(lib) {
+        var obj = {}
+        if (enabled !== undefined) 
+            obj["2fa_enabled"] = enabled;
+        if (phone !== undefined) {
+            obj['phone_verified'] = false; 
+            obj["2fa_phone"] = phone;
+        }
+        if (via !== undefined) 
+            obj["2fa_via"] = via;
+        if (country_code !== undefined) 
+            obj["2fa_country_code"] = country_code;
+        exports.store.update_where({set:obj,where:{key:'id',value:blob_id}},function(resp) {
+            if (resp.result) {
+                if (resp.result == 'success') 
+                    response.json({result:'success'}).pipe(res)
+                else if (resp.result == 'error') 
+                    response.json({result:'error',message:'error setting 2fa'}).status(400).pipe(res)
+                lib.done();
+                return
+            } else {
+                response.json({result:'error',message:'error setting 2fa'}).status(400).pipe(res)
+                lib.done()
+            }
+        })
+    }]);
 }
 var get2fa = function(req,res) {
     console.log("GET 2FA")
