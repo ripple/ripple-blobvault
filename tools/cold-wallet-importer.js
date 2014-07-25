@@ -1,11 +1,13 @@
 var argv = require('optimist')
-    .usage('Usage: $0 -f [file] -m [insert|remove]')
+    .usage('Usage: $0 -f [file] -m [insert|remove] -s')
     .demand('f')
     .describe('f','file to read in that is google exported tab separated value tsv')
     .alias('f','file')
     .demand('m')
     .describe('m', 'insert | remove')
     .alias('m', 'mode')
+    .describe('s','simulate only, make no changes to disk')
+    .alias('s','simulate')
     .argv;
 var fs = require('fs');
 var cw = fs.readFileSync(argv.f);

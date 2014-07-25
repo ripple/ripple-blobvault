@@ -43,7 +43,7 @@ var getUserInfo = function(username, res) {
         exports.store.read_where({key:"address",value:username,res:res},
             function(resp) {
                 if (resp.error) {
-                    response.json({result:'error',message:resp.error.message}).status(400).pipe(res)
+                    response.json({code:7498,result:'error',message:resp.error.message}).status(400).pipe(res)
                     return;
                 }
                 var obj = {}
@@ -76,16 +76,16 @@ var verify = function(req,res) {
     var username = req.params.username;
     var token = req.params.token;
     if ("string" !== typeof username) {
-        response.json({result:'error',message:'Username is required'}).status(400).pipe(res)
+        response.json({result:'error',code:7477,message:'Username is required'}).status(400).pipe(res)
         return;
     }
     if ("string" !== typeof token) {
-        response.json({result:'error', message:'Token is required'}).status(400).pipe(res)
+        response.json({result:'error', code:9106,message:'Token is required'}).status(400).pipe(res)
         return;
     }
     exports.store.read({username:username,res:res},function(resp) {
         if (resp.exists === false) {
-            response.json({result:'error',message:'No such user'}).status(404).pipe(res)
+            response.json({result:'error',code:5298,message:'No such user'}).status(404).pipe(res)
             return;
         } else {
             var obj = {}
@@ -102,7 +102,7 @@ var verify = function(req,res) {
                     response.json(obj).pipe(res);
                 });
             } else {
-                response.json({result:'error',message:'Invalid token'}).status(400).pipe(res)
+                response.json({result:'error',code:5895,message:'Invalid token'}).status(400).pipe(res)
                 return;
             } 
         }

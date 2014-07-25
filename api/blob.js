@@ -178,7 +178,7 @@ exports.patch = function (req, res) {
     // check patch size <= 1kb
     var size = libutils.atob(req.body.patch).length;
     if (size > config.patchsize*1024) {
-        response.json({result:'error', message:'patch size > 1kb',size:size}).status(400).pipe(res)
+        response.json({result:'error', code: 9061,message:'patch size > 1kb',size:size}).status(400).pipe(res)
         return
     }
     // check quota, user cannot submit patch if they >= quota limit
@@ -191,13 +191,13 @@ exports.patch = function (req, res) {
                 lib.set({quota:row.quota});
                 if (row.quota >= config.quota*1024) {
                     reporter.log("Excceeded quota. row.quota = ",row.quota, " vs config.quota*1024 = ", config.quota*1024);
-                    response.json({result:'error', message:'quota exceeded'}).status(400).pipe(res)
+                    response.json({result:'error',code:6682, message:'quota exceeded'}).status(400).pipe(res)
                     lib.terminate(id);
                     return;
                 } else 
                     lib.done();
             } else if (resp.error) {
-                response.json({result:'error', message:resp.error.message}).status(400).pipe(res)
+                response.json({result:'error',code:8383, message:resp.error.message}).status(400).pipe(res)
                 lib.terminate(id);
                 return;
             } 
@@ -206,7 +206,7 @@ exports.patch = function (req, res) {
     function(lib,id) {
         // check valid base64
         if (!libutils.isBase64(req.body.patch)) {
-            response.json({result:'error', message:'patch is not valid base64'}).status(400).pipe(res)
+            response.json({result:'error',code:7712,message:'patch is not valid base64'}).status(400).pipe(res)
             lib.terminate(id);
             return
         }
@@ -312,7 +312,7 @@ exports.get = function (req, res) {
                         lib.set({blobget:resp})
                         lib.done()
                     } else {
-                        response.json(resp.error).status(404).pipe(res)
+                        response.json({error:resp.error,code:6587}).status(404).pipe(res)
                         lib.terminate()
                     }
                 });
