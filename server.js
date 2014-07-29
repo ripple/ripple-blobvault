@@ -42,6 +42,8 @@ app.post('/v1/user/:username/updatekeys', ecdsa.middleware, api.user.updatekeys)
 app.get('/v1/user/recov/:username', ecdsa.recov, api.user.recov);
 app.post('/v1/user/:username/profile', hmac.middleware, api.user.profile);
 
+app.post('/v1/lookup', api.user.batchlookup)
+
 app.delete('/v1/user/:username', ecdsa.middleware, api.blob.delete);
 app.get('/v1/user/:username', api.user.get);
 app.get('/v1/user/:username/verify/:token', api.user.verify);

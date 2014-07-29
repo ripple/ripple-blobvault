@@ -656,6 +656,30 @@ var verify2faToken = function(req,res) {
     ])
 }
 
+var batchlookup = function(req,res,next) {
+    var keyresp = libutils.hasKeys(req.body,['list']);
+    if (!keyresp.hasAllKeys) {
+        response.json({result:'error', message:'Missing keys',missing:keyresp.missing}).status(400).pipe(res)
+        return
+    } 
+    var list = req.body.list;
+    exports.store.batchlookup({list:list},function(resp) {
+        if (resp.error) {
+            response.json({result:'error',message:resp.error}).status(400).pipe(res);
+            return
+        } else {
+            var result_hash = {};
+            for (var i = 0; i < resp.length; i++) {
+                var addr = resp[i].address;
+                var username = resp[i].username;
+                result_hash[addr] = username;
+            }
+            response.json({result:'success',mapping:result_hash}).pipe(res)
+        }
+    })
+}
+
+exports.batchlookup = batchlookup;
 exports.request2faToken = request2faToken;
 exports.verify2faToken = verify2faToken;
 exports.set2fa = set2fa;
