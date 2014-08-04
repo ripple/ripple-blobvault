@@ -1,16 +1,15 @@
 var argv = require('optimist')
-    .usage('Usage: $0 -f [file] -m [insert|remove] -s')
+    .usage('Usage: $0 -f [file] -m [insert|remove]')
     .demand('f')
     .describe('f','file to read in that is google exported tab separated value tsv')
     .alias('f','file')
     .demand('m')
     .describe('m', 'insert | remove')
     .alias('m', 'mode')
-    .describe('s','simulate only, make no changes to disk')
-    .alias('s','simulate')
     .argv;
 var fs = require('fs');
 var cw = fs.readFileSync(argv.f);
+var utils = require('../lib/utils')
 var QL = require('queuelib')
 var q = new QL;
 
@@ -36,7 +35,7 @@ if (argv.m == 'insert') {
         var failure = [];
         q.forEach(lines2,function(line,idx,lib) {
             var genid = (Math.random() + 1).toString(36).substring(7)
-            var obj = { id:'coldwallet_'+genid,address: line[0], username:line[1] }
+            var obj = { id:'coldwallet_'+genid,address: line[0], normalized_username:utils.normalizeUsername(line[1]),username:line[1] }
             store.insert_or_update_where({table:'blob',set:obj
             },
             function(resp) {
@@ -81,9 +80,11 @@ if (argv.m == 'insert') {
             })
         },
         function() {
-            console.log("All done. deleted " + success.length + " cold wallets")
+            var type = (argv.m == 'remove') ? 'deleted' : 'inserted'
+            console.log("All done. " + type + " " + success.length + " cold wallets")
             console.log("successes:", success)
             console.log("failures:", failure)
         })
     }
 }
+
