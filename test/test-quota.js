@@ -46,6 +46,20 @@ test('create , patch, patch, get specific patch #2, delete', function(done) {
     var server = http.createServer(app);
     q.series([
         function(lib) {
+            store.db('blob')
+            .truncate()
+            .then(function() {
+                lib.done()
+            })
+        },
+        function(lib) {
+            store.db('blob_patches')
+            .truncate()
+            .then(function() {
+                lib.done()
+            })
+        },
+        function(lib) {
             server.listen(5050,function() {
                 lib.done();
             });
@@ -112,7 +126,7 @@ test('create , patch, patch, get specific patch #2, delete', function(done) {
                     if (count <= 1523)
                         assert.deepEqual(body,{result:'success',revision:count});
                     else 
-                        assert.deepEqual(body,{result:'error',message:'quota exceeded'});
+                        assert.deepEqual(body,{result:'error',code:6682,message:'quota exceeded'});
                     if (count <= 1530)
                         doPatch();
                     else 
