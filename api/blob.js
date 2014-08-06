@@ -99,6 +99,7 @@ var create = function (req, res) {
             }
        });
     },
+/*
     function(lib,id) {
         // check if account is funded
         var cb = function(isFunded) {
@@ -124,6 +125,7 @@ var create = function (req, res) {
         }
         count.checkLedger(req.body.address,protector(cb,5000,'timeout'))
     },
+*/
     function(lib) { 
         // TODO : inner key is required on updates
 
@@ -158,11 +160,15 @@ var create = function (req, res) {
             }
             email.send({email:params.email,hostlink:params.hostlink,token:params.emailToken,name:username});
             response.json({result:'success'}).status(201).pipe(res)
-            // if account is not funded we set add towards the daily limit
+// if account is not funded we set add towards the daily limit
+/*
             if (!lib.get('isFunded'))
                 count.adddb();
             else 
                 count.markdb(); // for funded user migration
+*/
+            // RT-2048 we treat all users as funded for purpose of counting
+            count.markdb(); // for funded user migration
             lib.done();
         });
     }

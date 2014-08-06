@@ -193,6 +193,7 @@ var rename = function(req,res) {
             if (resp.length) {
                 lib.set({old_blob_id:resp[0].id})
                 lib.set({address:resp[0].address})
+                lib.set({email:resp[0].email})
                 lib.done();
             } else {
                 response.json({result:'error',message:"invalid user"}).status(400).pipe(res)
@@ -220,6 +221,13 @@ var rename = function(req,res) {
             lib.done()
         });    
     
+    },
+    function(lib) {
+        // RT-2036 send email when user changes Ripple Name 
+        if (lib.get('email') !== undefined) {
+            email.notifynamechange({email:lib.get('email'),new_username:new_username,old_username:old_username});
+        }
+        lib.done()
     },
     function(lib) {
         var obj = {id:new_blob_id,encrypted_secret:encrypted_secret,username:new_username,normalized_username:new_normalized_username};
