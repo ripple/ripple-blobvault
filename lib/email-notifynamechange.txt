@@ -1,7 +1,5 @@
-You've changed your name
-from
-_OLD_NAME__
-to
-_NEW_NAME_
-Thanks,
-The Ripple Trade team
+Hi,
+You recently changed your Ripple name from _OLD_NAME_ to _NEW_NAME_ 
+Remember to login to RippleTrade.com using your new Ripple name!
+Sincerely,
+The Ripple team
