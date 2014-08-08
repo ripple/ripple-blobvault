@@ -466,7 +466,26 @@ var set2fa = function(req,res) {
             lib.done()
         }
     },
-
+    function(lib) {
+        // store the auth_id (in this case the authy_id)
+        var _blob = lib.get('_blob')
+        if ((via == 'app') && (enabled === true) && (country_code && _blob.email && phone)) {
+            var produrl = config.phone.url+'/protected/json/users/new/?api_key='+config.phone.key
+            var obj = { email:_blob.email, cellphone:phone_number,country_code:country_code }
+            request.post({url:produrl,json:true,body:qs.stringify(obj)},function(err,resp,body) {
+                reporter.log("set2fa:calling to get auth id response body:",body);
+                if (body && body.user) {
+                    var update_obj = {};
+                    update_obj["2fa_auth_id"] = body.user.id;
+                    exports.store.update_where({set:update_obj,where:{key:'id',value:blob_id}},function(resp) {
+                        reporter.log("set2fa:2fa_auth_id:",body.user.id);
+                        lib.done()
+                    })
+                } else 
+                    lib.done()
+            })
+        }
+    },
     function(lib) {
         var obj = {}
         if (enabled !== undefined) 
