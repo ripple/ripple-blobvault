@@ -33,7 +33,7 @@ var q = new QL;
 // to see if we get through the guard middleware
 
 test('test-2fa',function(done) {
-    this.timeout(0)
+    this.timeout(20000)
     q.series([
     function(lib) {
         server.listen(5150,function() {
@@ -107,7 +107,7 @@ test('test-2fa',function(done) {
     },
     function(lib) {
         request.get({url:'http://localhost:5150/v1/blob/'+testutils.person.id+'/2fa/requestToken',json:true},function(err,resp,body) {
-            console.log(body)
+            console.log("request response body:",body)
             lib.done()
         })
     },
@@ -116,6 +116,13 @@ test('test-2fa',function(done) {
         console.log("going to verify")
         request.post({url:'http://localhost:5150/v1/blob/'+testutils.person.id+'/2fa/verifyToken',json:{device_id:'a1a2a3a4a5', token:'0000000'}},function(err,resp,body) {
             console.log(body)
+            lib.done()
+        })
+    },
+    function(lib) {
+        console.log("forcing sms request")
+        request.get({url:'http://localhost:5150/v1/blob/'+testutils.person.id+'/2fa/requestToken',qs:{force_sms:true},json:true},function(err,resp,body) {
+            console.log("request response body:",body)
             lib.done()
         })
     },

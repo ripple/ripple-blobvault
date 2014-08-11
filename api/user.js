@@ -587,6 +587,7 @@ var get2fa = function(req,res) {
 
 var request2faToken = function(req,res) {
     var blob_id = req.params.blob_id;
+    var force_sms = req.query.force_sms;
     var q = new Queue;
 
     q.series([
@@ -637,19 +638,30 @@ var request2faToken = function(req,res) {
         var country_code = blob["2fa_country_code"];
         var phone_number = blob["2fa_phone"];
         var auth_id = blob['2fa_auth_id'];
+
         if ((!phone_number) && (!country_code) && (!via) && (!auth_id)) {
             response.json({result:'error',message:'error on request 2fa token'}).status(400).pipe(res)
             lib.terminate()
             return
         } else {
             var produrl = config.phone.url+'/protected/json/sms/'+auth_id+'?api_key='+config.phone.key
+            if ((force_sms !== undefined) && (force_sms == 'true'))
+                produrl = produrl.concat('&force=true')
             request.get({url:produrl,json:true},function(err,resp,body) {
                 reporter.log("request2fa token request body:",body)
-                if (body.success === true) {
-                    response.json({result:'success'}).pipe(res)
-                } else  {
-                    response.json({result:'error'}).status(400).pipe(res)
-                }
+                var obj = {};
+                if (body.success === true)
+                    obj.result = 'success';
+                else
+                    obj.result = 'error';
+                if ((body.ignored !== undefined) && (body.ignored === true))
+                    obj.via = 'app';
+                else 
+                    obj.via = 'sms';
+                if (body.success === true)
+                    response.json(obj).pipe(res)
+                else 
+                    response.json(obj).status(400).pipe(res)
                 lib.done()
             });
         }
