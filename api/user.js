@@ -437,6 +437,8 @@ var set2fa = function(req,res) {
     var blob_id = req.query.signature_blob_id;
     var enabled = req.body.enabled;
     var phone = req.body.phone;
+    if (phone)
+        phone = libutils.normalizePhone(phone)
     var country_code = req.body.country_code;
     var via = req.body.via;
 
@@ -458,32 +460,46 @@ var set2fa = function(req,res) {
     function(lib) {
         // do not allow enabled 2fa if phone is not verified, RT-1945
         var _blob = lib.get('_blob');
-        if ((!_blob.phone_verified) && (enabled === true)) {
-            response.json({result:'error',message:'enabled cannot be set if phone number is not verified'}).status(400).pipe(res)
-            lib.terminate()
-            return
-        } else {
+        reporter.log("set2fa:check phone verified: blob:", _blob)
+        // check if phone is different
+        if (phone != _blob['2fa_phone']) {
+            if ((!_blob.phone_verified) && (enabled === true)) {
+                response.json({result:'error',message:'enabled cannot be set if phone number is not verified'}).status(400).pipe(res)
+                lib.terminate()
+                return
+            } else {
+                lib.done()
+            }
+        } else 
             lib.done()
-        }
     },
     function(lib) {
-        // store the auth_id (in this case the authy_id)
+        // create the auth id
         var _blob = lib.get('_blob')
-        if ((via == 'app') && (enabled === true) && (country_code && _blob.email && phone)) {
-            var produrl = config.phone.url+'/protected/json/users/new/?api_key='+config.phone.key
-            var obj = { email:_blob.email, cellphone:phone_number,country_code:country_code }
-            request.post({url:produrl,json:true,body:qs.stringify(obj)},function(err,resp,body) {
-                reporter.log("set2fa:calling to get auth id response body:",body);
-                if (body && body.user) {
-                    var update_obj = {};
-                    update_obj["2fa_auth_id"] = body.user.id;
-                    exports.store.update_where({set:update_obj,where:{key:'id',value:blob_id}},function(resp) {
-                        reporter.log("set2fa:2fa_auth_id:",body.user.id);
+        if (!_blob["2fa_auth_id"]) {
+            reporter.log("set2fa:auth id not set. getting auth id from provider") 
+            if (country_code && _blob.email && phone) {
+                var produrl = config.phone.url+'/protected/json/users/new/?api_key='+config.phone.key
+                var obj = { email:_blob.email, cellphone:phone,country_code:country_code }
+                reporter.log("set2fa:storing the auth_id tied to:", qs.stringify(obj));
+                reporter.log("set2fa:auth id going to register user");
+                request.post({url:produrl,json:{user:obj}},function(err,resp,body) {
+                    reporter.log("set2fa:auth id response body:",body);
+                    if (body && body.user) {
+                        var update_obj = {};
+                        update_obj["2fa_auth_id"] = body.user.id;
+                        exports.store.update_where({set:update_obj,where:{key:'id',value:blob_id}},function(resp) {
+                            reporter.log("set2fa:2fa_auth_id:",body.user.id);
+                            lib.done()
+                        })
+                    } else 
                         lib.done()
-                    })
-                } else 
-                    lib.done()
-            })
+                })
+            } else 
+                lib.done()
+        } else {
+            reporter.log("set2fa:auth id is set. not getting auth id from provider") 
+            lib.done()
         }
     },
     function(lib) {
@@ -538,7 +554,7 @@ var get2fa = function(req,res) {
                     var phone = row["2fa_phone"]
                     var masked_phone = libutils.maskphone(phone);
                     
-                    var obj = { via:row["2fa_via"],country_code:row["2fa_country_code"],enabled:row["2fa_enabled"],remember_me:row["2fa_remember_me"],phone:phone,masked_phone:masked_phone}
+                    var obj = { auth_id:row["2fa_auth_id"],via:row["2fa_via"],country_code:row["2fa_country_code"],enabled:row["2fa_enabled"],remember_me:row["2fa_remember_me"],phone:phone,masked_phone:masked_phone}
                     obj.result = 'success';
                     if (deviceidrow) {
                         obj.remember_me = deviceidrow.remember_me;
@@ -558,7 +574,7 @@ var get2fa = function(req,res) {
                 var phone = row["2fa_phone"]
                 var masked_phone = libutils.maskphone(phone);
                 
-                var obj = { via:row["2fa_via"],country_code:row["2fa_country_code"],enabled:row["2fa_enabled"],remember_me:row["2fa_remember_me"],phone:phone,masked_phone:masked_phone}
+                var obj = { auth_id:row["2fa_auth_id"],via:row["2fa_via"],country_code:row["2fa_country_code"],enabled:row["2fa_enabled"],remember_me:row["2fa_remember_me"],phone:phone,masked_phone:masked_phone}
                 obj.result = 'success';
                 console.log("THE OBJ:",obj)
                 response.json(obj).pipe(res)
@@ -571,37 +587,80 @@ var get2fa = function(req,res) {
 
 var request2faToken = function(req,res) {
     var blob_id = req.params.blob_id;
-    
-    exports.store.read_where({key:'id',value:blob_id},function(resp) {
-        if (resp.length) {
-            var row = resp[0];
-            var via = row["2fa_via"];
-            var country_code = row["2fa_country_code"];
-            var phone_number = row["2fa_phone"];
-            if ((!phone_number) && (!country_code) && (!via)) {
-                response.json({result:'error',message:'error on request 2fa token'}).status(400).pipe(res)
-                return
+    var q = new Queue;
+
+    q.series([
+    function(lib) {
+        exports.store.read_where({key:'id',value:blob_id},function(resp) {
+            if (resp.length) {
+                lib.set({_blob:resp[0]})
+                lib.done()
             } else {
-                var produrl = config.phone.url+'/protected/json/phones/verification/start?api_key='+config.phone.key
-                var obj = { via:via, phone_number:phone_number,country_code:country_code }
-                request.post({url:produrl,json:true,body:qs.stringify(obj)},function(err,resp,body) {
-                    if (body.success === true) {
-                        response.json({result:'success'}).pipe(res)
-                    } else  {
-                        response.json({result:'error'}).status(400).pipe(res)
-                    }
-                });
+                response.json({result:'error',message:'error requesting 2fa token'}).status(400).pipe(res)
+                lib.terminate();
+                return;
             }
-            
-        } else 
+        })
+    },
+    function(lib) {
+        // create the auth id
+        var _blob = lib.get('_blob')
+        if (!_blob["2fa_auth_id"]) {
+            reporter.log("request2fa:auth id not set. getting auth id from provider") 
+            if (country_code && _blob.email && phone) {
+                var produrl = config.phone.url+'/protected/json/users/new/?api_key='+config.phone.key
+                var obj = { email:_blob.email, cellphone:phone,country_code:country_code }
+                reporter.log("request2fa:storing the auth_id tied to:", qs.stringify(obj));
+                reporter.log("request2fa:auth id going to register user");
+                request.post({url:produrl,json:{user:obj}},function(err,resp,body) {
+                    reporter.log("request2fa:auth id response body:",body);
+                    if (body && body.user) {
+                        var update_obj = {};
+                        update_obj["2fa_auth_id"] = body.user.id;
+                        exports.store.update_where({set:update_obj,where:{key:'id',value:blob_id}},function(resp) {
+                            reporter.log("request2fa:2fa_auth_id:",body.user.id);
+                            lib.done()
+                        })
+                    } else 
+                        lib.done()
+                })
+            } else 
+                lib.done()
+        } else {
+            reporter.log("set2fa:auth id is set. not getting auth id from provider") 
+            lib.done()
+        }
+    },
+    function(lib) {
+        var blob = lib.get('_blob');
+        var via = blob["2fa_via"];
+        var country_code = blob["2fa_country_code"];
+        var phone_number = blob["2fa_phone"];
+        var auth_id = blob['2fa_auth_id'];
+        if ((!phone_number) && (!country_code) && (!via) && (!auth_id)) {
             response.json({result:'error',message:'error on request 2fa token'}).status(400).pipe(res)
-    });
+            lib.terminate()
+            return
+        } else {
+            var produrl = config.phone.url+'/protected/json/sms/'+auth_id+'?api_key='+config.phone.key
+            request.get({url:produrl,json:true},function(err,resp,body) {
+                reporter.log("request2fa token request body:",body)
+                if (body.success === true) {
+                    response.json({result:'success'}).pipe(res)
+                } else  {
+                    response.json({result:'error'}).status(400).pipe(res)
+                }
+                lib.done()
+            });
+        }
+    }
+    ]);
 }
 
 var verify2faToken = function(req,res) {
     var blob_id = req.params.blob_id;
 
-    var keyresp = libutils.hasKeys(req.body,['remember_me', 'device_id','token']);
+    var keyresp = libutils.hasKeys(req.body,['device_id','token']);
     if (!keyresp.hasAllKeys) {
         response.json({result:'error', message:'Missing keys',missing:keyresp.missing}).status(400).pipe(res)
         return
@@ -643,16 +702,17 @@ var verify2faToken = function(req,res) {
                 var via = row["2fa_via"];
                 var country_code = row["2fa_country_code"];
                 var phone_number = row["2fa_phone"];
+                var auth_id = row['2fa_auth_id'];
                 if ((!phone_number) && (!country_code) && (!via)) {
                     response.json({result:'error',message:'error on validate 2fa token'}).status(400).pipe(res)
                     lib.done()
                     return
                 } else {
                     var obj = {api_key:config.phone.key,phone_number:phone_number,country_code:country_code,verification_code:token}
-                    var produrl = config.phone.url+'/protected/json/phones/verification/check'
-                    request.get({url:produrl,qs:obj,json:true},function(err,resp,body) {
+                    var produrl = config.phone.url+'/protected/json/verify/'+token+'/'+auth_id+'?api_key='+config.phone.key
+                    request.get({url:produrl,json:true},function(err,resp,body) {
                         reporter.log("auth provider response on verify:",body)
-                        if (body.success === true) {
+                        if (body.success == 'true') {
                             var currtime = new Date().getTime()
                             exports.store.update_where({
                             where:{key:'id',value:blob_id},
