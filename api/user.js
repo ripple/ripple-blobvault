@@ -474,9 +474,10 @@ var set2fa = function(req,res) {
             lib.done()
     },
     function(lib) {
-        // create the auth id
+        // create the auth id if we don't have an auth_id OR we get a new auth_id if phone is different
         var _blob = lib.get('_blob')
-        if (!_blob["2fa_auth_id"]) {
+        // we don't need to normalize the phone check since the saved phone is already normalized as is the phone from the request
+        if ((!_blob["2fa_auth_id"]) || (phone != _blob['2fa_phone'])) {
             reporter.log("set2fa:auth id not set. getting auth id from provider") 
             if (country_code && _blob.email && phone) {
                 var produrl = config.phone.url+'/protected/json/users/new/?api_key='+config.phone.key
