@@ -36,18 +36,37 @@ if (argv.m == 'insert') {
         q.forEach(lines2,function(line,idx,lib) {
             var genid = (Math.random() + 1).toString(36).substring(7)
             var obj = { id:'coldwallet_'+genid,address: line[0], normalized_username:utils.normalizeUsername(line[1]),username:line[1] }
-            store.insert_or_update_where({table:'blob',set:obj
-            },
-            function(resp) {
-                if ((resp.result) && (resp.result == 'success'))
-                    success.push(obj)
-                else 
-                    failure.push(obj)
-                lib.done()
+            store.read_where({key:'address',value:line[0]},function(list) {
+                console.log("read where result:",list)
+                if (list.length) {
+                    console.log("user already exists.. so deleteing pre-generated id")
+                    delete obj.id;
+                    var blob = list[0];
+                    if ((!blob['encrypted_blobdecrypt_key']) || (blob['encrypted_blobdecrypt_key'] == '')) {
+                        console.log("user does NOT have encrypted blobdecrpyt key. Skipping")
+                        failure.push(obj)
+                        
+                        lib.done();
+                        return;
+                    }
+                } else {
+                    console.log("going with new generated id") 
+                }
+                store.insert_or_update_where({table:'blob',where:{key:'address',value:line[0]},set:obj
+                },
+                function(resp) {
+                    if ((resp.result) && (resp.result == 'success')) {
+                        if (list.length) 
+                            obj.oldusername = list[0].username;
+                        success.push(obj)
+                    } else 
+                        failure.push(obj)
+                    lib.done()
+                })
             })
         },
         function() {
-            console.log("All done. remove " + success.length + " cold wallets")
+            console.log("All done. inserted " + success.length + " cold wallets")
             console.log("successes:", success)
             console.log("failures:", failure)
         })
@@ -80,8 +99,7 @@ if (argv.m == 'insert') {
             })
         },
         function() {
-            var type = (argv.m == 'remove') ? 'deleted' : 'inserted'
-            console.log("All done. " + type + " " + success.length + " cold wallets")
+            console.log("All done. deleted " + success.length + " cold wallets")
             console.log("successes:", success)
             console.log("failures:", failure)
         })
