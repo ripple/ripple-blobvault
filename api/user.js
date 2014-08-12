@@ -493,8 +493,11 @@ var set2fa = function(req,res) {
                             reporter.log("set2fa:2fa_auth_id:",body.user.id);
                             lib.done()
                         })
-                    } else 
-                        lib.done()
+                    } else {
+                        response.json({result:'error',message:'invalid phone'}).status(400).pipe(res)
+                        lib.terminate()
+                        return;
+                    }
                 })
             } else 
                 lib.done()
