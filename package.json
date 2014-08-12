@@ -28,7 +28,7 @@
   "devDependencies": {
     "request": "^2.34.0",
     "chai": "^1.9.1",
-    "mocha": "^1.18.2",
+    "mocha": "https://github.com/visionmedia/mocha/archive/master.tar.gz",
     "sinon": "^1.9.1"
   },
   "scripts": {
