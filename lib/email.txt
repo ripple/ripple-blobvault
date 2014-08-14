@@ -1,4 +1,5 @@
 Welcome to Ripple!
+Hello _RIPPLE_NAME_
 To get started, please verify your email address below:
 _VERIFY_URL_
 Thanks,
