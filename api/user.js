@@ -155,6 +155,7 @@ var rename = function(req,res) {
     
     var old_username = req.params.username;
     var new_username = req.body.username;
+    reporter.log("rename: from:", old_username, " to:" , new_username)
     var new_blob_id = req.body.blob_id;
     var encrypted_secret = req.body.encrypted_secret;
     var new_normalized_username = libutils.normalizeUsername(new_username);
@@ -223,13 +224,6 @@ var rename = function(req,res) {
     
     },
     function(lib) {
-        // RT-2036 send email when user changes Ripple Name 
-        if (lib.get('email') !== undefined) {
-            email.notifynamechange({email:lib.get('email'),new_username:new_username,old_username:old_username});
-        }
-        lib.done()
-    },
-    function(lib) {
         var obj = {id:new_blob_id,encrypted_secret:encrypted_secret,username:new_username,normalized_username:new_normalized_username};
         if (req.body.encrypted_blobdecrypt_key) {
             obj.encrypted_blobdecrypt_key = req.body.encrypted_blobdecrypt_key;
@@ -249,7 +243,14 @@ var rename = function(req,res) {
                 response.json({result:'error',message:'rename'}).status(400).pipe(res)
             lib.done()
         })
-    }
+    },
+    function(lib) {
+        // RT-2036 send email when user changes Ripple Name 
+        if (lib.get('email') !== undefined) {
+            email.notifynamechange({email:lib.get('email'),new_username:new_username,old_username:old_username});
+        }
+        lib.done()
+    },
     ])
 }
 var profiledetail = function(req,res) {
