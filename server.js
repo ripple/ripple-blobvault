@@ -81,22 +81,6 @@ try {
   reporter.log("Could not launch SSL server: " + (e.stack ? e.stack : e.toString()));
 }
 
-if (config.campaigns === true) {
-    var Campaign = require('./emailcampaign');
-    var emailCampaign = new Campaign(store.db,config);
-    emailCampaign.probe_subscribe(function(data) {
-        reporter.log(data)
-        if (data.action == 'check') {
-            reporter.log(data.timetill / (1000*60) + " minutes till check")
-        }
-    })
-    emailCampaign.start(function(){
-        reporter.log("Email campaign ready");
-    })
-} else {
-    reporter.log("campaigns not running") 
-}
-
 process.on('SIGTERM',function() {
     reporter.log("caught sigterm");
     process.exit();
