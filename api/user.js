@@ -745,7 +745,7 @@ var verify2faToken = function(req,res) {
                             exports.store.insert_or_update_where({table:'twofactor',where:{key:'device_id',value:device_id},set:{blob_id:blob_id,is_auth:false,device_id:device_id}},
                             function(resp2) {
                                 reporter.log("verify2fa set incorrect code:",resp2)
-                                response.json({result:'error'}).status(400).pipe(res)
+                                response.json({result:'error',message:'invalid token'}).status(400).pipe(res)
                                 lib.done()
                             });
                         }
