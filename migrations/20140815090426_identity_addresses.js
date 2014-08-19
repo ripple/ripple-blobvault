@@ -15,7 +15,7 @@ exports.up = function(knex, Promise) {
             table.string('postal_code')
             table.string('country') 
             table.string('visibility')
-        
+            table.bigInteger('updated')
         })
     ])
   

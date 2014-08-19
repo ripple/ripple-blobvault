@@ -6,6 +6,7 @@ exports.up = function(knex, Promise) {
             table.string('id').primary()
             table.binary('binary')
             table.json('attestation')
+            table.json('meta')
         })
     ])
 };
