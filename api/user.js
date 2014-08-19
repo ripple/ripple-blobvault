@@ -783,6 +783,150 @@ var batchlookup = function(req,res,next) {
     })
 }
 
+var setProfile = function(req,res,next) {
+    var identity_id = req.params.identity_id
+    reporter.log("setProfile:identity_id:", identity_id)
+    var q = new Queue;
+    q.series([
+    function(lib) {
+        if (req.body.attributes) {
+            var q = new Queue;
+            q.forEach(req.body.attributes,
+            function(obj,idx,lib2) {
+                reporter.log("setProfile attr obj:",obj)
+                // set default type
+                if (obj.type == undefined) 
+                    obj.type = 'default';
+                obj.identity_id = identity_id
+                exports.store.read_where({table:'identity_attributes',key:'identity_id',value:identity_id},
+                function(resp) {
+                    reporter.log("setProfile:read Where resp:", resp)
+                    var matches = libutils.list_filter(resp,{name:obj.name,type:obj.type})
+                    reporter.log("setProfile:matches", matches,{name:obj.name,type:obj.type})
+                    if (matches.length) {
+                        var attr = matches[0]
+                        if ((obj.name == attr.name) && (obj.type == attr.type)) {
+                            // update
+                            exports.store.update_where({table:'identity_attributes', set: obj, where:{key:'attribute_id',value:attr.attribute_id}},function(resp) {
+                                reporter.log("setProfile: updated identity_attributes", obj, " where:", identity_id)
+                                lib2.done()
+                            })
+                        } else {
+                            //insert
+                            obj.attribute_id = libutils.generate_uuid()
+                            exports.store.insert({table:'identity_attributes', set:obj},function(resp) {
+                                reporter.log("setProfile: inserted identity_attributes", obj, " for:", identity_id)
+                                lib2.done()
+                            })
+                        }
+                    } else {
+                        //insert
+                        obj.attribute_id = libutils.generate_uuid()
+                        exports.store.insert({table:'identity_attributes', set:obj},function(resp) {
+                            reporter.log("setProfile: inserted identity_attributes", obj, " for:", identity_id)
+                            lib2.done()
+                        })
+                    }
+                })
+            },
+            function() {
+                reporter.log("setProfile:all done with attributes")
+                lib.done()
+            })
+        } else 
+            lib.done()
+    },
+    function(lib) {
+        if (req.body.addresses) {
+            var q = new Queue;
+            q.forEach(req.body.addresses,
+            function(obj,idx,lib2) {
+                reporter.log("setProfile addr obj:",obj)
+                // set default type
+                if (obj.type == undefined) 
+                    obj.type = 'default';
+                obj.identity_id = identity_id
+                exports.store.read_where({table:'identity_addresses',key:'identity_id',value:identity_id},
+                function(resp) {
+                    reporter.log("setProfile:read Where resp:", resp)
+                    var matches = libutils.list_filter(resp,{name:obj.name,type:obj.type})
+                    reporter.log("setProfile:matches", matches,{name:obj.name,type:obj.type})
+                    if (matches.length) {
+                        var attr = matches[0]
+                        if ((obj.name == attr.name) && (obj.type == attr.type)) {
+                            // update
+                            exports.store.update_where({table:'identity_addresses', set: obj, where:{key:'id',value:attr.id}},function(resp) {
+                                reporter.log("setProfile: updated identity_addresses", obj, " where:", identity_id)
+                                lib2.done()
+                            })
+                        } else {
+                            //insert
+                            obj.id = libutils.generate_uuid()
+                            exports.store.insert({table:'identity_addresses', set:obj},function(resp) {
+                                reporter.log("setProfile: inserted identity_addresses", obj, " for:", identity_id)
+                                lib2.done()
+                            })
+                        }
+                    } else {
+                        //insert
+                        obj.id = libutils.generate_uuid()
+                        exports.store.insert({table:'identity_addresses', set:obj},function(resp) {
+                            reporter.log("setProfile: inserted identity_addresses", obj, " for:", identity_id)
+                            lib2.done()
+                        })
+                    }
+                })
+            },
+            function() {
+                reporter.log("setProfile:all done with addresses")
+                lib.done()
+            })
+        } else 
+            lib.done()
+    },
+    function(lib) {
+        console.log("setProfile: finished.")
+        response.json({result:'success'}).pipe(res)
+        lib.done()
+    }
+    ])
+}
+
+var getProfile = function(req,res,next) {
+    var identity_id = req.params.identity_id
+    reporter.log("getProfile:identity_id:", identity_id)
+    var q = new Queue
+    q.series([
+    function(lib) {
+        exports.store.read_where({table:'identity_attributes',key:'identity_id', value:identity_id},
+        function(resp) {
+            reporter.log("getProfile:attributes lookup response:", resp)
+            lib.set({attributes:resp})
+            lib.done()
+        });
+    },
+    function(lib) {
+        exports.store.read_where({table:'identity_addresses',key:'identity_id', value:identity_id},
+        function(resp) {
+            reporter.log("getProfile:addresses lookup response:", resp)
+            lib.set({addresses:resp})
+            lib.done()
+        });
+    },
+    function(lib) {
+        response.json({
+        result:'success',
+        addresses:lib.get('addresses'),
+        attributes:lib.get('attributes')
+        }).pipe(res)
+        lib.done()
+    }
+    ])
+        
+}
+
+exports.setProfile = setProfile;
+exports.getProfile = getProfile;
 exports.batchlookup = batchlookup;
 exports.request2faToken = request2faToken;
 exports.verify2faToken = verify2faToken;

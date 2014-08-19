@@ -10,6 +10,7 @@ var api = require('./api');
 var reporter = require('./lib/reporter');
 var guard = require('./guard')(store)
 var limiter = guard.resend_email();
+var requestAttestation = require('./api/requestAttestation')
 
 var Ddos= require('ddos');
 var ddos = new Ddos;
@@ -48,22 +49,28 @@ app.delete('/v1/user/:username', ecdsa.middleware, api.blob.delete);
 app.get('/v1/user/:username', api.user.get);
 app.get('/v1/user/:username/verify/:token', api.user.verify);
 
-// JSON handlers
+// blob related
 app.get('/v1/blob/:blob_id', api.blob.get);
 app.post('/v1/blob/patch', hmac.middleware, api.blob.patch);
 app.get('/v1/blob/:blob_id/patch/:patch_id', api.blob.getPatch);
 app.post('/v1/blob/consolidate', hmac.middleware, api.blob.consolidate);
 
+// old phone validation
 app.post('/v1/user/:username/phone', api.user.phoneRequest)
 app.post('/v1/user/:username/phone/validate', api.user.phoneValidate)
 
 // 2FA
 app.post('/v1/blob/:blob_id/2fa', ecdsa.middleware, api.user.set2fa)
 app.get('/v1/blob/:blob_id/2fa', ecdsa.middleware, api.user.get2fa)
-
 app.get('/v1/blob/:blob_id/2fa/requestToken', api.user.request2faToken)
 app.post('/v1/blob/:blob_id/2fa/verifyToken', api.user.verify2faToken)
 
+// profile route
+app.post('/v1/requestAttestation', hmac.middleware, requestAttestation)
+app.post('/v1/profile/:identity_id', api.user.setProfile)
+app.get('/v1/profile/:identity_id', api.user.getProfile
+
+// etc
 app.get('/v1/authinfo', api.user.authinfo);
 app.get('/health', health.status);
 app.get('/logs', api.blob.logs);

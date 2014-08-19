@@ -4,7 +4,7 @@ exports.up = function(knex, Promise) {
 
     return Promise.all([
         knex.schema.createTable('identity_attributes',function(table) {
-            table.string('attribute_id')
+            table.string('attribute_id').primary()
             table.string('identity_id') 
             table.string('name')
             table.string('type')
