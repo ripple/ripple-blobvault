@@ -159,7 +159,8 @@ var create = function (req, res) {
                 return;
             }
             email.send({email:params.email,hostlink:params.hostlink,token:params.emailToken,name:username});
-            response.json({result:'success'}).status(201).pipe(res)
+            lib.set({identity_id:resp.identity_id})
+            response.json(resp).status(201).pipe(res)
 // if account is not funded we set add towards the daily limit
 /*
             if (!lib.get('isFunded'))
@@ -171,6 +172,17 @@ var create = function (req, res) {
             count.markdb(); // for funded user migration
             lib.done();
         });
+    },
+    function(lib) {
+    // finally add identity_id to identity table
+        
+        var set = params.set;
+        var table = params.table || 'blob';
+        store.insert({set:{identity_id:lib.get('identity_id')},table:'identity'},
+        function() {
+            reporter.log("blob create: added ", lib.get('identity_id'), " to identity table")
+            lib.done();
+        })
     }
     ]);
 };
@@ -330,6 +342,30 @@ exports.get = function (req, res) {
                     }
                     lib.done()
                 })
+            },
+            function(lib) {
+            // set identity_id if one does not exist
+                var _blob = lib.get('_blob');
+                if (!_blob.identity_id) {
+                    reporter.log("blobGet: identity_id does not exist for ", _blob)
+                    var identity_id = libutils.generateIdentityId()
+                    lib.set({identity_id:identity_id})
+                    store.update_where({where:{key:'id', value:_blob.id},set:{identity_id:identity_id}, table:'blob'},function(resp) {
+                        reporter.log("blobGet: identity_id added ", identity_id)
+                        lib.done()
+                    })
+                } else {
+                    lib.done()
+                }
+            },
+            function(lib) {
+                if (!_blob.identity_id) {
+                    store.insert({set:{identity_id:lib.get('identity_id')},table:'identity'}, 
+                    function() {
+                        lib.done()
+                    })
+                } else 
+                    lib.done() 
             },
             function(lib) {
                 var _blob = lib.get('_blob');
