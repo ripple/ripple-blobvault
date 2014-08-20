@@ -45,7 +45,7 @@ var Campaign = function(db,config) {
                         reporter.log(idx + " / " + rows.length)
                         lib2.done()
                         return
-                    } else if (isFunded == row[idx].isFunded) {
+                    } else if (isFunded == rows[idx].isFunded) {
                         lib2.done()
                         return
                     }

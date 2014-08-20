@@ -94,7 +94,7 @@ In this example we use GET but it can apply to any HTTP Method for any route mar
         "message" : ""
         }
 
-# Group Deleting a user - uses HMAC
+# Group Deleting a user - uses ECDSA
 
 example: DELETE /v1/user/foo will delete user foo
 
@@ -200,6 +200,91 @@ Example: /v1/authinfo?username=foo
             }
         }
         
+
+# Group 2FA - Setting Two Factor Authentication 2FA Settings - uses ECDSA
+
+## POST /v1/blob/{blob_id}/2FA
+
++ Parameters 
+
+    + blob_id (required,string) ... the blob id
+
++ Request (application/json)
+
+        {
+            "remember_me" : true,
+            "enabled" : true,
+            "phone" : "<phone number>",
+            "country_code" : "<country_code>",
+            "via" : "sms"
+        }
+
++ Response 200 (application/json)
+
+        { 
+            "result" : "success",
+            "message" : "<message>"
+        }
+        
+# Group 2FA - Getting Two Factor Authentication 2FA Settings - uses ECDSA
+
+## GET /v1/blob/{blob_id}/2FA{?device_id}
+
+Ex. /v1/blob/<blobid>/2FA?device_id=57261be82601452ada0f2795bc709734
+
++ Parameters
+
+    + blob_id (required,string) ... the blob id
+    + device_id   (optional, string,`57261be82601452ada0f2795bc709734`) ... 256 bit random number in hex
+    
++ Response 200 (application/json)
+
+        { 
+            "result" : "success",
+            "device_id" : "<device_id>", (if device id is supplied)
+            "is_auth" : true, (if device id is supplied)
+            "remember_me" : true,  
+            "enabled" : true,
+            "country_code": "<country_code",
+            "masked_phone" : "<masked phone number>",
+            "via" : "sms"
+        }
+
+# Group 2FA - Request 2FA Token
+
+This is not a signed request but requires the blob id. No device ID required.
+
+## GET /v1/blob/{blob_id}/2fa/requestToken
+
++ Response 200 (application/json)
+
+        {
+            "result" : "success",
+            "message" : "<message>"
+        }
+
+# Group 2FA - Verify Device Token
+
+This is not a signed request but requires the blob id. Client supplies device ID.
+
+## POST /v1/blob/{blob_id}/2fa/verifyToken
+
++ Request (application/json)
+        
+        {
+            "device_id" : "<device_id>",
+            "token" : "<token>"
+        }
+
++ Response 200 (application/json)
+
+        {
+            "result" : "success",
+            "message" : "<message>"
+        }
+
+
+        
 # Group Recovering a user blob - uses ECDSA-RECOV
 
 ## GET /v1/user/recov/{username}
@@ -218,7 +303,8 @@ Example: /v1/authinfo?username=foo
             `revision` : `<revision number>`,
             `patches` : `<list of patches>`,
             `blob_id` : `<blob_id>`,
-            `encrypted_blobdecrypt_key` : `<encrypted_blobdecrypt_key>`
+            `encrypted_blobdecrypt_key` : `<encrypted_blobdecrypt_key>`,
+            `missing_user_fields` : `<missing user fields>`
         }
         
 + Response 400 (application/json)
@@ -232,6 +318,8 @@ Example: /v1/authinfo?username=foo
 This is meant to be used for either resetting the blob after client blob recovery, or
 this can be used password change, where all the listed fields in the request must be changed.
 
+Since this endpoint changes the blob_id, please note to use the old blob_id for the ECDSA signature.
+
 ## POST /v1/user/{username}/updatekeys
 
 + Parameters 
@@ -239,7 +327,7 @@ this can be used password change, where all the listed fields in the request mus
     +  username (required, string) ... represents the old username we want to change
 
 + Request (application/json)
-
+ 
         {
             `blob_id`: `<new blob id>`,
             `data` : `<data base64>`,
@@ -265,6 +353,9 @@ this can be used password change, where all the listed fields in the request mus
 
         
 # Group Renaming a user - uses ECDSA
+
+Since this endpoint changes the blob_id, please note to use the old blob_id for the ECDSA signature.
+
 
 ## POST /v1/user/{username}/rename
 
@@ -417,7 +508,7 @@ this can be used password change, where all the listed fields in the request mus
         }
             
 
-# Group Adding Profile Detail
+# Group Adding Profile Detail - uses HMAC
 
 Choose any number of the following to add
 
@@ -441,11 +532,12 @@ Choose any number of the following to add
         
 # Group Retrieve a blob
 
-## GET /v1/blob/{blob_id}
+## GET /v1/blob/{blob_id}{?device_id}
 
 + Parameters
 
     + blob_id (required,string) ... the blob id
+    + device_id (optional, string) ... client produced id for two-factor auth (2fa)
 
 + Response 200 (application/json)
 
@@ -456,7 +548,14 @@ Choose any number of the following to add
             revision : '<revision number>',
             email: '<email address>',
             quota: '<disk usage>',
-            patches: '<array of patches>'
+            patches: '<array of patches>',
+            twofactor: {
+                enabled: <boolean>,
+                is_auth: <boolean>,
+                remember_me: <boolean>,
+                masked_phone: "***-***-5555",
+                via:"sms"
+            } (only if device_id has attempted auth)
         }
 
 + Response 400 (application/json)
@@ -541,20 +640,19 @@ Choose any number of the following to add
         }
 
 
-# Group Checking if a user is locked
+# Group Service Health
 
-## GET /v1/locked{?address}
+## GET /health
 
-+ Response 403 (application/json)
-
-        { 
-            "result" : "locked"
-            "reason" : ""
-        }
-        
 + Response 200 (application/json)
 
-        { 
-            "result" : "not locked"
+        {
+            status : 'ok'
         }
+    
++ Response 500 (application/json)
 
+        {
+            status : 'not ok'
+            
+        }

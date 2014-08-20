@@ -1,4 +1,5 @@
 var reporter = require('../lib/reporter');
+var qs = require('querystring')
 var config = require('../config');
 var request = require('request');
 var response = require('response');
@@ -42,7 +43,7 @@ var getUserInfo = function(username, res) {
         exports.store.read_where({key:"address",value:username,res:res},
             function(resp) {
                 if (resp.error) {
-                    response.json({result:'error',message:resp.error.message}).status(400).pipe(res)
+                    response.json({code:7498,result:'error',message:resp.error.message}).status(400).pipe(res)
                     return;
                 }
                 var obj = {}
@@ -75,16 +76,16 @@ var verify = function(req,res) {
     var username = req.params.username;
     var token = req.params.token;
     if ("string" !== typeof username) {
-        response.json({result:'error',message:'Username is required'}).status(400).pipe(res)
+        response.json({result:'error',code:7477,message:'Username is required'}).status(400).pipe(res)
         return;
     }
     if ("string" !== typeof token) {
-        response.json({result:'error', message:'Token is required'}).status(400).pipe(res)
+        response.json({result:'error', code:9106,message:'Token is required'}).status(400).pipe(res)
         return;
     }
     exports.store.read({username:username,res:res},function(resp) {
         if (resp.exists === false) {
-            response.json({result:'error',message:'No such user'}).status(404).pipe(res)
+            response.json({result:'error',code:5298,message:'No such user'}).status(404).pipe(res)
             return;
         } else {
             var obj = {}
@@ -101,7 +102,7 @@ var verify = function(req,res) {
                     response.json(obj).pipe(res);
                 });
             } else {
-                response.json({result:'error',message:'Invalid token'}).status(400).pipe(res)
+                response.json({result:'error',code:5895,message:'Invalid token'}).status(400).pipe(res)
                 return;
             } 
         }
@@ -154,6 +155,7 @@ var rename = function(req,res) {
     
     var old_username = req.params.username;
     var new_username = req.body.username;
+    reporter.log("rename: from:", old_username, " to:" , new_username)
     var new_blob_id = req.body.blob_id;
     var encrypted_secret = req.body.encrypted_secret;
     var new_normalized_username = libutils.normalizeUsername(new_username);
@@ -192,6 +194,7 @@ var rename = function(req,res) {
             if (resp.length) {
                 lib.set({old_blob_id:resp[0].id})
                 lib.set({address:resp[0].address})
+                lib.set({email:resp[0].email})
                 lib.done();
             } else {
                 response.json({result:'error',message:"invalid user"}).status(400).pipe(res)
@@ -240,7 +243,14 @@ var rename = function(req,res) {
                 response.json({result:'error',message:'rename'}).status(400).pipe(res)
             lib.done()
         })
-    }
+    },
+    function(lib) {
+        // RT-2036 send email when user changes Ripple Name 
+        if (lib.get('email') !== undefined) {
+            email.notifynamechange({email:lib.get('email'),new_username:new_username,old_username:old_username});
+        }
+        lib.done()
+    },
     ])
 }
 var profiledetail = function(req,res) {
@@ -412,6 +422,516 @@ var updatekeys = function(req,res) {
     }
     ])
 }
+
+var set2fa = function(req,res) {
+    var keyresp = libutils.hasKeys(req.query,['signature_blob_id']);
+    if (!keyresp.hasAllKeys) {
+        response.json({result:'error', message:'Missing keys',missing:keyresp.missing}).status(400).pipe(res)
+        return
+    } 
+    /*keyresp = libutils.hasKeys(req.body,['enabled','phone','via','country_code']);
+    if (!keyresp.hasAllKeys) {
+        response.json({result:'error', message:'Missing keys',missing:keyresp.missing}).status(400).pipe(res)
+        return
+    } 
+    */
+    var blob_id = req.query.signature_blob_id;
+    var enabled = req.body.enabled;
+    var phone = req.body.phone;
+    if (phone)
+        phone = libutils.normalizePhone(phone)
+    var country_code = req.body.country_code;
+    var via = req.body.via;
+
+    var q = new Queue;
+
+    q.series([
+    function(lib) {
+        exports.store.read_where({key:'id',value:blob_id},function(resp) {
+            if (resp.length) {
+                lib.set({_blob:resp[0]})
+                lib.done()
+            } else {
+                response.json({result:'error',message:'error setting 2fa'}).status(400).pipe(res)
+                lib.terminate();
+                return;
+            }
+        })
+    },
+    function(lib) {
+        // do not allow enabled 2fa if phone is not verified, RT-1945
+        var _blob = lib.get('_blob');
+        reporter.log("set2fa:check phone verified: blob:", _blob)
+        // check if phone is different
+        if (phone != _blob['2fa_phone']) {
+            if ((!_blob.phone_verified) && (enabled === true)) {
+                response.json({result:'error',message:'enabled cannot be set if phone number is not verified'}).status(400).pipe(res)
+                lib.terminate()
+                return
+            } else {
+                lib.done()
+            }
+        } else 
+            lib.done()
+    },
+    function(lib) {
+        // create the auth id if we don't have an auth_id OR we get a new auth_id if phone is different
+        var _blob = lib.get('_blob')
+        // we don't need to normalize the phone check since the saved phone is already normalized as is the phone from the request
+        if ((!_blob["2fa_auth_id"]) || (phone != _blob['2fa_phone'])) {
+            reporter.log("set2fa:auth id not set. getting auth id from provider") 
+            if (country_code && _blob.email && phone) {
+                var produrl = config.phone.url+'/protected/json/users/new/?api_key='+config.phone.key
+                var obj = { email:_blob.email, cellphone:phone,country_code:country_code }
+                reporter.log("set2fa:storing the auth_id tied to:", qs.stringify(obj));
+                reporter.log("set2fa:auth id going to register user");
+                request.post({url:produrl,json:{user:obj}},function(err,resp,body) {
+                    reporter.log("set2fa:auth id response body:",body);
+                    if (body && body.user) {
+                        var update_obj = {};
+                        update_obj["2fa_auth_id"] = body.user.id;
+                        exports.store.update_where({set:update_obj,where:{key:'id',value:blob_id}},function(resp) {
+                            reporter.log("set2fa:2fa_auth_id:",body.user.id);
+                            lib.done()
+                        })
+                    } else {
+                        response.json({result:'error',message:'invalid phone'}).status(400).pipe(res)
+                        lib.terminate()
+                        return;
+                    }
+                })
+            } else 
+                lib.done()
+        } else {
+            reporter.log("set2fa:auth id is set. not getting auth id from provider") 
+            lib.done()
+        }
+    },
+    function(lib) {
+        var obj = {}
+        if (enabled !== undefined) 
+            obj["2fa_enabled"] = enabled;
+        if (phone !== undefined) {
+            obj['phone_verified'] = false; 
+            obj["2fa_phone"] = phone;
+        }
+        if (via !== undefined) 
+            obj["2fa_via"] = via;
+        if (country_code !== undefined) 
+            obj["2fa_country_code"] = country_code;
+        exports.store.update_where({set:obj,where:{key:'id',value:blob_id}},function(resp) {
+            if (resp.result) {
+                if (resp.result == 'success') 
+                    response.json({result:'success'}).pipe(res)
+                else if (resp.result == 'error') 
+                    response.json({result:'error',message:'error setting 2fa'}).status(400).pipe(res)
+                lib.done();
+                return
+            } else {
+                response.json({result:'error',message:'error setting 2fa'}).status(400).pipe(res)
+                lib.done()
+            }
+        })
+    }]);
+}
+var get2fa = function(req,res) {
+    console.log("GET 2FA")
+    var keyresp = libutils.hasKeys(req.query,['signature_blob_id']);
+    if (!keyresp.hasAllKeys) {
+        response.json({result:'error', message:'Missing keys',missing:keyresp.missing}).status(400).pipe(res)
+        return
+    } 
+    var device_id = req.query.device_id || undefined;
+    var blob_id = req.query.signature_blob_id;
+    
+    exports.store.read_where({key:'id',value:blob_id},function(resp) {
+        var blobsettings = resp;
+        if (device_id !== undefined) {
+            exports.store.read_where({table:'twofactor',key:'device_id',value:device_id},
+            function(resp) {
+                var deviceidrow;
+                if (resp.length) {
+                    deviceidrow = resp[0]
+                } 
+                if (blobsettings.length) {
+                    var row = blobsettings[0]
+                    console.log("THE ROW:",row)
+                    var phone = row["2fa_phone"]
+                    var masked_phone = libutils.maskphone(phone);
+                    
+                    var obj = { auth_id:row["2fa_auth_id"],via:row["2fa_via"],country_code:row["2fa_country_code"],enabled:row["2fa_enabled"],remember_me:row["2fa_remember_me"],phone:phone,masked_phone:masked_phone}
+                    obj.result = 'success';
+                    if (deviceidrow) {
+                        obj.remember_me = deviceidrow.remember_me;
+                        obj.device_id = deviceidrow.device_id;
+                        obj.is_auth = deviceidrow.is_auth; 
+                    }
+                    console.log("THE OBJ:",obj)
+                    response.json(obj).pipe(res)
+                } else {
+                    response.json({result:'error',message:'error getting 2fa settings'}).status(400).pipe(res)
+                }
+            })
+        } else {
+            if (blobsettings.length) {
+                var row = blobsettings[0]
+                console.log("THE ROW:",row)
+                var phone = row["2fa_phone"]
+                var masked_phone = libutils.maskphone(phone);
+                
+                var obj = { auth_id:row["2fa_auth_id"],via:row["2fa_via"],country_code:row["2fa_country_code"],enabled:row["2fa_enabled"],remember_me:row["2fa_remember_me"],phone:phone,masked_phone:masked_phone}
+                obj.result = 'success';
+                console.log("THE OBJ:",obj)
+                response.json(obj).pipe(res)
+            } else {
+                response.json({result:'error',message:'error getting 2fa settings'}).status(400).pipe(res)
+            }
+        }
+    })
+}
+
+var request2faToken = function(req,res) {
+    var blob_id = req.params.blob_id;
+    var force_sms = req.query.force_sms;
+    var q = new Queue;
+
+    q.series([
+    function(lib) {
+        exports.store.read_where({key:'id',value:blob_id},function(resp) {
+            if (resp.length) {
+                lib.set({_blob:resp[0]})
+                lib.done()
+            } else {
+                response.json({result:'error',message:'error requesting 2fa token'}).status(400).pipe(res)
+                lib.terminate();
+                return;
+            }
+        })
+    },
+    function(lib) {
+        // create the auth id
+        var _blob = lib.get('_blob')
+        if (!_blob["2fa_auth_id"]) {
+            reporter.log("request2fa:auth id not set. getting auth id from provider") 
+            if (country_code && _blob.email && phone) {
+                var produrl = config.phone.url+'/protected/json/users/new/?api_key='+config.phone.key
+                var obj = { email:_blob.email, cellphone:phone,country_code:country_code }
+                reporter.log("request2fa:storing the auth_id tied to:", qs.stringify(obj));
+                reporter.log("request2fa:auth id going to register user");
+                request.post({url:produrl,json:{user:obj}},function(err,resp,body) {
+                    reporter.log("request2fa:auth id response body:",body);
+                    if (body && body.user) {
+                        var update_obj = {};
+                        update_obj["2fa_auth_id"] = body.user.id;
+                        exports.store.update_where({set:update_obj,where:{key:'id',value:blob_id}},function(resp) {
+                            reporter.log("request2fa:2fa_auth_id:",body.user.id);
+                            lib.done()
+                        })
+                    } else 
+                        lib.done()
+                })
+            } else 
+                lib.done()
+        } else {
+            reporter.log("set2fa:auth id is set. not getting auth id from provider") 
+            lib.done()
+        }
+    },
+    function(lib) {
+        var blob = lib.get('_blob');
+        var via = blob["2fa_via"];
+        var country_code = blob["2fa_country_code"];
+        var phone_number = blob["2fa_phone"];
+        var auth_id = blob['2fa_auth_id'];
+
+        if ((!phone_number) && (!country_code) && (!via) && (!auth_id)) {
+            response.json({result:'error',message:'error on request 2fa token'}).status(400).pipe(res)
+            lib.terminate()
+            return
+        } else {
+            var produrl = config.phone.url+'/protected/json/sms/'+auth_id+'?api_key='+config.phone.key
+            if ((force_sms !== undefined) && (force_sms == 'true'))
+                produrl = produrl.concat('&force=true')
+            request.get({url:produrl,json:true},function(err,resp,body) {
+                reporter.log("request2fa token request body:",body)
+                var obj = {};
+                if (body.success === true)
+                    obj.result = 'success';
+                else
+                    obj.result = 'error';
+                if ((body.ignored !== undefined) && (body.ignored === true))
+                    obj.via = 'app';
+                else 
+                    obj.via = 'sms';
+                if (body.success === true)
+                    response.json(obj).pipe(res)
+                else 
+                    response.json(obj).status(400).pipe(res)
+                lib.done()
+            });
+        }
+    }
+    ]);
+}
+
+var verify2faToken = function(req,res) {
+    var blob_id = req.params.blob_id;
+
+    var keyresp = libutils.hasKeys(req.body,['device_id','token']);
+    if (!keyresp.hasAllKeys) {
+        response.json({result:'error', message:'Missing keys',missing:keyresp.missing}).status(400).pipe(res)
+        return
+    } 
+    var device_id = req.body.device_id;
+    var token  = req.body.token;
+    var remember_me = req.body.remember_me;
+    reporter.log("verify2faToken:device_id:",device_id," token:",token," remember_me:",remember_me)
+    var q = new Queue;
+    q.series([
+    function(lib) {
+        if (remember_me !== undefined)
+            exports.store.update_where({table:'twofactor',where:{device_id:device_id},set:{remember_me:remember_me}},function(resp) {
+                lib.done()
+            })
+        else 
+            lib.done()
+    },
+    function(lib) {
+        exports.store.read_where({table:'twofactor',key:'device_id',value:device_id},
+        function(resp) {
+            if (resp.length) {
+                var row = resp[0];
+                if (row.is_auth) {
+                    reporter.log("verify2fa: already is_auth. no need to verify")
+                    response.json({result:'success'}).pipe(res)
+                    lib.terminate()
+                } else 
+                    reporter.log("verify2fa: is NOT is_auth. contacting verification")
+                    lib.done()
+            }
+            lib.done()
+        })
+    },
+    function(lib) {
+        exports.store.read_where({key:'id',value:blob_id},function(resp) {
+            if (resp.length) {
+                var row = resp[0];
+                var via = row["2fa_via"];
+                var country_code = row["2fa_country_code"];
+                var phone_number = row["2fa_phone"];
+                var auth_id = row['2fa_auth_id'];
+                if ((!phone_number) && (!country_code) && (!via)) {
+                    response.json({result:'error',message:'error on validate 2fa token'}).status(400).pipe(res)
+                    lib.done()
+                    return
+                } else {
+                    var obj = {api_key:config.phone.key,phone_number:phone_number,country_code:country_code,verification_code:token}
+                    var produrl = config.phone.url+'/protected/json/verify/'+token+'/'+auth_id+'?api_key='+config.phone.key
+                    request.get({url:produrl,json:true},function(err,resp,body) {
+                        reporter.log("auth provider response on verify:",body)
+                        if (body.success == 'true') {
+                            var currtime = new Date().getTime()
+                            exports.store.update_where({
+                            where:{key:'id',value:blob_id},
+                            set:{phone_verified:true}}, function(resp) {
+                                exports.store.insert_or_update_where({table:'twofactor',where:{key:'device_id',value:device_id},set:{blob_id:blob_id,is_auth:true,device_id:device_id,last_auth_timestamp:new Date().getTime()}},
+                                function(resp2) {
+                                    reporter.log("verify2fa success:",resp2)
+                                    response.json({result:'success'}).pipe(res)
+                                    lib.done()
+                                })
+                            })
+                        } else  {
+                            exports.store.insert_or_update_where({table:'twofactor',where:{key:'device_id',value:device_id},set:{blob_id:blob_id,is_auth:false,device_id:device_id}},
+                            function(resp2) {
+                                reporter.log("verify2fa set incorrect code:",resp2)
+                                response.json({result:'error',message:'invalid token'}).status(400).pipe(res)
+                                lib.done()
+                            });
+                        }
+                    })
+                }
+            } else  {
+                response.json({result:'error',message:'error on validate 2fa token'}).status(400).pipe(res)
+                lib.done()
+            }
+        });
+    }
+    ])
+}
+
+var batchlookup = function(req,res,next) {
+    var keyresp = libutils.hasKeys(req.body,['list']);
+    if (!keyresp.hasAllKeys) {
+        response.json({result:'error', message:'Missing keys',missing:keyresp.missing}).status(400).pipe(res)
+        return
+    } 
+    var list = req.body.list;
+    exports.store.batchlookup({list:list},function(resp) {
+        if (resp.error) {
+            response.json({result:'error',message:resp.error}).status(400).pipe(res);
+            return
+        } else {
+            var result_hash = {};
+            for (var i = 0; i < resp.length; i++) {
+                var addr = resp[i].address;
+                var username = resp[i].username;
+                result_hash[addr] = username;
+            }
+            response.json({result:'success',mapping:result_hash}).pipe(res)
+        }
+    })
+}
+
+var setProfile = function(req,res,next) {
+    var identity_id = req.params.identity_id
+    reporter.log("setProfile:identity_id:", identity_id)
+    var q = new Queue;
+    q.series([
+    function(lib) {
+        if (req.body.attributes) {
+            var q = new Queue;
+            q.forEach(req.body.attributes,
+            function(obj,idx,lib2) {
+                reporter.log("setProfile attr obj:",obj)
+                // set default type
+                if (obj.type == undefined) 
+                    obj.type = 'default';
+                obj.identity_id = identity_id
+                exports.store.read_where({table:'identity_attributes',key:'identity_id',value:identity_id},
+                function(resp) {
+                    reporter.log("setProfile:read Where resp:", resp)
+                    var matches = libutils.list_filter(resp,{name:obj.name,type:obj.type})
+                    reporter.log("setProfile:matches", matches,{name:obj.name,type:obj.type})
+                    if (matches.length) {
+                        var attr = matches[0]
+                        if ((obj.name == attr.name) && (obj.type == attr.type)) {
+                            // update
+                            exports.store.update_where({table:'identity_attributes', set: obj, where:{key:'attribute_id',value:attr.attribute_id}},function(resp) {
+                                reporter.log("setProfile: updated identity_attributes", obj, " where:", identity_id)
+                                lib2.done()
+                            })
+                        } else {
+                            //insert
+                            obj.attribute_id = libutils.generate_uuid()
+                            exports.store.insert({table:'identity_attributes', set:obj},function(resp) {
+                                reporter.log("setProfile: inserted identity_attributes", obj, " for:", identity_id)
+                                lib2.done()
+                            })
+                        }
+                    } else {
+                        //insert
+                        obj.attribute_id = libutils.generate_uuid()
+                        exports.store.insert({table:'identity_attributes', set:obj},function(resp) {
+                            reporter.log("setProfile: inserted identity_attributes", obj, " for:", identity_id)
+                            lib2.done()
+                        })
+                    }
+                })
+            },
+            function() {
+                reporter.log("setProfile:all done with attributes")
+                lib.done()
+            })
+        } else 
+            lib.done()
+    },
+    function(lib) {
+        if (req.body.addresses) {
+            var q = new Queue;
+            q.forEach(req.body.addresses,
+            function(obj,idx,lib2) {
+                reporter.log("setProfile addr obj:",obj)
+                // set default type
+                if (obj.type == undefined) 
+                    obj.type = 'default';
+                obj.identity_id = identity_id
+                exports.store.read_where({table:'identity_addresses',key:'identity_id',value:identity_id},
+                function(resp) {
+                    reporter.log("setProfile:read Where resp:", resp)
+                    var matches = libutils.list_filter(resp,{name:obj.name,type:obj.type})
+                    reporter.log("setProfile:matches", matches,{name:obj.name,type:obj.type})
+                    if (matches.length) {
+                        var attr = matches[0]
+                        if ((obj.name == attr.name) && (obj.type == attr.type)) {
+                            // update
+                            exports.store.update_where({table:'identity_addresses', set: obj, where:{key:'id',value:attr.id}},function(resp) {
+                                reporter.log("setProfile: updated identity_addresses", obj, " where:", identity_id)
+                                lib2.done()
+                            })
+                        } else {
+                            //insert
+                            obj.id = libutils.generate_uuid()
+                            exports.store.insert({table:'identity_addresses', set:obj},function(resp) {
+                                reporter.log("setProfile: inserted identity_addresses", obj, " for:", identity_id)
+                                lib2.done()
+                            })
+                        }
+                    } else {
+                        //insert
+                        obj.id = libutils.generate_uuid()
+                        exports.store.insert({table:'identity_addresses', set:obj},function(resp) {
+                            reporter.log("setProfile: inserted identity_addresses", obj, " for:", identity_id)
+                            lib2.done()
+                        })
+                    }
+                })
+            },
+            function() {
+                reporter.log("setProfile:all done with addresses")
+                lib.done()
+            })
+        } else 
+            lib.done()
+    },
+    function(lib) {
+        console.log("setProfile: finished.")
+        response.json({result:'success'}).pipe(res)
+        lib.done()
+    }
+    ])
+}
+
+var getProfile = function(req,res,next) {
+    var identity_id = req.params.identity_id
+    reporter.log("getProfile:identity_id:", identity_id)
+    var q = new Queue
+    q.series([
+    function(lib) {
+        exports.store.read_where({table:'identity_attributes',key:'identity_id', value:identity_id},
+        function(resp) {
+            reporter.log("getProfile:attributes lookup response:", resp)
+            lib.set({attributes:resp})
+            lib.done()
+        });
+    },
+    function(lib) {
+        exports.store.read_where({table:'identity_addresses',key:'identity_id', value:identity_id},
+        function(resp) {
+            reporter.log("getProfile:addresses lookup response:", resp)
+            lib.set({addresses:resp})
+            lib.done()
+        });
+    },
+    function(lib) {
+        response.json({
+        result:'success',
+        addresses:lib.get('addresses'),
+        attributes:lib.get('attributes')
+        }).pipe(res)
+        lib.done()
+    }
+    ])
+        
+}
+
+exports.setProfile = setProfile;
+exports.getProfile = getProfile;
+exports.batchlookup = batchlookup;
+exports.request2faToken = request2faToken;
+exports.verify2faToken = verify2faToken;
+exports.set2fa = set2fa;
+exports.get2fa = get2fa;
 exports.recov = recov;
 exports.phoneRequest = phonerequest;
 exports.phoneValidate = phonevalidate;

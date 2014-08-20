@@ -1,0 +1,353 @@
+--
+-- PostgreSQL database dump
+--
+
+SET statement_timeout = 0;
+SET client_encoding = 'UTF8';
+SET standard_conforming_strings = on;
+SET check_function_bodies = false;
+SET client_min_messages = warning;
+
+--
+-- Name: plpgsql; Type: EXTENSION; Schema: -; Owner: 
+--
+
+CREATE EXTENSION IF NOT EXISTS plpgsql WITH SCHEMA pg_catalog;
+
+
+--
+-- Name: EXTENSION plpgsql; Type: COMMENT; Schema: -; Owner: 
+--
+
+COMMENT ON EXTENSION plpgsql IS 'PL/pgSQL procedural language';
+
+
+SET search_path = public, pg_catalog;
+
+SET default_tablespace = '';
+
+SET default_with_oids = false;
+
+--
+-- Name: blob; Type: TABLE; Schema: public; Owner: tom; Tablespace: 
+--
+
+CREATE TABLE blob (
+    id character varying(255) NOT NULL,
+    address character varying(255),
+    auth_secret character varying(255),
+    revision integer,
+    data bytea,
+    encrypted_blobdecrypt_key character varying(255),
+    quota integer DEFAULT 0,
+    username character varying(255),
+    normalized_username character varying(255),
+    email_verified boolean,
+    email character varying(255),
+    email_token character varying(255),
+    hostlink character varying(255),
+    encrypted_secret character varying(255),
+    create_date character varying(255) DEFAULT 'Mon Aug 11 2014 20:37:48 GMT-0700 (PDT)'::character varying,
+    create_timestamp bigint DEFAULT 1407814668867::bigint,
+    phone character varying(255),
+    country character varying(255),
+    region character varying(255),
+    city character varying(255),
+    domain character varying(255),
+    "2fa_auth_id" character varying(255),
+    "2fa_enabled" boolean,
+    "2fa_phone" character varying(255),
+    "2fa_country_code" character varying(255),
+    "2fa_via" character varying(255),
+    phone_verified boolean
+);
+
+
+ALTER TABLE public.blob OWNER TO tom;
+
+--
+-- Name: blob_patches; Type: TABLE; Schema: public; Owner: tom; Tablespace: 
+--
+
+CREATE TABLE blob_patches (
+    id integer NOT NULL,
+    blob_id character varying(255),
+    revision integer,
+    data bytea,
+    size integer DEFAULT 0
+);
+
+
+ALTER TABLE public.blob_patches OWNER TO tom;
+
+--
+-- Name: blob_patches_id_seq; Type: SEQUENCE; Schema: public; Owner: tom
+--
+
+CREATE SEQUENCE blob_patches_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.blob_patches_id_seq OWNER TO tom;
+
+--
+-- Name: blob_patches_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: tom
+--
+
+ALTER SEQUENCE blob_patches_id_seq OWNED BY blob_patches.id;
+
+
+--
+-- Name: campaigns; Type: TABLE; Schema: public; Owner: tom; Tablespace: 
+--
+
+CREATE TABLE campaigns (
+    address character varying(255),
+    last_emailed bigint,
+    start_time bigint,
+    campaign character varying(255),
+    "isFunded" boolean,
+    locked character varying(255) DEFAULT ''::character varying
+);
+
+
+ALTER TABLE public.campaigns OWNER TO tom;
+
+--
+-- Name: knex_migrations; Type: TABLE; Schema: public; Owner: tom; Tablespace: 
+--
+
+CREATE TABLE knex_migrations (
+    id integer NOT NULL,
+    name character varying(255),
+    batch integer,
+    migration_time timestamp with time zone
+);
+
+
+ALTER TABLE public.knex_migrations OWNER TO tom;
+
+--
+-- Name: knex_migrations_id_seq; Type: SEQUENCE; Schema: public; Owner: tom
+--
+
+CREATE SEQUENCE knex_migrations_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.knex_migrations_id_seq OWNER TO tom;
+
+--
+-- Name: knex_migrations_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: tom
+--
+
+ALTER SEQUENCE knex_migrations_id_seq OWNED BY knex_migrations.id;
+
+
+--
+-- Name: locked_users; Type: TABLE; Schema: public; Owner: tom; Tablespace: 
+--
+
+CREATE TABLE locked_users (
+    id character varying(255) NOT NULL,
+    address character varying(255),
+    auth_secret character varying(255),
+    revision integer,
+    data bytea,
+    encrypted_blobdecrypt_key character varying(255),
+    quota integer DEFAULT 0,
+    username character varying(255),
+    normalized_username character varying(255),
+    email_verified boolean,
+    email character varying(255),
+    email_token character varying(255),
+    hostlink character varying(255),
+    encrypted_secret character varying(255),
+    create_date character varying(255) DEFAULT 'Mon Aug 11 2014 20:37:48 GMT-0700 (PDT)'::character varying,
+    create_timestamp bigint DEFAULT 1407814668867::bigint,
+    phone character varying(255),
+    country character varying(255),
+    region character varying(255),
+    city character varying(255),
+    domain character varying(255),
+    "2fa_enabled" boolean,
+    "2fa_phone" character varying(255),
+    "2fa_country_code" character varying(255),
+    "2fa_via" character varying(255),
+    phone_verified boolean
+);
+
+
+ALTER TABLE public.locked_users OWNER TO tom;
+
+--
+-- Name: log; Type: TABLE; Schema: public; Owner: tom; Tablespace: 
+--
+
+CREATE TABLE log (
+    date character varying(255),
+    fulldate character varying(255),
+    currtime character varying(255),
+    number character varying(255),
+    "isAccepted" boolean,
+    "isRejected" boolean,
+    "isFunded" boolean
+);
+
+
+ALTER TABLE public.log OWNER TO tom;
+
+--
+-- Name: name_change_history; Type: TABLE; Schema: public; Owner: tom; Tablespace: 
+--
+
+CREATE TABLE name_change_history (
+    address character varying(255),
+    from_username character varying(255),
+    to_username character varying(255),
+    "timestamp" bigint,
+    fulldate character varying(255)
+);
+
+
+ALTER TABLE public.name_change_history OWNER TO tom;
+
+--
+-- Name: twofactor; Type: TABLE; Schema: public; Owner: tom; Tablespace: 
+--
+
+CREATE TABLE twofactor (
+    blob_id character varying(255),
+    is_auth boolean,
+    device_id character varying(255),
+    remember_me boolean,
+    last_auth_timestamp bigint
+);
+
+
+ALTER TABLE public.twofactor OWNER TO tom;
+
+--
+-- Name: id; Type: DEFAULT; Schema: public; Owner: tom
+--
+
+ALTER TABLE ONLY blob_patches ALTER COLUMN id SET DEFAULT nextval('blob_patches_id_seq'::regclass);
+
+
+--
+-- Name: id; Type: DEFAULT; Schema: public; Owner: tom
+--
+
+ALTER TABLE ONLY knex_migrations ALTER COLUMN id SET DEFAULT nextval('knex_migrations_id_seq'::regclass);
+
+
+--
+-- Name: blob_address_unique; Type: CONSTRAINT; Schema: public; Owner: tom; Tablespace: 
+--
+
+ALTER TABLE ONLY blob
+    ADD CONSTRAINT blob_address_unique UNIQUE (address);
+
+
+--
+-- Name: blob_normalized_username_unique; Type: CONSTRAINT; Schema: public; Owner: tom; Tablespace: 
+--
+
+ALTER TABLE ONLY blob
+    ADD CONSTRAINT blob_normalized_username_unique UNIQUE (normalized_username);
+
+
+--
+-- Name: blob_patches_pkey; Type: CONSTRAINT; Schema: public; Owner: tom; Tablespace: 
+--
+
+ALTER TABLE ONLY blob_patches
+    ADD CONSTRAINT blob_patches_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: blob_pkey; Type: CONSTRAINT; Schema: public; Owner: tom; Tablespace: 
+--
+
+ALTER TABLE ONLY blob
+    ADD CONSTRAINT blob_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: blob_username_unique; Type: CONSTRAINT; Schema: public; Owner: tom; Tablespace: 
+--
+
+ALTER TABLE ONLY blob
+    ADD CONSTRAINT blob_username_unique UNIQUE (username);
+
+
+--
+-- Name: campaigns_address_unique; Type: CONSTRAINT; Schema: public; Owner: tom; Tablespace: 
+--
+
+ALTER TABLE ONLY campaigns
+    ADD CONSTRAINT campaigns_address_unique UNIQUE (address);
+
+
+--
+-- Name: knex_migrations_pkey; Type: CONSTRAINT; Schema: public; Owner: tom; Tablespace: 
+--
+
+ALTER TABLE ONLY knex_migrations
+    ADD CONSTRAINT knex_migrations_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: locked_users_address_unique; Type: CONSTRAINT; Schema: public; Owner: tom; Tablespace: 
+--
+
+ALTER TABLE ONLY locked_users
+    ADD CONSTRAINT locked_users_address_unique UNIQUE (address);
+
+
+--
+-- Name: locked_users_normalized_username_unique; Type: CONSTRAINT; Schema: public; Owner: tom; Tablespace: 
+--
+
+ALTER TABLE ONLY locked_users
+    ADD CONSTRAINT locked_users_normalized_username_unique UNIQUE (normalized_username);
+
+
+--
+-- Name: locked_users_pkey; Type: CONSTRAINT; Schema: public; Owner: tom; Tablespace: 
+--
+
+ALTER TABLE ONLY locked_users
+    ADD CONSTRAINT locked_users_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: locked_users_username_unique; Type: CONSTRAINT; Schema: public; Owner: tom; Tablespace: 
+--
+
+ALTER TABLE ONLY locked_users
+    ADD CONSTRAINT locked_users_username_unique UNIQUE (username);
+
+
+--
+-- Name: public; Type: ACL; Schema: -; Owner: postgres
+--
+
+REVOKE ALL ON SCHEMA public FROM PUBLIC;
+REVOKE ALL ON SCHEMA public FROM postgres;
+GRANT ALL ON SCHEMA public TO postgres;
+GRANT ALL ON SCHEMA public TO PUBLIC;
+
+
+--
+-- PostgreSQL database dump complete
+--
+

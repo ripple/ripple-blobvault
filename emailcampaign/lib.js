@@ -10,6 +10,7 @@ var UInt160 = RL.UInt160;
 var scan = function(db,cb) {
     db('blob')
         .join('campaigns','blob.address','=','campaigns.address','LEFT OUTER')
+        .whereNotNull('blob.email')
         .where('campaigns.isFunded','=',null)
         .orWhere('campaigns.isFunded','=',false)
         .andWhere('campaigns.locked','=','') // we ignore already locked users
@@ -62,6 +63,9 @@ var generateMessage = function(email,days,name) {
         }
        ]
     };
+    if ((config.is_staging !== undefined) && (config.is_staging)) {
+        message.subject = '[Staging] ' + message.subject;
+    }
     message.attachment[0].data = hyperglue(contents, {
     'span.username': name,
     'span.days' : days
@@ -71,7 +75,6 @@ var generateMessage = function(email,days,name) {
     return message;
 }
 exports.send = function(params) {
-    //reporter.log("Email send params", params);
     var email = params.email;
     var name = params.name;
     var days = params.days;

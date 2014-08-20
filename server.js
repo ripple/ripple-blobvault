@@ -10,11 +10,19 @@ var api = require('./api');
 var reporter = require('./lib/reporter');
 var guard = require('./guard')(store)
 var limiter = guard.resend_email();
+var requestAttestation = require('./api/requestAttestation')
+
+var Ddos= require('ddos');
+var ddos = new Ddos;
+
+var health = require('./health')(store.db)
+health.start()
 
 api.setStore(store);
 hmac.setStore(store);
 
 var app = express();
+app.use(ddos.express)
 app.use(reporter.inspect);
 
 // app.use(express.limit('1mb')); is deprecated and has no functionality
@@ -35,21 +43,35 @@ app.post('/v1/user/:username/updatekeys', ecdsa.middleware, api.user.updatekeys)
 app.get('/v1/user/recov/:username', ecdsa.recov, api.user.recov);
 app.post('/v1/user/:username/profile', hmac.middleware, api.user.profile);
 
+app.post('/v1/lookup', api.user.batchlookup)
+
 app.delete('/v1/user/:username', ecdsa.middleware, api.blob.delete);
 app.get('/v1/user/:username', api.user.get);
 app.get('/v1/user/:username/verify/:token', api.user.verify);
 
-// JSON handlers
+// blob related
 app.get('/v1/blob/:blob_id', api.blob.get);
 app.post('/v1/blob/patch', hmac.middleware, api.blob.patch);
 app.get('/v1/blob/:blob_id/patch/:patch_id', api.blob.getPatch);
 app.post('/v1/blob/consolidate', hmac.middleware, api.blob.consolidate);
 
+// old phone validation
 app.post('/v1/user/:username/phone', api.user.phoneRequest)
 app.post('/v1/user/:username/phone/validate', api.user.phoneValidate)
 
-app.get('/v1/authinfo', api.user.authinfo);
+// 2FA
+app.post('/v1/blob/:blob_id/2fa', ecdsa.middleware, api.user.set2fa)
+app.get('/v1/blob/:blob_id/2fa', ecdsa.middleware, api.user.get2fa)
+app.get('/v1/blob/:blob_id/2fa/requestToken', api.user.request2faToken)
+app.post('/v1/blob/:blob_id/2fa/verifyToken', api.user.verify2faToken)
 
+// profile route
+app.post('/v1/attest/:identity_id', hmac.middleware, requestAttestation)
+app.post('/v1/profile/:identity_id', hmac.middleware, api.user.setProfile)
+app.get('/v1/profile/:identity_id', hmac.middleware, api.user.getProfile)
+
+app.get('/v1/authinfo', api.user.authinfo);
+app.get('/health', health.status);
 app.get('/logs', api.blob.logs);
 
 try {
@@ -63,22 +85,6 @@ try {
   reporter.log("Blobvault listening on port "+port);
 } catch (e) {
   reporter.log("Could not launch SSL server: " + (e.stack ? e.stack : e.toString()));
-}
-
-if (config.campaigns === true) {
-    var Campaign = require('./emailcampaign');
-    var emailCampaign = new Campaign(store.db,config);
-    emailCampaign.probe_subscribe(function(data) {
-        reporter.log(data)
-        if (data.action == 'check') {
-            reporter.log(data.timetill / (1000*60) + " minutes till check")
-        }
-    })
-    emailCampaign.start(function(){
-        reporter.log("Email campaign ready");
-    })
-} else {
-    reporter.log("campaigns not running") 
 }
 
 process.on('SIGTERM',function() {

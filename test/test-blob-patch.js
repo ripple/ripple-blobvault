@@ -44,6 +44,20 @@ test('create , patch, patch, get specific patch #2, delete', function(done) {
     var server = http.createServer(app);
     q.series([
         function(lib) {
+            store.db('blob')
+            .truncate()
+            .then(function() {
+                lib.done()
+            })
+        },
+        function(lib) {
+            store.db('blob_patches')
+            .truncate()
+            .then(function() {
+                lib.done()
+            })
+        },
+        function(lib) {
             server.listen(5050,function() {
                 lib.done();
             });
@@ -70,7 +84,7 @@ test('create , patch, patch, get specific patch #2, delete', function(done) {
                 json:body
             },function(err, resp, body) {
                     console.log("body base 64" , body)
-                    assert.deepEqual(body,{result:'error',message:'patch is not valid base64'});
+                    assert.deepEqual(body,{result:'error',code:7712,message:'patch is not valid base64'});
                     lib.done();
             });
         },
@@ -84,7 +98,7 @@ test('create , patch, patch, get specific patch #2, delete', function(done) {
                 url:url,
                 json:body
             },function(err, resp, body) {
-                    assert.deepEqual(body,{result:'error',message:'patch size > 1kb', size:largestring.length})
+                    assert.deepEqual(body,{result:'error',code:9061,message:'patch size > 1kb', size:largestring.length})
                     lib.done();
             });
         },
