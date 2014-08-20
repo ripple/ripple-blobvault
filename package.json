@@ -23,7 +23,9 @@
     "request": "^2.36.0",
     "response": "https://github.com/mikeal/response/archive/master.tar.gz",
     "ripple-lib": "https://github.com/rook2pawn/ripple-lib/archive/develop.tar.gz",
-    "timeout-protector": "0.0.1"
+    "timeout-protector": "0.0.1",
+    "blockscore": "^3.0.0",
+    "jwt-sign": "^0.1.0"
   },
   "devDependencies": {
     "request": "^2.34.0",

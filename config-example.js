@@ -48,6 +48,11 @@ exports.phone = {
     key : ''
 }
 
+//blockscore identity verification
+exports.blockscore = {
+    key : ''
+}
+
 // run campaign logic
 // should be true from only one instance
 exports.campaigns = false;
