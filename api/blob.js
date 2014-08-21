@@ -346,6 +346,7 @@ exports.get = function (req, res) {
             function(lib) {
             // set identity_id if one does not exist
                 var _blob = lib.get('_blob');
+                reporter.log("blobGet:_blob:",_blob)
                 if (!_blob.identity_id) {
                     reporter.log("blobGet: identity_id does not exist for ", _blob)
                     var identity_id = libutils.generateIdentityId()
