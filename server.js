@@ -67,9 +67,9 @@ app.post('/v1/blob/:blob_id/2fa/verifyToken', api.user.verify2faToken)
 
 // profile routes
 app.post('/v1/profile/:identity_id/attest', hmac.middleware, requestAttestation)
-app.get('/v1/profile/:identity_id/attestations/', hmac.middleware, api.user.getAttestations)
 app.post('/v1/profile/:identity_id', hmac.middleware, api.user.setProfile)
 app.get('/v1/profile/:identity_id', hmac.middleware, api.user.getProfile)
+//app.get('/v1/profile/:identity_id/attestations/', hmac.middleware, api.user.getAttestations)
 //app.post('v1/profile/create', api.identity.create)
 
 app.get('/v1/authinfo', api.user.authinfo);

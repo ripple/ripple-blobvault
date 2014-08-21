@@ -16,22 +16,35 @@ var Queue = require('queuelib')
 
 
 var requestAttestation = function(req,res,next) {
+   
+  if (req.body.type === 'basic_identity') basicIdentityAttestation (req, res, next);
+  else if (req.body.type === 'email') emailAttestation (req, res, next);
+  else if (req.body.type === 'phone') phoneAttestation (req, res, next);
+  else {
+    response.json({result:'error', message:'missing or invalid attestion type'}).status(400).pipe(res);    
+  }
+};
+
+/**
+ * basicIdentityAttestation
+ * - uses block score to validate name, address, birthdate, and identification
+ */
+
+var basicIdentityAttestation = function (req, res, next) {
   
   /*
-    TODO: handle different attestation types: email, phone, identity 
-   
     1. get existing attestation
     2. check if its not expired
     3. check if its using current profile data
     4. if it passes the tests, serve up the existing one
     5. otherwise request a new one from blockscore
-    6. formulate the attestation JWT
+    6. formulate the attestation JWT's
     6. calculate attribute attestation scores and trust score
-    7. save trust score into identity table
-    8. return attestation JWT and trust score
+    7. save attestations and trust score into identity table
+    8. return attestation JWT's and trust score
   */
-
-    var identity_id = req.params.identity_id
+   
+    var identity_id = req.params.identity_id;
     reporter.log("requestAttestation:identity_id:", identity_id)
     var q = new Queue
     q.series([
@@ -169,7 +182,23 @@ var requestAttestation = function(req,res,next) {
             lib.done()
         });
     }
-    ])
-}
+    ]);  
+};
+
+/**
+ * emailAttestation
+ * - uses an email sent from the server with a validation code 
+ */
+var emailAttestation = function (req, res, next) {
+  
+};
+
+/*
+ * phoneAttestation
+ * - uses Authy for verification
+ */
+var phoneAttestation = function (req, res, next) {
+  
+};
 
 module.exports = exports = requestAttestation;
