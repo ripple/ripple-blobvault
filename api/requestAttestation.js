@@ -75,9 +75,9 @@ var requestAttestation = function(req,res,next) {
             if (err) {
                 code   = 400;
                 result = {
-                result  : 'error',
-                message : err.message,
-                error   : err.param + ": " + err.code
+                  result  : 'error',
+                  message : err.message,
+                  error   : err.param + ": " + err.code
                 }
             } else if (resp.status === 'invalid') {
                 //possibly handle invalid attestation differently
@@ -89,7 +89,12 @@ var requestAttestation = function(req,res,next) {
                 };
             //formulate attestation
             } else { 
-                var payload = {
+                var complete;
+                var payload;
+                var blind;
+                var blindPayload;
+                
+                payload = {
                     iss : "https://id.ripple.com",
                     sub : req.params.identity_id,
                     exp : ~~(new Date().getTime() / 1000) + (30 * 60),
@@ -105,6 +110,7 @@ var requestAttestation = function(req,res,next) {
                         country     : params.address.country_code
                     }
                 };
+                
                 if (params.address.street2) 
                 payload.address.line2 = params.address.street2;  
                 if (params.identification.ssn)
@@ -112,33 +118,53 @@ var requestAttestation = function(req,res,next) {
                 if (params.identification.passport)
                 payload.passport = params.identification.passport
                 if (params.phone_number)
-                payload.phone = params.phone_number
-                
+                payload.phone = params.phone_number 
                 if (params.ip_address) 
                 payload.ip_address = params.ip_address
               
-                payload.address_match   = resp.details.address;
-                payload.address_risk    = resp.details.address_risk;
-                payload.birthdate_match = resp.details.date_of_birth;
-                payload.ofac_match      = resp.details.ofac;
-                payload.pep_match       = resp.details.pep;
-             
-                if (params.ssn_last_4) {
-                    payload.ssn_last_4_match = resp.details.identification;
-                } else if (params.passport) {
-                    payload.passport_match = resp.details.identification;
-                }
+                payload.basic_identity_validated = true;
+                payload.address_risk             = resp.details.address_risk;
+                payload.ofac_match               = resp.details.ofac;
+                //payload.pep_match              = resp.details.pep; //ask blockscore what this is
+                payload.context_match = {
+                  address        : resp.details.address,
+                  identification : resp.details.identification,
+                  birthdate      : resp.details.date_of_birth,
+                };
 
+                    
+                //create blinded attestation
+                blindPayload = {
+                  iss : payload.iss,
+                  sub : payload.sub,
+                  exp : payload.exp,
+                  iat : payload.iat,
+                  basic_identity_validated : true,
+                  address_risk             : resp.details.address_risk,
+                  ofac_match               : resp.details.ofac,
+                  //pep_match              : resp.details.pep, //ask blockscore what this is
+                  context_match : {
+                    address        : resp.details.address,
+                    identification : resp.details.identification,
+                    birthdate      : resp.details.date_of_birth
+                  }
+                };
+                
+                //TODO: recalculate trust score, add to payload
+                //TODO: save attestation data in DB
                 //TODO: catch error with signing
-                var signed = jwtSigner.sign(payload, key); 
-
-                console.log(payload);
+                complete = jwtSigner.sign(payload, key); 
+                blinded  = jwtSigner.sign(blindPayload, key); 
+                console.log(payload, blindPayload);
+                
                 code   = 200;
                 result = {
-                result  : 'success',
-                claims_token : signed
+                  result  : 'success',
+                  blinded : blinded,
+                  complete : complete
                 };
             }
+            
             response.json(result).status(code).pipe(res);  
             lib.done()
         });
