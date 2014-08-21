@@ -65,10 +65,12 @@ app.get('/v1/blob/:blob_id/2fa', ecdsa.middleware, api.user.get2fa)
 app.get('/v1/blob/:blob_id/2fa/requestToken', api.user.request2faToken)
 app.post('/v1/blob/:blob_id/2fa/verifyToken', api.user.verify2faToken)
 
-// profile route
-app.post('/v1/requestAttestation/:identity_id', hmac.middleware, requestAttestation)
+// profile routes
+app.post('/v1/profile/:identity_id/attest', hmac.middleware, requestAttestation)
+app.get('/v1/profile/:identity_id/attestations/', hmac.middleware, api.user.getAttestations)
 app.post('/v1/profile/:identity_id', hmac.middleware, api.user.setProfile)
 app.get('/v1/profile/:identity_id', hmac.middleware, api.user.getProfile)
+//app.post('v1/profile/create', api.identity.create)
 
 app.get('/v1/authinfo', api.user.authinfo);
 app.get('/health', health.status);
