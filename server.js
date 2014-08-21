@@ -66,7 +66,7 @@ app.get('/v1/blob/:blob_id/2fa/requestToken', api.user.request2faToken)
 app.post('/v1/blob/:blob_id/2fa/verifyToken', api.user.verify2faToken)
 
 // profile route
-app.post('/v1/attest/:identity_id', hmac.middleware, requestAttestation)
+app.post('/v1/requestAttestation/:identity_id', hmac.middleware, requestAttestation)
 app.post('/v1/profile/:identity_id', hmac.middleware, api.user.setProfile)
 app.get('/v1/profile/:identity_id', hmac.middleware, api.user.getProfile)
 

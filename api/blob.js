@@ -374,6 +374,7 @@ exports.get = function (req, res) {
                     if (device_id !== undefined) {
                         store.read_where({table:'twofactor',key:'device_id',value:device_id},
                         function(resp2) {
+                            reporter.log("readwhere: 2fa blobGet:_blob:",_blob)
                             if (resp2.length) {
                                 var row = resp2[0];
                                 twofactor.is_auth = row.is_auth;
