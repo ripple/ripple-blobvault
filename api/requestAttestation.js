@@ -5,7 +5,12 @@ var config = require('../config');
 var store = require('../lib/store')(config.dbtype);
 var client = require('blockscore')(config.blockscore.key);
 var jwtSigner = require('jwt-sign');
-var key = require('fs').readFileSync('./test.pem', 'utf8');
+var key;
+require('fs').readFile('./test.pem', 'utf8', 
+function(err, data) {
+    if (!err) key = data;
+    else console.log("no private key specificed for JWT signing")
+})
 var conformParams = require('../lib/conformParams')
 var Queue = require('queuelib')
 

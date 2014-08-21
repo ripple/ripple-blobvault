@@ -359,6 +359,7 @@ exports.get = function (req, res) {
                 }
             },
             function(lib) {
+                var _blob = lib.get('_blob');
                 if (!_blob.identity_id) {
                     store.insert({set:{identity_id:lib.get('identity_id')},table:'identity'}, 
                     function() {

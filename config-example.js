@@ -2,6 +2,10 @@
 // exports.host = '127.0.0.1';
 exports.host = null;
 
+exports.blockscore = {
+    key: ''
+}
+
 // Port to listen on
 exports.port = 8080;
 
