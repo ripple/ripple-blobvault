@@ -2,10 +2,12 @@ var reporter = require('../lib/reporter');
 var request = require('request');
 var response = require('response');
 var config = require('../config');
+var store = require('../lib/store')(config.dbtype);
 var client = require('blockscore')(config.blockscore.key);
 var jwtSigner = require('jwt-sign');
 var key = require('fs').readFileSync('./test.pem', 'utf8');
 var conformParams = require('../lib/conformParams')
+var Queue = require('queuelib')
 
 
 var requestAttestation = function(req,res,next) {
@@ -29,7 +31,7 @@ var requestAttestation = function(req,res,next) {
     var q = new Queue
     q.series([
     function(lib) {
-        exports.store.read_where({table:'identity_attributes',key:'identity_id', value:identity_id},
+        store.read_where({table:'identity_attributes',key:'identity_id', value:identity_id},
         function(resp) {
             reporter.log("getProfile:attributes lookup response:", resp)
             lib.set({attributes:resp})
@@ -37,7 +39,7 @@ var requestAttestation = function(req,res,next) {
         });
     },
     function(lib) {
-        exports.store.read_where({table:'identity_addresses',key:'identity_id', value:identity_id},
+        store.read_where({table:'identity_addresses',key:'identity_id', value:identity_id},
         function(resp) {
             reporter.log("getProfile:addresses lookup response:", resp)
             lib.set({addresses:resp})
@@ -59,11 +61,12 @@ var requestAttestation = function(req,res,next) {
         return; 
         } 
         var params = result.params;
+        console.log("Params sent to blockscore:", params)
 
         client.verifications.create(params,
         function (err, resp) {
             var result;
-            //console.log(err, resp);
+            console.log("Blockscore response:",err, resp);
             if (err) {
                 code   = 400;
                 result = {
