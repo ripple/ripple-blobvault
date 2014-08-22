@@ -369,6 +369,10 @@ exports.get = function (req, res) {
                     lib.done() 
             },
             function(lib) {
+            // get relevant attestations RT-2127
+                lib.done()  
+            },
+            function(lib) {
                 var _blob = lib.get('_blob');
                 var twofactor = {};
                 if (_blob["2fa_enabled"] === true) {
