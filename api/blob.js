@@ -178,7 +178,7 @@ var create = function (req, res) {
         
         var set = params.set;
         var table = params.table || 'blob';
-        store.insert({set:{identity_id:lib.get('identity_id')},table:'identity'},
+        store.insert({set:{identity:lib.get('identity_id')},table:'identity'},
         function() {
             reporter.log("blob create: added ", lib.get('identity_id'), " to identity table")
             lib.done();
