@@ -5,6 +5,7 @@ var config = require('../config');
 var store = require('../lib/store')(config.dbtype);
 var client = require('blockscore')(config.blockscore.key);
 var jwtSigner = require('jwt-sign');
+var utils = require('../lib/utils');
 var key;
 require('fs').readFile('./test.pem', 'utf8', 
 function(err, data) {
@@ -45,7 +46,7 @@ var basicIdentityAttestation = function (req, res, next) {
   */
    
     var identity_id = req.params.identity_id;
-    reporter.log("requestAttestation:identity_id:", identity_id)
+    reporter.log("basicIdentityAttestation:identity_id:", identity_id)
     var q = new Queue
     q.series([
     function(lib) {
@@ -69,42 +70,43 @@ var basicIdentityAttestation = function (req, res, next) {
         var data = {addresses:lib.get('addresses'),attributes:lib.get('attributes')} 
         var result = conformParams(data);
 
-        var code;
-
-        //console.log(result);
-
         if (result.error) {
         response.json({result:'error', message:result.error}).status(400).pipe(res); 
-        lib.terminate()
+        lib.terminate();
         return; 
         } 
         var params = result.params;
-        console.log("Params sent to blockscore:", params)
+        //reporter.log("Params sent to blockscore:", params)
 
         client.verifications.create(params,
         function (err, resp) {
             var result;
-            console.log("Blockscore response:",err, resp);
+            //reporter.log("Blockscore response:",err, resp);
+            
             if (err) {
-                code   = 400;
                 result = {
                   result  : 'error',
                   message : err.message,
                   error   : err.param + ": " + err.code
                 }
+                
+              response.json(result).status(400).pipe(res);  
+              lib.done();
+            
+            //invalid attestation - possibly handle differently      
             } else if (resp.status === 'invalid') {
-                //possibly handle invalid attestation differently
-                code   = 200;
-                result = {
-                    result  : 'success',
-                    status  : resp.status,
-                    details : resp.details
-                };
+              result = {
+                  result  : 'success',
+                  status  : resp.status,
+                  details : resp.details
+              };
+              
+              response.json(result).pipe(res);  
+              lib.done();
+                
             //formulate attestation
             } else { 
-                var complete;
                 var payload;
-                var blind;
                 var blindPayload;
                 
                 payload = {
@@ -164,22 +166,45 @@ var basicIdentityAttestation = function (req, res, next) {
                 };
                 
                 //TODO: recalculate trust score, add to payload
-                //TODO: save attestation data in DB
                 //TODO: catch error with signing
-                complete = jwtSigner.sign(payload, key); 
-                blinded  = jwtSigner.sign(blindPayload, key); 
-                console.log(payload, blindPayload);
+                lib.set({
+                  complete : jwtSigner.sign(payload, key),
+                  blinded : jwtSigner.sign(blindPayload, key),
+                  attestation_id : utils.generate_uuid()
+                });
                 
-                code   = 200;
-                result = {
-                  result  : 'success',
-                  blinded : blinded,
-                  complete : complete
+              
+                var attestation = {
+                  id : lib.get('attestation_id'),
+                  identity_id : identity_id,
+                  issuer : payload.iss,
+                  status : 'valid',
+                  payload : payload,
+                  signed_jwt_base64 : lib.get('complete'),
+                  blinded_signed_jwt_base64 : lib.get('blinded'),
+                  created : new Date().getTime()
                 };
+                  
+                store.insert({set:attestation,table:'attestations'},
+                function(db_resp) {
+                  if (db_resp.error) {
+                    response.json({result:'error', message:'attestation database error'}).status(500).pipe(res);
+                   
+                  } else {
+                    reporter.log("attestation created: ", lib.get('attestation_id'));
+                    result = {
+                      result  : 'success',
+                      blinded : lib.get('blinded'),
+                      complete : lib.get('complete')
+                    }; 
+                    
+                    response.json(result).pipe(res); 
+                    
+                  } 
+                   
+                  lib.done();                   
+                });
             }
-            
-            response.json(result).status(code).pipe(res);  
-            lib.done()
         });
     }
     ]);  
