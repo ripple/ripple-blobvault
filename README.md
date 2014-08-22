@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/rook2pawn/ripple-blobvault.svg?branch=master)](https://travis-ci.org/rook2pawn/ripple-blobvault)
+[![Build Status](https://travis-ci.org/ripple/ripple-blobvault.svg?branch=master)](https://travis-ci.org/ripple/ripple-blobvault)
 
 You can read the documentation at [apiary](http://docs.blobvaultv1.apiary.io/)
 
