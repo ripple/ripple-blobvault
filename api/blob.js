@@ -159,7 +159,7 @@ var create = function (req, res) {
                 return;
             }
             email.send({email:params.email,hostlink:params.hostlink,token:params.emailToken,name:username});
-            lib.set({identity_id:resp.identity_id})
+            lib.set({id:resp.identity_id})
             response.json(resp).status(201).pipe(res)
 // if account is not funded we set add towards the daily limit
 /*
@@ -172,18 +172,19 @@ var create = function (req, res) {
             count.markdb(); // for funded user migration
             lib.done();
         });
-    },
+    }
+/*
     function(lib) {
     // finally add identity_id to identity table
-        
         var set = params.set;
         var table = params.table || 'blob';
-        store.insert({set:{identity:lib.get('identity_id')},table:'identity'},
+        store.insert({set:{identity:lib.get('id')},table:'identity'},
         function() {
             reporter.log("blob create: added ", lib.get('identity_id'), " to identity table")
             lib.done();
         })
     }
+*/
     ]);
 };
 exports.create = create;
