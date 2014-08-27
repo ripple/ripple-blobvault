@@ -11,7 +11,7 @@
    - cat config.js
    - "echo create database blobvault as user postgres"
    - psql -c 'create database blobvault;' -U postgres
-   - node migration.js
+   - ./node_modules/knex/lib/bin/cli.js migrate:latest
    - "echo make test script executable"
    - chmod +x test.sh
    - "echo End of before script"
