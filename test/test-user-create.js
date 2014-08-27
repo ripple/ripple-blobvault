@@ -31,7 +31,7 @@ app.post('/v1/user',api.blob.create);
 
 var assert = require('chai').assert;
 test('create then delete',function(done) {
-    this.timeout(0); 
+    this.timeout(10*1000); 
     var server = http.createServer(app);
     q.series([
         function(lib) {
@@ -105,6 +105,14 @@ test('create then delete',function(done) {
             }
         );
         },
+        // insert a patch directly
+        function(lib) {
+            store.db('blob_patches')
+            .insert({id:5, blob_id:testutils.person.blob_id, revision:55, data:'foo', size:3})
+            .then(function() {
+                lib.done()
+            })
+        },
         // delete user after 
         function(lib) {
             var sig = testutils.createSignature({method:'DELETE',url:'/v1/user',secret:testutils.person.auth_secret,date:testutils.person.date});
@@ -113,6 +121,7 @@ test('create then delete',function(done) {
                 url:url,
                 json:true
             },function(err, resp, body) {
+                console.log("Delete user after response:" , body)
                 assert.equal(resp.statusCode,200,'after delete request, status code should be 200');
                 lib.done();
             });

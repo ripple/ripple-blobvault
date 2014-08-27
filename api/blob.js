@@ -308,13 +308,17 @@ exports.consolidate = function (req, res) {
     });    
 };
 exports.delete = function (req, res) {
+    console.log("DELETE:",req.query)
     var keyresp = libutils.hasKeys(req.query,['signature_blob_id']);
     if (!keyresp.hasAllKeys) {
         response.json({result:'error', message:'Missing keys',missing:keyresp.missing}).status(400).pipe(res)
-    } else 
-        store.blobDelete(req,res,function(resp) {
+    } else {
+        var params = { blob_id : req.query.signature_blob_id }
+        console.log("calling blobDelete with ", params)
+        store.blobDelete(params,function(resp) {
             response.json(resp).pipe(res)
         });
+    }
 };
 exports.get = function (req, res) {
     var keyresp = libutils.hasKeys(req.params,['blob_id']);

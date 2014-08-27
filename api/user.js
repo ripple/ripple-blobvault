@@ -652,6 +652,7 @@ var request2faToken = function(req,res) {
             var produrl = config.phone.url+'/protected/json/sms/'+auth_id+'?api_key='+config.phone.key
             if ((force_sms !== undefined) && (force_sms == 'true'))
                 produrl = produrl.concat('&force=true')
+            console.log("request2fa token:", produrl)
             request.get({url:produrl,json:true},function(err,resp,body) {
                 reporter.log("request2fa token request body:",body)
                 var obj = {};
@@ -690,7 +691,7 @@ var verify2faToken = function(req,res) {
     q.series([
     function(lib) {
         if (remember_me !== undefined)
-            exports.store.update_where({table:'twofactor',where:{device_id:device_id},set:{remember_me:remember_me}},function(resp) {
+            exports.store.update_where({table:'twofactor',where:{key:'device_id',value:device_id},set:{remember_me:remember_me}},function(resp) {
                 lib.done()
             })
         else 
