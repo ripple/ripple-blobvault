@@ -83,13 +83,13 @@ test('test-2fa',function(done) {
         request.get({url:'http://localhost:5150/v1/blob/'+testutils.person.id+'/2fa?signature_blob_id='+testutils.person.id,json:true},
         function(err,resp, body) {
             console.log(resp.headers,resp.statusCode)
-            console.log(body)
+            console.log("THe BODY:", body, "  <-")
             assert.deepEqual(body, { via: 'sms',
     country_code:'1',
   enabled: true,
   masked_phone: '******'.concat(testutils.person.phone.substr(-4)),
   phone:libutils.normalizePhone(testutils.person.phone),
-  result:'success',auth_id:body.auth_id})
+  result:'success', auth_id:testutils.person["2fa_auth_id"]})
             lib.done();
         })
     },

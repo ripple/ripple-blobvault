@@ -19,7 +19,8 @@ exports.person = {
     encrypted_blobdecrypt_key: 'asdfasdfasdf',
     domain:'rippletrade.com',
  //   phone:'555-555-5555'
-    phone:'510-910-9958'
+    phone:'510-910-9958',
+    '2fa_auth_id' : "2469"
 }
 
 

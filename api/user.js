@@ -424,6 +424,7 @@ var updatekeys = function(req,res) {
 }
 
 var set2fa = function(req,res) {
+    reporter.log("set2fa:body:",req.body)
     var keyresp = libutils.hasKeys(req.query,['signature_blob_id']);
     if (!keyresp.hasAllKeys) {
         response.json({result:'error', message:'Missing keys',missing:keyresp.missing}).status(400).pipe(res)
@@ -478,6 +479,7 @@ var set2fa = function(req,res) {
         // create the auth id if we don't have an auth_id OR we get a new auth_id if phone is different
         var _blob = lib.get('_blob')
         // we don't need to normalize the phone check since the saved phone is already normalized as is the phone from the request
+        // this check is saying do they not have an auth id OR has the phone changed
         if ((!_blob["2fa_auth_id"]) || (phone != _blob['2fa_phone'])) {
             reporter.log("set2fa:auth id not set. getting auth id from provider") 
             if (country_code && _blob.email && phone) {
