@@ -48,8 +48,8 @@ exports.is_staging = false;
 
 // authy phone verification
 exports.phone = {
-    url : '',
-    key : ''
+    url : 'http://sandbox-api.authy.com',
+    key : '591b17780a53fb9872ec1f17f49e4fff'
 }
 
 //blockscore identity verification
