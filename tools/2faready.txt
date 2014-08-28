@@ -1,0 +1,12 @@
+Hey _USERNAME_, two factor authentication is now available!
+
+Hi, ~_USERNAME_
+
+You can now enable two factor authentication at RippleTrade, 
+and keep your account ultra safe!
+
+* Remember me option for your different devices
+* Authenticate via phone SMS or smartphone app
+            
+    Sincerely,
+    The Ripple Team
