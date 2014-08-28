@@ -19,7 +19,7 @@ var q = new Queue;
            text:    contents_txt.replace(/_USERNAME_/gi, username),
            from:    "you <foo@bar.com>",
            to:        "someone <foo@bar.com>",
-           subject:    "Ripple - Two Factor Authentication is here!",
+           subject:    "Ripple Trade: now offering two-factor authentication",
            'Reply-to' : 'support@ripple.com',
            attachment:
            [
