@@ -1,29 +1,11 @@
-<table cellspacing="0" cellpadding="0" border="0" width="40%" style='font-family:sans-serif;color:#5E5E5E'>
-    <tr>
-        <td bgcolor="#FFFFFF" align='left'>
-<div style='width:360px;'>
-<img style='display:block;margin:0 auto;' src='http://curlpaste.com/ripple.jpg' />
-<h1 style='padding-top:1em;font-weight:normal;' >Hey _USERNAME_, stronger security is now available for your Ripple Trade account!</h1>
-<div>
-You can now enable two factor authentication at <b>Ripple Trade</b>, and protect your account with both your password and your phone.
-<br>
-Turn it on: login to <a href='http://rippletrade.com/#/security'>Ripple Trade > Gear wheel > Security </a>
-    
+Hey _USERNAME_, stronger security is now available for your Ripple Trade account!
 
-    <ul>
-        <li><b>Remember me</b> option for your different devices
-        <li><b>Authenticate</b> via SMS or Authy app
-    </ul>
+You can now enable two factor authentication at Ripple Trade, and protect your account with both your password and your phone.
 
-    <div style="text-align:center;margin-bottom:1em;line-height:45px;font-weight:bold;font-family:Helvetica,Arial,sans-serif;color:rgb(255,255,255);text-transform:uppercase;background-color:rgb(104,212,114)">
-        <span style="font-family:'proxima_novablack',Helvetica;font-weight:normal">
-        <a href="http://rippletrade.com" style="color:rgb(255,255,255);font-size:18px;text-decoration:none;" target="_blank">Go for it</a>
-        </span>
-    </div>
-            
-    <div>Sincerely,</div>
-    <div>The Ripple Team</div>
-</div>
-        </td>
-    </tr>
-</table>
+Turn it on: login to http://rippletrade.com/#/security Ripple Trade > Gear wheel > Security
+
+* Remember me option for your different devices
+* Authenticate via SMS or Authy app
+
+    Sincerely,
+    The Ripple Team
