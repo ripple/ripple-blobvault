@@ -45,7 +45,6 @@ q.series([
     function(lib) {
         store.db('blob')
         .select('email','username')
-        .where('email_verified', '=', true)
         .then(function(resp) {
             lib.set({list:resp})
             lib.done()
