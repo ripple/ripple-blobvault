@@ -366,16 +366,12 @@ exports.get = function (req, res) {
             function(lib) {
                 var _blob = lib.get('_blob');
                 if (!_blob.identity_id) {
-                    store.insert({set:{identity_id:lib.get('identity_id')},table:'identity'}, 
+                    store.insert({set:{id:lib.get('identity_id')},table:'identity'}, 
                     function() {
                         lib.done()
                     })
                 } else 
                     lib.done() 
-            },
-            function(lib) {
-            // get relevant attestations RT-2127
-                lib.done()  
             },
             function(lib) {
                 var _blob = lib.get('_blob');
@@ -394,7 +390,15 @@ exports.get = function (req, res) {
                                 twofactor.via = _blob["2fa_via"];
                                 twofactor.masked_phone = libutils.maskphone(_blob["2fa_phone"])
                                 lib.set({twofactor:twofactor})
+                                // if remember me is ON then we want to take diff of current time and last_auth_timestamp and see that diff < 30 days ELSE invalidate and claim 
+                                // no authorization due to expired device authentication
+                
+                                // if rembmer me is off we want to to take diff of current time and last auth timestamp and diff < 24 hours else
                                 if (row.is_auth) {
+                                    // foo = currTime - last_auth_timestamp
+                                    // bar = (24 hours) if !rememberMe else bar = 30days
+                                    // check if (foo > bar) ->  set is_auth false return device auth expiration
+                                    // otherwise continue like so
                                     lib.done()
                                     return
                                 } else {

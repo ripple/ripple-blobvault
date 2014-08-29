@@ -465,7 +465,7 @@ var set2fa = function(req,res) {
         reporter.log("set2fa:check phone verified: blob:", _blob)
         // check if phone is different
         if (phone != _blob['2fa_phone']) {
-            if ((!_blob.phone_verified) && (enabled === true)) {
+            if (enabled === true) {
                 response.json({result:'error',message:'enabled cannot be set if phone number is not verified'}).status(400).pipe(res)
                 lib.terminate()
                 return
