@@ -424,7 +424,7 @@ var updatekeys = function(req,res) {
 }
 
 var set2fa = function(req,res) {
-    reporter.log("set2fa:body:",req.body)
+    reporter.log("\n**set2fa:body:",req.body)
     var keyresp = libutils.hasKeys(req.query,['signature_blob_id']);
     if (!keyresp.hasAllKeys) {
         response.json({result:'error', message:'Missing keys',missing:keyresp.missing}).status(400).pipe(res)
@@ -460,11 +460,27 @@ var set2fa = function(req,res) {
         })
     },
     function(lib) {
+        var _blob = lib.get('_blob');
+        if ((phone) && (phone != _blob['2fa_phone'])) {
+            var obj = {phone_verified:false};
+            obj['2fa_enabled'] = false;
+            exports.store.update_where({set:obj,where:{key:'id',value:blob_id}},function(resp) {
+                _blob.phone_verified = false;
+                _blob['2fa_enabled'] = false;
+                lib.set({_blob:_blob})
+                reporter.log("new phone", phone, " does not equal 2fa_phone:", _blob['2fa_phone'], " on record, setting phone_verified false for ", _blob.username)
+                lib.done()
+            })
+        } else {
+            lib.done()
+        }
+    },
+    function(lib) {
         // do not allow enabled 2fa if phone is not verified, RT-1945
         var _blob = lib.get('_blob');
         reporter.log("set2fa:check phone verified: blob:", _blob)
-        // check if phone is different
-        if (phone != _blob['2fa_phone']) {
+        if (!_blob.phone_verified) {
+        // check if phone is different ... actually we will reset phone_verified on 
             if (enabled === true) {
                 response.json({result:'error',message:'enabled cannot be set if phone number is not verified'}).status(400).pipe(res)
                 lib.terminate()
@@ -476,11 +492,12 @@ var set2fa = function(req,res) {
             lib.done()
     },
     function(lib) {
+        // purpose of this block is to obtain an auth_id or update for a new auth_id
         // create the auth id if we don't have an auth_id OR we get a new auth_id if phone is different
         var _blob = lib.get('_blob')
         // we don't need to normalize the phone check since the saved phone is already normalized as is the phone from the request
         // this check is saying do they not have an auth id OR has the phone changed
-        if ((!_blob["2fa_auth_id"]) || (phone != _blob['2fa_phone'])) {
+        if ((!_blob["2fa_auth_id"]) || (phone && (phone != _blob['2fa_phone']))) {
             reporter.log("set2fa:auth id not set. getting auth id from provider") 
             if (country_code && _blob.email && phone) {
                 var produrl = config.phone.url+'/protected/json/users/new/?api_key='+config.phone.key

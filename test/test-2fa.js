@@ -66,9 +66,8 @@ test('test-2fa',function(done) {
     },
     // this is to set the settings for 2fa for this user
     function(lib) {
-        console.log("setting settings")
+        console.log("setting settings 1")
         request.post({url:'http://localhost:5150/v1/blob/'+testutils.person.id+'/2fa?signature_blob_id='+testutils.person.id,json:{
-            enabled : true,
             phone : testutils.person.phone,
             country_code:'1',
             via : "sms"
@@ -78,7 +77,20 @@ test('test-2fa',function(done) {
             lib.done()
         });
     },
-        // this is to get / view the settings for 2fa for this user
+    // this is to set the settings for 2fa for this user
+    function(lib) {
+        console.log("setting settings 2")
+        request.post({url:'http://localhost:5150/v1/blob/'+testutils.person.id+'/2fa?signature_blob_id='+testutils.person.id,json:{
+            enabled : true,
+            country_code:'1',
+            via : "sms"
+        }},function(err,resp, body) {
+            console.log("settings response:",body)
+            assert.deepEqual(body,{ result: 'error',message:'enabled cannot be set if phone number is not verified' })
+            lib.done()
+        });
+    },
+    // this is to get / view the settings for 2fa for this user
     function(lib) {
         console.log("Going to get the settings")
         request.get({url:'http://localhost:5150/v1/blob/'+testutils.person.id+'/2fa?signature_blob_id='+testutils.person.id,json:true},
