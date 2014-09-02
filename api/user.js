@@ -430,19 +430,12 @@ var set2fa = function(req,res) {
         response.json({result:'error', message:'Missing keys',missing:keyresp.missing}).status(400).pipe(res)
         return
     } 
-    /*keyresp = libutils.hasKeys(req.body,['enabled','phone','via','country_code']);
-    if (!keyresp.hasAllKeys) {
-        response.json({result:'error', message:'Missing keys',missing:keyresp.missing}).status(400).pipe(res)
-        return
-    } 
-    */
     var blob_id = req.query.signature_blob_id;
     var enabled = req.body.enabled;
     var phone = req.body.phone;
     if (phone)
         phone = libutils.normalizePhone(phone)
     var country_code = req.body.country_code;
-    var via = req.body.via;
 
     var q = new Queue;
 
@@ -534,8 +527,6 @@ var set2fa = function(req,res) {
             obj['phone_verified'] = false; 
             obj["2fa_phone"] = phone;
         }
-        if (via !== undefined) 
-            obj["2fa_via"] = via;
         if (country_code !== undefined) 
             obj["2fa_country_code"] = country_code;
         exports.store.update_where({set:obj,where:{key:'id',value:blob_id}},function(resp) {
@@ -577,7 +568,7 @@ var get2fa = function(req,res) {
                     var phone = row["2fa_phone"]
                     var masked_phone = libutils.maskphone(phone);
                     
-                    var obj = { auth_id:row["2fa_auth_id"],via:row["2fa_via"],country_code:row["2fa_country_code"],enabled:row["2fa_enabled"],remember_me:row["2fa_remember_me"],phone:phone,masked_phone:masked_phone}
+                    var obj = { auth_id:row["2fa_auth_id"],country_code:row["2fa_country_code"],enabled:row["2fa_enabled"],remember_me:row["2fa_remember_me"],phone:phone,masked_phone:masked_phone}
                     obj.result = 'success';
                     if (deviceidrow) {
                         obj.remember_me = deviceidrow.remember_me;
@@ -596,7 +587,7 @@ var get2fa = function(req,res) {
                 var phone = row["2fa_phone"]
                 var masked_phone = libutils.maskphone(phone);
                 
-                var obj = { auth_id:row["2fa_auth_id"],via:row["2fa_via"],country_code:row["2fa_country_code"],enabled:row["2fa_enabled"],remember_me:row["2fa_remember_me"],phone:phone,masked_phone:masked_phone}
+                var obj = { auth_id:row["2fa_auth_id"],country_code:row["2fa_country_code"],enabled:row["2fa_enabled"],remember_me:row["2fa_remember_me"],phone:phone,masked_phone:masked_phone}
                 obj.result = 'success';
                 console.log("THE OBJ:",obj)
                 response.json(obj).pipe(res)
@@ -656,12 +647,11 @@ var request2faToken = function(req,res) {
     },
     function(lib) {
         var blob = lib.get('_blob');
-        var via = blob["2fa_via"];
         var country_code = blob["2fa_country_code"];
         var phone_number = blob["2fa_phone"];
         var auth_id = blob['2fa_auth_id'];
 
-        if ((!phone_number) && (!country_code) && (!via) && (!auth_id)) {
+        if ((!phone_number) && (!country_code) && (!auth_id)) {
             response.json({result:'error',message:'error on request 2fa token'}).status(400).pipe(res)
             lib.terminate()
             return
@@ -735,11 +725,10 @@ var verify2faToken = function(req,res) {
         exports.store.read_where({key:'id',value:blob_id},function(resp) {
             if (resp.length) {
                 var row = resp[0];
-                var via = row["2fa_via"];
                 var country_code = row["2fa_country_code"];
                 var phone_number = row["2fa_phone"];
                 var auth_id = row['2fa_auth_id'];
-                if ((!phone_number) && (!country_code) && (!via)) {
+                if ((!phone_number) && (!country_code)) {
                     response.json({result:'error',message:'error on validate 2fa token'}).status(400).pipe(res)
                     lib.done()
                     return

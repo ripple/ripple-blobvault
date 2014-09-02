@@ -68,8 +68,7 @@ test('test-2fa',function(done) {
     function(lib) {
         request.post({url:'http://localhost:5150/v1/blob/'+testutils.person.id+'/2fa?signature_blob_id='+testutils.person.id,json:{
             phone : testutils.person.phone,
-            country_code:'1',
-            via : "sms"
+            country_code:'1'
         }},function(err,resp, body) {
             console.log("settings response:",body)
             assert.equal(body.result,'success')
@@ -80,9 +79,7 @@ test('test-2fa',function(done) {
     // we want this to fail because we should not be able to enable until we have verified
     function(lib) {
         request.post({url:'http://localhost:5150/v1/blob/'+testutils.person.id+'/2fa?signature_blob_id='+testutils.person.id,json:{
-            enabled : true,
-            country_code:'1',
-            via : "sms"
+            enabled : true
         }},function(err,resp, body) {
             console.log("settings response:",body)
             assert.deepEqual(body,{ result: 'error',message:'enabled cannot be set if phone number is not verified' })
@@ -96,24 +93,13 @@ test('test-2fa',function(done) {
         function(err,resp, body) {
             console.log(resp.headers,resp.statusCode)
             console.log("THe BODY:", body, "  <-")
-            assert.deepEqual(body, { via: 'sms',
-    country_code:'1',
+            assert.deepEqual(body, { country_code:'1',
   enabled: false,
   masked_phone: '******'.concat(testutils.person.phone.substr(-4)),
   phone:libutils.normalizePhone(testutils.person.phone),
   result:'success', auth_id:testutils.person["2fa_auth_id"]})
             lib.done();
         })
-    },
-    function(lib) {
-        // we should NOT be able to enable
-        request.post({url:'http://localhost:5150/v1/blob/'+testutils.person.id+'/2fa?signature_blob_id='+testutils.person.id,json:{
-            enabled : true,
-        }},function(err,resp, body) {
-            assert.deepEqual(body,{ result: 'error',
-  message: 'enabled cannot be set if phone number is not verified' })
-            lib.done()
-        });
     },
     function(lib) {
         request.get({url:'http://localhost:5150/v1/blob/'+testutils.person.id+'/2fa/requestToken',json:true},function(err,resp,body) {
