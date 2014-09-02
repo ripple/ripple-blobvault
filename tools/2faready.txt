@@ -1,9 +1,10 @@
-Hey _USERNAME_, stronger security is now available for your Ripple Trade account!
+Hey ~_USERNAME_, stronger security is now available for your Ripple Trade account!
 
-You can now enable two factor authentication at Ripple Trade, and protect your account with both your password and your phone.
+You can now enable two-factor authentication at Ripple Trade, and protect your account with both your password and your phone.
 
-Turn it on: login to http://rippletrade.com/#/security Ripple Trade > Gear wheel > Security
+Turn it on: 
 
+* login to http://rippletrade.com/#/security Ripple Trade > Gear wheel > Security
 * Remember me option for your different devices
 * Authenticate via SMS or Authy app
 
