@@ -54,6 +54,7 @@ test('create then delete',function(done) {
             json: mod_person
             },
             function(err, resp, body) {
+                console.log(body)
                 assert.equal(resp.statusCode,400,'encrypted secret is required');
                 assert.equal(body.result,'error');
                 assert.equal(body.message,'Missing keys');

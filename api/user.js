@@ -498,7 +498,7 @@ var set2fa = function(req,res) {
         // we don't need to normalize the phone check since the saved phone is already normalized as is the phone from the request
         // this check is saying do they not have an auth id OR has the phone changed
         if ((!_blob["2fa_auth_id"]) || (phone && (phone != _blob['2fa_phone']))) {
-            reporter.log("set2fa:auth id not set. getting auth id from provider") 
+            reporter.log("set2fa:auth id not set or we need a new one. getting auth id from provider") 
             if (country_code && _blob.email && phone) {
                 var produrl = config.phone.url+'/protected/json/users/new/?api_key='+config.phone.key
                 var obj = { email:_blob.email, cellphone:phone,country_code:country_code }
@@ -554,7 +554,7 @@ var set2fa = function(req,res) {
     }]);
 }
 var get2fa = function(req,res) {
-    console.log("GET 2FA")
+    reporter.log("get2fa")
     var keyresp = libutils.hasKeys(req.query,['signature_blob_id']);
     if (!keyresp.hasAllKeys) {
         response.json({result:'error', message:'Missing keys',missing:keyresp.missing}).status(400).pipe(res)
@@ -574,7 +574,6 @@ var get2fa = function(req,res) {
                 } 
                 if (blobsettings.length) {
                     var row = blobsettings[0]
-                    console.log("THE ROW:",row)
                     var phone = row["2fa_phone"]
                     var masked_phone = libutils.maskphone(phone);
                     
@@ -585,7 +584,6 @@ var get2fa = function(req,res) {
                         obj.device_id = deviceidrow.device_id;
                         obj.is_auth = deviceidrow.is_auth; 
                     }
-                    console.log("THE OBJ:",obj)
                     response.json(obj).pipe(res)
                 } else {
                     response.json({result:'error',message:'error getting 2fa settings'}).status(400).pipe(res)
@@ -717,6 +715,7 @@ var verify2faToken = function(req,res) {
             lib.done()
     },
     function(lib) {
+        // check if verification is unnecessary
         exports.store.read_where({table:'twofactor',key:'device_id',value:device_id},
         function(resp) {
             if (resp.length) {
@@ -728,8 +727,8 @@ var verify2faToken = function(req,res) {
                 } else 
                     reporter.log("verify2fa: is NOT is_auth. contacting verification")
                     lib.done()
-            }
-            lib.done()
+            } else 
+                lib.done()
         })
     },
     function(lib) {
@@ -754,7 +753,7 @@ var verify2faToken = function(req,res) {
                             exports.store.update_where({
                             where:{key:'id',value:blob_id},
                             set:{phone_verified:true}}, function(resp) {
-                                exports.store.insert_or_update_where({table:'twofactor',where:{key:'device_id',value:device_id},set:{blob_id:blob_id,is_auth:true,device_id:device_id,last_auth_timestamp:new Date().getTime()}},
+                                exports.store.insert_or_update_where({table:'twofactor',where:{key:'device_id',value:device_id},set:{remember_me:remember_me,blob_id:blob_id,is_auth:true,device_id:device_id,last_auth_timestamp:new Date().getTime()}},
                                 function(resp2) {
                                     reporter.log("verify2fa success:",resp2)
                                     response.json({result:'success'}).pipe(res)
@@ -762,7 +761,7 @@ var verify2faToken = function(req,res) {
                                 })
                             })
                         } else  {
-                            exports.store.insert_or_update_where({table:'twofactor',where:{key:'device_id',value:device_id},set:{blob_id:blob_id,is_auth:false,device_id:device_id}},
+                            exports.store.insert_or_update_where({table:'twofactor',where:{key:'device_id',value:device_id},set:{blob_id:blob_id,is_auth:false,remember_me:remember_me,device_id:device_id}},
                             function(resp2) {
                                 reporter.log("verify2fa set incorrect code:",resp2)
                                 response.json({result:'error',message:'invalid token'}).status(400).pipe(res)

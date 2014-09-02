@@ -27,7 +27,7 @@ exports.patchsize = 1;
 
 // if testmode = true, there is no remote rippled connection made
 // and no ecdsa signature check on create
-exports.testmode = false;
+exports.testmode = false
 
 // if account is created before this date and funded
 exports.nolimit_date = 'Thu May 1 2014';

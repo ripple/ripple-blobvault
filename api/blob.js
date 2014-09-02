@@ -355,6 +355,9 @@ exports.get = function (req, res) {
                     reporter.log("blobGet: identity_id does not exist for ", _blob)
                     var identity_id = libutils.generateIdentityId()
                     lib.set({identity_id:identity_id})
+                    _blob.identity_id = identity_id;
+                    lib.set({_blob:_blob})
+                    lib.set({needUpdateToIdentityTable:true})
                     store.update_where({where:{key:'id', value:_blob.id},set:{identity_id:identity_id}, table:'blob'},function(resp) {
                         reporter.log("blobGet: identity_id added ", identity_id)
                         lib.done()
@@ -365,7 +368,7 @@ exports.get = function (req, res) {
             },
             function(lib) {
                 var _blob = lib.get('_blob');
-                if (!_blob.identity_id) {
+                if (lib.get('needUpdateToIdentityTable')) {
                     store.insert({set:{id:lib.get('identity_id')},table:'identity'}, 
                     function() {
                         lib.done()
@@ -374,13 +377,56 @@ exports.get = function (req, res) {
                     lib.done() 
             },
             function(lib) {
+                // handle remember me
+                reporter.log("handleRememberMe")
+                var _blob = lib.get('_blob');
+                if (device_id !== undefined) {
+                    store.read_where({table:'twofactor',key:'device_id',value:device_id},
+                    function(resp2) {
+                        if (resp2.length) {
+                            var row = resp2[0]
+                            reporter.log("handleRememberMe:getBlob:twofactor on device id", device_id,row) 
+                            // if rembmer me is off we want to to take diff of current time and last auth timestamp and diff < 24 hours else
+                            var curr = new Date().getTime()
+                            var diff = curr - parseInt(row.last_auth_timestamp)
+                            var hours = diff / (1000 * 60 * 60)
+                            reporter.log("handleRememberMe:diff hours:", hours)
+                            if ((row.remember_me === false) && (hours > 24)) {
+                                reporter.log("rememberMe false and hours > 24")
+                                store.update_where({
+                                    table:'twofactor',
+                                    set:{is_auth:false},
+                                    where:{key:'device_id',value:device_id}},
+                                function(resp) {
+                                    reporter.log("handleRememberMe:invalidated ", device_id, row.remember_me, hours)
+                                    lib.done()
+                                })
+                            } else if ((row.remember_me === true) && (hours > 24*30)) {
+                                reporter.log("rememberMe true and hours > 24*30 30days")
+                                store.update_where({
+                                    table:'twofactor',
+                                    set:{is_auth:false},
+                                    where:{key:'device_id',value:device_id}},
+                                function(resp) {
+                                    reporter.log("handleRememberMe:invalidated ", device_id, row.remember_me, hours)
+                                    lib.done()
+                                })
+                            } else 
+                                lib.done()
+                        } else 
+                            lib.done()
+                    })
+                } else 
+                    lib.done()
+            },
+            function(lib) {
                 var _blob = lib.get('_blob');
                 var twofactor = {};
                 if (_blob["2fa_enabled"] === true) {
                     if (device_id !== undefined) {
                         store.read_where({table:'twofactor',key:'device_id',value:device_id},
                         function(resp2) {
-                            reporter.log("readwhere: 2fa blobGet:_blob:",_blob)
+                            reporter.log("getBlob:twofactor on device id", device_id,resp2) 
                             if (resp2.length) {
                                 var row = resp2[0];
                                 twofactor.is_auth = row.is_auth;
@@ -390,15 +436,7 @@ exports.get = function (req, res) {
                                 twofactor.via = _blob["2fa_via"];
                                 twofactor.masked_phone = libutils.maskphone(_blob["2fa_phone"])
                                 lib.set({twofactor:twofactor})
-                                // if remember me is ON then we want to take diff of current time and last_auth_timestamp and see that diff < 30 days ELSE invalidate and claim 
-                                // no authorization due to expired device authentication
-                
-                                // if rembmer me is off we want to to take diff of current time and last auth timestamp and diff < 24 hours else
                                 if (row.is_auth) {
-                                    // foo = currTime - last_auth_timestamp
-                                    // bar = (24 hours) if !rememberMe else bar = 30days
-                                    // check if (foo > bar) ->  set is_auth false return device auth expiration
-                                    // otherwise continue like so
                                     lib.done()
                                     return
                                 } else {
