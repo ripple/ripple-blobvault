@@ -10,8 +10,8 @@ var api = require('./api');
 var reporter = require('./lib/reporter');
 var guard = require('./guard')(store)
 var limiter = guard.resend_email();
-var requestAttestation = require('./api/requestAttestation')
-
+var requestAttestation = require('./api/requestAttestation');
+var blobIdentity = require('./lib/blobIdentity');
 var Ddos= require('ddos');
 var ddos = new Ddos;
 
@@ -20,6 +20,7 @@ health.start()
 
 api.setStore(store);
 hmac.setStore(store);
+blobIdentity.setStore(store);
 
 var app = express();
 app.use(ddos.express)
@@ -66,9 +67,9 @@ app.get('/v1/blob/:blob_id/2fa/requestToken', api.user.request2faToken)
 app.post('/v1/blob/:blob_id/2fa/verifyToken', api.user.verify2faToken)
 
 // profile routes
-app.post('/v1/profile/:identity_id/attest', hmac.middleware, requestAttestation)
-app.post('/v1/profile/:identity_id', hmac.middleware, api.user.setProfile)
-app.get('/v1/profile/:identity_id', hmac.middleware, api.user.getProfile)
+app.post('/v1/profile/attest', hmac.middleware, blobIdentity.getID, requestAttestation)
+app.post('/v1/profile', hmac.middleware, blobIdentity.getID, api.user.setProfile)
+app.get('/v1/profile', hmac.middleware, blobIdentity.getID, api.user.getProfile)
 //app.get('/v1/profile/:identity_id/attestations/', hmac.middleware, api.user.getAttestations)
 //app.post('v1/profile/create', api.identity.create)
 
