@@ -381,6 +381,7 @@ var updatekeys = function(req,res) {
         exports.store.read_where({key:'normalized_username',value:libutils.normalizeUsername(username)},function(resp) {
             if (resp.length) {
                 lib.set({old_blob_id:resp[0].id})
+                lib.set({_blob:resp[0]})
                 lib.done();
             } else {
                 response.json({result:'error',message:"invalid user"}).status(400).pipe(res)
@@ -419,6 +420,14 @@ var updatekeys = function(req,res) {
                 response.json({result:'error',message:'updatekeys'}).status(400).pipe(res)
             lib.done()
         })
+    },
+    function(lib) {
+        var _blob = lib.get('_blob')
+        var email = _blob['email'];
+        if (email) {
+            email.notifypasswordchange({email:email,username:_blob.username});
+        }
+        lib.done()
     }
     ])
 }
