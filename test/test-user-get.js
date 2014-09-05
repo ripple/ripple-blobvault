@@ -40,6 +40,7 @@ test('create, get, the cleanup and delete', function(done) {
                 json: testutils.person
                 }, function(err, resp, body) {
                     
+                    console.log("BODY IS:",body)
                     assert.equal(resp.statusCode,201,'after proper create request, status code should be 201');
                     lib.done();
             });

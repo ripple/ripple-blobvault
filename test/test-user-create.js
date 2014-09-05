@@ -47,6 +47,7 @@ test('create then delete',function(done) {
             });
         },
         function(lib) {
+        // create a user but is missing keys
         var mod_person = Hash(testutils.person).clone.end;
         delete mod_person.encrypted_secret;
         request.post({
@@ -54,7 +55,6 @@ test('create then delete',function(done) {
             json: mod_person
             },
             function(err, resp, body) {
-                console.log(body)
                 assert.equal(resp.statusCode,400,'encrypted secret is required');
                 assert.equal(body.result,'error');
                 assert.equal(body.message,'Missing keys');
@@ -69,21 +69,19 @@ test('create then delete',function(done) {
             json: testutils.person
             },
             function(err, resp, body) {
-                console.log("Header:", resp.headers)
-                console.log("BODY:",body);
                 assert.equal(resp.statusCode,201,'after proper create request, status code should be 201');
                 lib.done();
             }
         );
         },
         function(lib) {
+        console.log("same username rejection")
         request.post({
             url:'http://localhost:5050/v1/user',
             json: testutils.person
             },
             function(err, resp, body) {
                 assert.equal(resp.statusCode,400,'we should not be able to duplicate a user that already exists');
-                log(body);
                 lib.done();
             }
         );
@@ -92,31 +90,31 @@ test('create then delete',function(done) {
         // we want to .catch from the store since it should be throwing at the db level
         // step 1 modify the testutils.person.username 
         function(lib) {
+            console.log("attempt ot violate unique ripple address")
             var mod_person = Hash(testutils.person).clone.end;
             mod_person.username = 'zed';
-        request.post({
-            url:'http://localhost:5050/v1/user',
-            json: mod_person
+            request.post({
+                url:'http://localhost:5050/v1/user',
+                json: mod_person
             },
             function(err, resp, body) {
                 assert.equal(resp.statusCode,400,'we should not be create a new person with the same ripple address');
-                log(body);
                 lib.done();
-            }
-        );
+            });
         },
         // insert a patch directly
         function(lib) {
+            console.log("Inserting patch directly")
             store.db('blob_patches')
             .insert({id:5, blob_id:testutils.person.blob_id, revision:55, data:'foo', size:3})
             .then(function() {
-                console.log("AFJASKAJ")
+                console.log("Inserted patch directly")
                 lib.done()
             })
         },
         // delete user after 
         function(lib) {
-            process.exit()
+            console.log("Deleting user afterwards")
             var sig = testutils.createSignature({method:'DELETE',url:'/v1/user',secret:testutils.person.auth_secret,date:testutils.person.date});
             var url = 'http://localhost:5050/v1/user?signature=' + sig + '&signature_date='+testutils.person.date + '&signature_blob_id='+ testutils.person.blob_id;
             request.del({
