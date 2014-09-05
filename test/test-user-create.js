@@ -90,7 +90,6 @@ test('create then delete',function(done) {
         },
         // here we are going to modify the username but violate the constraint on the unique ripple address 
         // we want to .catch from the store since it should be throwing at the db level
-        
         // step 1 modify the testutils.person.username 
         function(lib) {
             var mod_person = Hash(testutils.person).clone.end;
@@ -111,11 +110,13 @@ test('create then delete',function(done) {
             store.db('blob_patches')
             .insert({id:5, blob_id:testutils.person.blob_id, revision:55, data:'foo', size:3})
             .then(function() {
+                console.log("AFJASKAJ")
                 lib.done()
             })
         },
         // delete user after 
         function(lib) {
+            process.exit()
             var sig = testutils.createSignature({method:'DELETE',url:'/v1/user',secret:testutils.person.auth_secret,date:testutils.person.date});
             var url = 'http://localhost:5050/v1/user?signature=' + sig + '&signature_date='+testutils.person.date + '&signature_blob_id='+ testutils.person.blob_id;
             request.del({
