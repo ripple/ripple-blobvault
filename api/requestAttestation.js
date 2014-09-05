@@ -117,8 +117,8 @@ var basicIdentityAttestation = function (req, res, next) {
                     sub : req.params.identity_id,
                     exp : ~~(new Date().getTime() / 1000) + (30 * 60),
                     iat : ~~(new Date().getTime() / 1000 - 60),
-                    given_name  : params.first,
-                    family_name : params.last,
+                    given_name  : params.name.first,
+                    family_name : params.name.last,
                     birthdate   : params.date_of_birth,
                     address : {
                         line1       : params.address.street1,
@@ -241,23 +241,148 @@ var emailAttestation = function (req, res, next) {
  * - uses Authy for verification, out of band
  */
 var phoneAttestation = function (req, res, next) {
-  
+    
   //resuming previous phone verification
   if (req.body.attestation_id) {
+
+   /*
+   1. check if id matches an existing attestation
+        - if no, return error
+        - if yes and status != pending, return the attestation
+        - if yes and status == pending, continue
+   2. check for verification token
+   3. send token to authy
+   4. on successful verification, create and store attestation
+   
+   */
+      
+    var attestation_id = req.body.attestation_id;
+    var identity_id    = req.params.identity_id;
+    var q = new Queue
+    q.series([
+    function(lib) {
+      store.read_where({table:'attestations', key:'id', value:attestation_id}, function(resp) {
+          if (!resp || resp.error) {
+            response.json({result:'error', message:'attestation database error'}).status(500).pipe(res);
+            lib.terminate();
+            
+          } else if (!resp.length) {
+            response.json({result:'error', message:'attestation not found'}).status(500).pipe(res);
+            lib.terminate();
+          
+          } else if (resp[0].identity_id !== identity_id) {
+            response.json({result:'error', message:'attestation does not match the identity'}).status(500).pipe(res);
+            lib.terminate();            
+            
+          } else if (!resp[0].payload || !resp[0].payload.phone_number) {
+            response.json({result:'error', message:'invalid attestation'}).status(500).pipe(res);
+            lib.terminate();         
+          
+          } else if (resp[0].status !== 'pending') {
+            var result = {
+              result   : 'success',
+              status   : resp[0].status,
+              blinded  : fobar.blinded_signed_jwt_base64,
+              complete : blah.signed_jwt_base64
+            };
+            
+            response.json(result).pipe(res);
+            lib.terminate();              
+            
+          } else {
+            lib.set({attestation:resp[0]});
+            lib.done(); 
+          }
+      });
+    },
     
-    /*
-     1. check if id matches an existing attestation
-          - if no, return error
-          - if yes and status != pending, return the attestation
-          - if yes and status == pending, complete the validation
-     2. check for verification token
-     3. send token to authy
-     4. on successful verification, create and store attestation
-     
-     */
-  
+    function(lib) {
+      var authyURL    = config.phone.url + '/protected/json/phones/verification/check?api_key=' + config.phone.key;
+      var attestation = lib.get('attestation'); 
+      var match       = attestation.payload.phone_number.match(/^\+(\d*)(.+)/);
+      var countryCode = match[1];
+      var phone       = match[2] ? match[2].replace(/\D/g,'') : undefined;
+      
+      if (!phone || !countryCode) {
+        response.json({result:'error', message:'invalid phone number'}).status(500).pipe(res);
+        lib.terminate();
+        return;
+      }
+      
+      var params = {
+        api_key      : config.phone.key,
+        phone_number : phone,
+        country_code : countryCode,
+        verification_code : req.body.token
+      }
+      
+      request.get({url:authyURL,qs:params,json:true},function(err,resp,body) {
+
+        if (err) {
+          response.json({result:'error', message:'error validating token'}).status(500).pipe(res);
+          lib.terminate();
+                       
+        } else if (body.success === true) {
+
+          var payload = {
+            iss : issuer,
+            sub : identity_id,
+            exp : ~~(new Date().getTime() / 1000) + (30 * 60),
+            iat : ~~(new Date().getTime() / 1000 - 60),
+            phone_number : attestation.payload.phone_number,
+            phone_number_verified : true,
+          }; 
+            
+            
+          var blinded_payload = {
+            iss : issuer,
+            sub : identity_id,
+            exp : ~~(new Date().getTime() / 1000) + (30 * 60),
+            iat : ~~(new Date().getTime() / 1000 - 60),
+            phone_number_verified : true          
+          };
+              
+          attestation.payload                   = payload;
+          attestation.signed_jwt_base64         = jwtSigner.sign(payload, key);
+          attestation.blinded_signed_jwt_base64 = jwtSigner.sign(blinded_payload, key);          
+          attestation.status                    = 'valid';
+          attestation.created                   = new Date().getTime();
+          
+          store.update_where({table:'attestations', set: attestation, where:{key:'id',value:attestation_id}}, function(db_resp) {
+            if (db_resp.error) {
+              response.json({result:'error', message:'attestation database error'}).status(500).pipe(res);
+             
+            } else {
+              reporter.log("identity attestation created: ", lib.get('attestation_id'));
+              result = {
+                result   : 'success',
+                status   : attestation.status,
+                blinded  : attestation.blinded_signed_jwt_base64,
+                complete : attestation.signed_jwt_base64
+              }; 
+              
+              response.json(result).pipe(res); 
+              
+            } 
+             
+            lib.done();  
+          });
+        
+        } else {
+          response.json({result:'error', message:body.message}).status(500).pipe(res);
+          lib.terminate();
+        }
+      });        
+    }
+    ]);
+      
   } else {
-  
+
+    var identity_id = req.params.identity_id;
+    var phone       = "+" + req.body.phone.country_code + ' ' + formatPhone(req.body.phone.number);
+    
+    //TODO: check here for existing attestation with the provide phone number
+    
     /*
      1. create request validation token from authy for phone #
      2. use phone verification flow from authy (no app, no email)
@@ -269,28 +394,21 @@ var phoneAttestation = function (req, res, next) {
       return;  
     }
   
-    var identity_id = req.params.identity_id;
-    var phone       = "+" + req.body.phone.country_code + ' ' + formatPhone(req.body.phone.number);
-    var token       = ("0000" + Math.floor(Math.random() * 100000)).slice(-5);
     var attestation = {
       id          : utils.generate_uuid(),
       identity_id : identity_id,
       issuer      : issuer,
       status      : 'pending',
       payload     : {
-        phone     : phone
+        phone_number : phone
       },
       created : new Date().getTime()
     };
     
-    console.log(attestation);
-    
     var q = new Queue
     q.series([
       function(lib) {
-        //lib.done();
-        //return;
-        
+
         store.insert({set:attestation,table:'attestations'},
         function(db_resp) {
 
@@ -313,14 +431,20 @@ var phoneAttestation = function (req, res, next) {
           via          : 'sms'     
         }
          
-        console.log(authyURL, params);
         request.post({url:authyURL,body:params,json:true},function(err,resp,body) {
-          console.log(err, body);
+
           if (err) {
             response.json({result:'error', message:'error requesting verification token'}).status(500).pipe(res);
             lib.terminate();
                          
           } else {
+            response.json({
+              result         : 'success',
+              status         : attestation.status,
+              attestation_id : attestation.id,
+              message        : 'attestation pending verification'
+            }).pipe(res);
+            
             lib.done();
           }
         });        
