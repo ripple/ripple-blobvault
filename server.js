@@ -1,5 +1,3 @@
-var agent = require('webkit-devtools-agent');
-agent.start()
 var config = require('./config');
 var http = require('http');
 var https = require('https');

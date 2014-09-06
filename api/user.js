@@ -423,10 +423,7 @@ var updatekeys = function(req,res) {
     },
     function(lib) {
         var _blob = lib.get('_blob')
-        var email = _blob['email'];
-        if (email) {
-            email.notifypasswordchange({email:email,username:_blob.username});
-        }
+        email.notifypasswordchange({email:_blob.email,username:_blob.username});
         lib.done()
     }
     ])
