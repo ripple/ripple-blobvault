@@ -9,6 +9,10 @@ var utils     = require('../lib/utils');
 var Queue     = require('queuelib');
 var conformParams = require('../lib/conformParams');
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> refactored profile and identity attestation
 var key;
 var issuer = "https://id.ripple.com";
 
@@ -68,7 +72,7 @@ var profileAttestation  = function (req, res, next) {
         reporter.log("got existing attestation:", resp[0].id);
         response.json(result).pipe(res);  
         lib.terminate();
-        
+
       } else {
         response.json({result:'error', message:'no profile attestation for this identity'}).status(404).pipe(res); 
         lib.terminate();
