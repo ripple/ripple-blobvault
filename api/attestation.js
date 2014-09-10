@@ -9,7 +9,6 @@ var utils     = require('../lib/utils');
 var Queue     = require('queuelib');
 var conformParams = require('../lib/conformParams');
 
-
 var key;
 var issuer = "https://id.ripple.com";
 
@@ -68,6 +67,10 @@ var profileAttestation  = function (req, res, next) {
         
         reporter.log("got existing attestation:", resp[0].id);
         response.json(result).pipe(res);  
+        lib.terminate();
+        
+      } else {
+        response.json({result:'error', message:'no profile attestation for this identity'}).status(404).pipe(res); 
         lib.terminate();
       }
     });
@@ -374,7 +377,8 @@ var identityAttestation = function (req, res, next) {
       iat : ~~(new Date().getTime() / 1000 - 60),
     };
     
-    if (score >= 80) payload.identity_verified = true;
+    if (score >= 80) payload.identity_verified   = true;
+    else             payload.identity_unverified = true;
     if (score)       payload.score = score;
     
     //TODO: recalculate trust score, add to payload
