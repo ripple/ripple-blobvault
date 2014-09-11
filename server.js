@@ -11,7 +11,6 @@ var reporter = require('./lib/reporter');
 var guard = require('./guard')(store)
 var limiter = guard.resend_email();
 var requestAttestation = require('./api/requestAttestation');
-var attestationSummary = require('./api/attestationSummary');
 var blobIdentity = require('./lib/blobIdentity');
 var Ddos= require('ddos');
 var ddos = new Ddos;
@@ -69,10 +68,11 @@ app.post('/v1/blob/:blob_id/2fa/verifyToken', api.user.verify2faToken)
 
 // profile routes
 //app.post('/v1/profile/attest', hmac.middleware, blobIdentity.getID, requestAttestation);
+//app.get('/v1/profile/attestation/:type', hmac.middleware, blobIdentity.getID, api.attestation.get);
 app.post('/v1/profile/attestation/:type', hmac.middleware, blobIdentity.getID, api.attestation.get);
+//app.get('/v1/profile/attestation/summary', hmac.middleware, blobIdentity.getID, api.attestation.summary);
 app.post('/v1/profile', hmac.middleware, blobIdentity.getID, api.user.setProfile);
 app.get('/v1/profile', hmac.middleware, blobIdentity.getID, api.user.getProfile);
-//app.get('/v1/profile/attestationSummary', hmac.middleware, blobIdentity.getID, attestationSummary);
 //app.post('v1/profile/create', api.identity.create)
 
 app.get('/v1/authinfo', api.user.authinfo);
