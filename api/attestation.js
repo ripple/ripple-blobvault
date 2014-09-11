@@ -123,8 +123,16 @@ var profileAttestation  = function (req, res, next) {
           }
         };
         
-        exports.store.insert_or_update_where({set:attestation,table:'attestations',where:{key:'id',value:id}},
-        function(db_resp) {
+        var params = {
+          set   : attestation,
+          table : 'attestations',
+          where : {
+            key   : 'id',
+            value : id
+          }
+        };
+        
+        exports.store.insert_or_update_where(params, function(db_resp) {
           if (db_resp.error) {
             response.json({result:'error', message:'attestation database error'}).status(500).pipe(res);
            
@@ -411,11 +419,18 @@ var phoneAttestation = function (req, res, next) {
             
       //we have a verified phone attestation, return it      
       } if (resp[0] && resp[0].status === 'verified') {
-        console.log(resp[0]);
+        reporter.log("existing phone attestation: ", resp[0].id);
+        result = {
+          result      : 'success',
+          status      : resp[0].status,
+          attestation : resp[0].signed_jwt_base64,
+          blinded     : resp[0].blinded_signed_jwt_base64
+        }; 
+        
+        response.json(result).pipe(res); 
         lib.terminate();
       
       } else {
-        console.log(resp[0]);
         lib.set({attestation:resp[0]});
         lib.done();
       }      
@@ -461,7 +476,7 @@ var phoneAttestation = function (req, res, next) {
           existing.payload                   = payload;
           existing.signed_jwt_base64         = jwtSigner.sign(payload, key);
           existing.blinded_signed_jwt_base64 = jwtSigner.sign(blinded_payload, key);          
-          existing.status                    = 'valid';
+          existing.status                    = 'verified';
           existing.created                   = new Date().getTime();      
  
           exports.store.update_where({table:'attestations', set: existing, where:{key:'id',value:existing.id}}, function(db_resp) {
@@ -471,10 +486,10 @@ var phoneAttestation = function (req, res, next) {
             } else {
               reporter.log("phone attestation created: ", existing.id);
               result = {
-                result   : 'success',
-                status   : existing.status,
-                blinded  : existing.blinded_signed_jwt_base64,
-                complete : existing.signed_jwt_base64
+                result      : 'success',
+                status      : existing.status,
+                attestation : existing.signed_jwt_base64,
+                blinded     : existing.blinded_signed_jwt_base64
               }; 
               
               response.json(result).pipe(res); 
@@ -496,6 +511,7 @@ var phoneAttestation = function (req, res, next) {
         id          : existing ? existing.id : utils.generate_uuid(),
         identity_id : identity_id,
         issuer      : issuer,
+        type        : 'phone',
         status      : 'pending',
         payload     : {
           phone_number : phoneNumber
@@ -510,8 +526,16 @@ var phoneAttestation = function (req, res, next) {
         via          : 'sms'     
       };
       
-      console.log(attestation, params);  
-      exports.store.insert({set:attestation,table:'attestations'}, function(db_resp) {
+      var options = {
+        set   : attestation,
+        table : 'attestations',
+        where : {
+          key   : 'id',
+          value : attestation.id
+        }
+      };
+      
+      exports.store.insert_or_update_where(options, function(db_resp) {
         if (db_resp.error) {
           response.json({result:'error', message:'attestation database error'}).status(500).pipe(res);
           lib.terminate();
@@ -519,8 +543,7 @@ var phoneAttestation = function (req, res, next) {
         } else {
           reporter.log("phone attestation created: ", attestation.id);
           request.post({url:authyURL,body:params,json:true},function(err,resp,body) {
-            console.log(err, body);
-            if (err) {
+            if (err || body.success !== true) {
               response.json({result:'error', message:'error requesting verification token'}).status(500).pipe(res);
               lib.terminate();
                            
