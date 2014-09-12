@@ -422,9 +422,15 @@ var updatekeys = function(req,res) {
         })
     },
     function(lib) {
-        var _blob = lib.get('_blob')
-        email.notifypasswordchange({email:_blob.email,username:_blob.username});
-        lib.done()
+        var old_blob_id = lib.get('old_blob_id')
+        var id = req.body.blob_id;
+        if (old_blob_id != id) {
+            var _blob = lib.get('_blob')
+            email.notifypasswordchange({email:_blob.email,username:_blob.username});
+            lib.done()
+        } else {
+            lib.done()
+        }
     }
     ])
 }
