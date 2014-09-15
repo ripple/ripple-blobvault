@@ -13,7 +13,7 @@ var limiter = guard.resend_email();
 var requestAttestation = require('./api/requestAttestation');
 var blobIdentity = require('./lib/blobIdentity');
 var Ddos= require('ddos');
-var ddos = new Ddos;
+var ddos = new Ddos({burst:10});
 
 var health = require('./health')(store.db)
 health.start()
