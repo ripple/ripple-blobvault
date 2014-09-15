@@ -6,7 +6,10 @@ var store = require('../lib/store')(config.dbtype);
 var client = require('blockscore')(config.blockscore.key);
 var jwtSigner = require('jwt-sign');
 var utils = require('../lib/utils');
+
 var key;
+var issuer = "https://id.ripple.com";
+
 require('fs').readFile('./test.pem', 'utf8', 
 function(err, data) {
     if (!err) key = data;
@@ -110,12 +113,12 @@ var basicIdentityAttestation = function (req, res, next) {
                 var blindPayload;
                 
                 payload = {
-                    iss : "https://id.ripple.com",
+                    iss : issuer,
                     sub : req.params.identity_id,
                     exp : ~~(new Date().getTime() / 1000) + (30 * 60),
                     iat : ~~(new Date().getTime() / 1000 - 60),
-                    given_name  : params.first,
-                    family_name : params.last,
+                    given_name  : params.name.first,
+                    family_name : params.name.last,
                     birthdate   : params.date_of_birth,
                     address : {
                         line1       : params.address.street1,
@@ -191,7 +194,7 @@ var basicIdentityAttestation = function (req, res, next) {
                     response.json({result:'error', message:'attestation database error'}).status(500).pipe(res);
                    
                   } else {
-                    reporter.log("attestation created: ", lib.get('attestation_id'));
+                    reporter.log("identity attestation created: ", lib.get('attestation_id'));
                     result = {
                       result  : 'success',
                       blinded : lib.get('blinded'),
@@ -215,15 +218,249 @@ var basicIdentityAttestation = function (req, res, next) {
  * - uses an email sent from the server with a validation code 
  */
 var emailAttestation = function (req, res, next) {
-  
+
+  if (req.param.attestation_id) {
+    if (req.param.token) {
+      //check for attestation with corresponding token
+      //if found, create an email attestation
+    } 
+  } else {
+    
+    /*
+     1. Generate a unique attestation ID and token
+     2. Create a new attestation entry
+     3. send an email with a completion link
+     4. return the attestation ID
+     
+     */
+  }
 };
 
 /*
  * phoneAttestation
- * - uses Authy for verification
+ * - uses Authy for verification, out of band
  */
 var phoneAttestation = function (req, res, next) {
+    
+  //resuming previous phone verification
+  if (req.body.attestation_id) {
+
+   /*
+   1. check if id matches an existing attestation
+        - if no, return error
+        - if yes and status != pending, return the attestation
+        - if yes and status == pending, continue
+   2. check for verification token
+   3. send token to authy
+   4. on successful verification, create and store attestation
+   
+   */
+      
+    var attestation_id = req.body.attestation_id;
+    var identity_id    = req.params.identity_id;
+    var q = new Queue
+    q.series([
+    function(lib) {
+      store.read_where({table:'attestations', key:'id', value:attestation_id}, function(resp) {
+          if (!resp || resp.error) {
+            response.json({result:'error', message:'attestation database error'}).status(500).pipe(res);
+            lib.terminate();
+            
+          } else if (!resp.length) {
+            response.json({result:'error', message:'attestation not found'}).status(500).pipe(res);
+            lib.terminate();
+          
+          } else if (resp[0].identity_id !== identity_id) {
+            response.json({result:'error', message:'attestation does not match the identity'}).status(500).pipe(res);
+            lib.terminate();            
+            
+          } else if (!resp[0].payload || !resp[0].payload.phone_number) {
+            response.json({result:'error', message:'invalid attestation'}).status(500).pipe(res);
+            lib.terminate();         
+          
+          } else if (resp[0].status !== 'pending') {
+            var result = {
+              result   : 'success',
+              status   : resp[0].status,
+              blinded  : fobar.blinded_signed_jwt_base64,
+              complete : blah.signed_jwt_base64
+            };
+            
+            response.json(result).pipe(res);
+            lib.terminate();              
+            
+          } else {
+            lib.set({attestation:resp[0]});
+            lib.done(); 
+          }
+      });
+    },
+    
+    function(lib) {
+      var authyURL    = config.phone.url + '/protected/json/phones/verification/check?api_key=' + config.phone.key;
+      var attestation = lib.get('attestation'); 
+      var match       = attestation.payload.phone_number.match(/^\+(\d*)(.+)/);
+      var countryCode = match[1];
+      var phone       = match[2] ? match[2].replace(/\D/g,'') : undefined;
+      
+      if (!phone || !countryCode) {
+        response.json({result:'error', message:'invalid phone number'}).status(500).pipe(res);
+        lib.terminate();
+        return;
+      }
+      
+      var params = {
+        api_key      : config.phone.key,
+        phone_number : phone,
+        country_code : countryCode,
+        verification_code : req.body.token
+      }
+      
+      request.get({url:authyURL,qs:params,json:true},function(err,resp,body) {
+
+        if (err) {
+          response.json({result:'error', message:'error validating token'}).status(500).pipe(res);
+          lib.terminate();
+                       
+        } else if (body.success === true) {
+
+          var payload = {
+            iss : issuer,
+            sub : identity_id,
+            exp : ~~(new Date().getTime() / 1000) + (30 * 60),
+            iat : ~~(new Date().getTime() / 1000 - 60),
+            phone_number : attestation.payload.phone_number,
+            phone_number_verified : true,
+          }; 
+            
+            
+          var blinded_payload = {
+            iss : issuer,
+            sub : identity_id,
+            exp : ~~(new Date().getTime() / 1000) + (30 * 60),
+            iat : ~~(new Date().getTime() / 1000 - 60),
+            phone_number_verified : true          
+          };
+              
+          attestation.payload                   = payload;
+          attestation.signed_jwt_base64         = jwtSigner.sign(payload, key);
+          attestation.blinded_signed_jwt_base64 = jwtSigner.sign(blinded_payload, key);          
+          attestation.status                    = 'valid';
+          attestation.created                   = new Date().getTime();
+          
+          store.update_where({table:'attestations', set: attestation, where:{key:'id',value:attestation_id}}, function(db_resp) {
+            if (db_resp.error) {
+              response.json({result:'error', message:'attestation database error'}).status(500).pipe(res);
+             
+            } else {
+              reporter.log("identity attestation created: ", lib.get('attestation_id'));
+              result = {
+                result   : 'success',
+                status   : attestation.status,
+                blinded  : attestation.blinded_signed_jwt_base64,
+                complete : attestation.signed_jwt_base64
+              }; 
+              
+              response.json(result).pipe(res); 
+              
+            } 
+             
+            lib.done();  
+          });
+        
+        } else {
+          response.json({result:'error', message:body.message}).status(500).pipe(res);
+          lib.terminate();
+        }
+      });        
+    }
+    ]);
+      
+  } else {
+
+    var identity_id = req.params.identity_id;
+    var phone       = "+" + req.body.phone.country_code + ' ' + formatPhone(req.body.phone.number);
+    
+    //TODO: check here for existing attestation with the provide phone number
+    
+    /*
+     1. create request validation token from authy for phone #
+     2. use phone verification flow from authy (no app, no email)
+     3. create a pending attestation, return the id to the user
+     */
+    
+    if (!req.body.phone || !req.body.phone.number || !req.body.phone.country_code) {
+      response.json({result:'error',message:"phone.number and phone.country_code are required"}).status(400).pipe(res); 
+      return;  
+    }
   
+    var attestation = {
+      id          : utils.generate_uuid(),
+      identity_id : identity_id,
+      issuer      : issuer,
+      status      : 'pending',
+      payload     : {
+        phone_number : phone
+      },
+      created : new Date().getTime()
+    };
+    
+    var q = new Queue
+    q.series([
+      function(lib) {
+
+        store.insert({set:attestation,table:'attestations'},
+        function(db_resp) {
+
+          if (db_resp.error) {
+            response.json({result:'error', message:'attestation database error'}).status(500).pipe(res);
+            lib.terminate();
+            
+          } else {
+            reporter.log("phone attestation created: ", attestation.id);
+            lib.done();
+          }                   
+        });         
+      },
+      
+      function(lib) {
+        var authyURL = config.phone.url + '/protected/json/phones/verification/start?api_key=' + config.phone.key;
+        var params = {
+          phone_number : req.body.phone.number,
+          country_code : req.body.phone.country_code,    
+          via          : 'sms'     
+        }
+         
+        request.post({url:authyURL,body:params,json:true},function(err,resp,body) {
+
+          if (err) {
+            response.json({result:'error', message:'error requesting verification token'}).status(500).pipe(res);
+            lib.terminate();
+                         
+          } else {
+            response.json({
+              result         : 'success',
+              status         : attestation.status,
+              attestation_id : attestation.id,
+              message        : 'attestation pending verification'
+            }).pipe(res);
+            
+            lib.done();
+          }
+        });        
+      }
+    ]);      
+  }
+  
+  function formatPhone(s) {
+    var s2 = (""+s).replace(/\D/g, '');
+    if (s.length === 10) {
+      var m = s2.match(/^(\d{3})(\d{3})(\d{4})$/);
+      return "(" + m[1] + ") " + m[2] + "-" + m[3];
+    } else {
+      return s2;
+    }
+  }
 };
 
 module.exports = exports = requestAttestation;
