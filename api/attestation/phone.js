@@ -39,9 +39,8 @@ exports.get = function(req,res,next) {
   exports.store.getPhoneAttestation(identity_id, phoneNumber, function(resp){
     if (resp.error) {
       response.json({result:'error', message:'attestation DB error'}).status(500).pipe(res); 
-      lib.terminate();
               
-    } if (resp[0]) {
+    } else if (resp[0]) {
       result = {
         result      : 'success',
         status      : resp[0].status,
