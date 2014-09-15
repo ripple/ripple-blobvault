@@ -25,7 +25,8 @@
     "ripple-lib": "https://github.com/rook2pawn/ripple-lib/archive/develop.tar.gz",
     "timeout-protector": "0.0.1",
     "blockscore": "^3.0.0",
-    "jwt-sign": "^0.1.0"
+    "jwt-sign": "^0.1.0",
+    "nock": "^0.47.0"
   },
   "devDependencies": {
     "request": "^2.34.0",

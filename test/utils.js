@@ -10,6 +10,7 @@ exports.person = {
     normalized_username: 'bob5050',
     auth_secret :'FFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0A',
     blob_id : 'ffff0a0affff0a0affff0a0affff0a0affff0a0affff0a0affff0a0affff0a0a',
+    identity_id : libutils.generate_uuid(),
     data : libutils.btoa('foo'),
     address : rp,
     email: 'bob5050@bob.com',
