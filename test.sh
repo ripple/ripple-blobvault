@@ -13,5 +13,5 @@ node_modules/.bin/mocha --ui tdd -R spec test/test-guard.js &&
 node_modules/.bin/mocha --ui tdd -R spec test/test-guard-requests.js &&
 node_modules/.bin/mocha --ui tdd -R spec test/test-profile-details.js &&
 node_modules/.bin/mocha --ui tdd -R spec test/test-2fa.js &&
-node_modules/.bin/mocha --ui tdd -R spec test/test-attestation.js &&
+#node_modules/.bin/mocha --ui tdd -R spec test/test-attestation.js &&
 node test/test-libutils.js
