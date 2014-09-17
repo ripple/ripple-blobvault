@@ -29,6 +29,7 @@ app.post('/v1/attestation/profile', blobIdentity.getID, api.attestation.profile.
 app.post('/v1/attestation/profile/update', blobIdentity.getID, api.attestation.profile.update);
 app.post('/v1/attestation/identity', blobIdentity.getID, api.attestation.identity.get);
 app.post('/v1/attestation/identity/update', blobIdentity.getID, api.attestation.identity.update);
+app.get('/v1/attestation/summary', blobIdentity.getID, api.attestation.summary.get);
 
 var server = http.createServer(app);
       
@@ -84,7 +85,6 @@ describe('Attestation:', function() {
         .reply(200, {success:true}, {'Content-Type': 'text/plain'}); 
         
       request.post({url:'http://localhost:5150/v1/attestation/phone/update?signature_blob_id='+testutils.person.id,json:params}, function(err,resp,body) {
-        console.log(err, body);
         assert.ifError(err);  
         assert.strictEqual(body.result, 'success'); 
         assert.strictEqual(body.status, 'pending'); 
@@ -287,7 +287,6 @@ describe('Attestation:', function() {
     
     it('should return an identity attestation if it exists', function(done) {
       request.post({url:'http://localhost:5150/v1/attestation/identity?signature_blob_id='+testutils.person.id,json:true}, function(err,resp,body) {
-        console.log(err, body);
         assert.ifError(err);  
         assert.strictEqual(body.result, 'success');
         assert.strictEqual(body.status, 'verified'); 
@@ -295,5 +294,16 @@ describe('Attestation:', function() {
         done();
       });
     });    
-  });  
+  });
+  
+  describe('Attestation Summary:', function() {
+    it('should return a summary of all existing attestations', function(done) { 
+      request.get({url:'http://localhost:5150/v1/attestation/summary?signature_blob_id='+testutils.person.id,json:true}, function(err,resp,body) {
+        assert.ifError(err);  
+        assert.strictEqual(body.result, 'success');
+        assert.strictEqual(typeof body.attestation, 'string'); 
+        done();
+      });      
+    }); 
+  });
 });

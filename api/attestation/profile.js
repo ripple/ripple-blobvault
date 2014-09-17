@@ -30,8 +30,6 @@ exports.get = function(req,res,next) {
   exports.store.getAttestations({identity_id:identity_id, type:'profile'}, function (resp){
     if (resp.error) {
       response.json({result:'error', message:'attestation DB error'}).status(500).pipe(res); 
-      lib.terminate();
-      
 
     //otherwise return the existing attestation
     } else if (resp[0]) {

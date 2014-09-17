@@ -9,6 +9,7 @@ require('fs').readFile('./test.pem', 'utf8', function(err, data) {
     exports.identity.setKey(data, issuer);
     exports.phone.setKey(data, issuer);
     exports.email.setKey(data, issuer);
+    exports.summary.setKey(data, issuer);
   }
 });
 
@@ -16,10 +17,12 @@ exports.profile  = require('./profile');
 exports.identity = require('./identity');
 exports.phone    = require('./phone');
 exports.email    = require('./email');
+exports.summary  = require('./summary');
     
 exports.setStore = function(store) {
   exports.profile.setStore(store);
   exports.identity.setStore(store);
   exports.phone.setStore(store);
   exports.email.setStore(store);
+  exports.summary.setStore(store);
 };

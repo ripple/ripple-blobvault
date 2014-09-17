@@ -75,7 +75,7 @@ app.post('/v1/attestation/identity', hmac.middleware, blobIdentity.getID, api.at
 app.post('/v1/attestation/identity/update', hmac.middleware, blobIdentity.getID, api.attestation.identity.update);
 //app.post('/v1/attestation/email', hmac.middleware, blobIdentity.getID, api.attestation.email.get);
 //app.get('/v1/attestation/email/verify', api.attestation.email.verify);
-//app.get('/v1/attestation/summary', hmac.middleware, blobIdentity.getID, api.attestation.summary);
+app.get('/v1/attestation/summary', hmac.middleware, blobIdentity.getID, api.attestation.summary.get);
 app.post('/v1/profile', hmac.middleware, blobIdentity.getID, api.user.setProfile);
 app.get('/v1/profile', hmac.middleware, blobIdentity.getID, api.user.getProfile);
 //app.post('v1/profile/create', api.identity.create)
