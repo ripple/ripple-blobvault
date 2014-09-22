@@ -299,7 +299,6 @@ describe('Attestation:', function() {
   describe('Attestation Summary:', function() {
     it('should return a summary of all existing attestations', function(done) { 
       request.get({url:'http://localhost:5150/v1/attestation/summary?signature_blob_id='+testutils.person.id,json:true}, function(err,resp,body) {
-        console.log(body);
         assert.ifError(err);  
         assert.strictEqual(body.result, 'success');
         assert.strictEqual(typeof body.attestation, 'string'); 

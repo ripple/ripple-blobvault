@@ -42,24 +42,28 @@ exports.get = function (req, res, next) {
       
       } else {    
         resp.forEach(function(row) {
+          var created = new Date();
+          created.setTime(row.created);
+          
           if (row.type === 'phone' && row.status === 'verified') {
             summary.phone_number_verified = row.payload.phone_number_verified;
-            summary.phone_verified_date   = new Date(row.created*1000);
+            summary.phone_verified_date   = created.toISOString();
             attestation = true;
   
           } else if (row.type === 'email' && row.status === 'verified') {
             summary.email_verified      = row.payload.email_verified;
-            summary.email_verified_date = new Date(row.created*1000);
+            summary.email_verified_date = created.toISOString();
             attestation = true;
                       
           } else if (row.type === 'identity' && row.status === 'verified') {
             summary.identity_verified      = row.payload.identity_verified;
-            summary.identity_verified_date = new Date(row.created*1000);
+            summary.identity_verified_date = created.toISOString();
             attestation = true;
             
-          } else if (row.type === 'profile' && row.status === 'verfied') {
-            summary.profile_verified      = row.payload.profile_verifed;
-            summary.profile_verified_date = new Date(row.created*1000);
+          } else if (row.type === 'profile' && row.status === 'verified') {
+            
+            summary.profile_verified      = row.payload.profile_verified;
+            summary.profile_verified_date = created.toISOString();
             attestation = true;          
           } 
         });
@@ -73,7 +77,6 @@ exports.get = function (req, res, next) {
       summary.exp = ~~(new Date().getTime() / 1000) + (30 * 60);
       summary.iat = ~~(new Date().getTime() / 1000 - 60);
 
-      console.log(summary);
       var result = {
         result      : 'success',
         attestation : jwtSigner.sign(summary, exports.key)
