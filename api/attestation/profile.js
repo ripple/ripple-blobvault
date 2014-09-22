@@ -121,7 +121,7 @@ exports.update = function (req, res, next) {
       identity_id : identity_id,
       issuer      : exports.issuer,
       type        : 'profile',
-      status      : blockscore.status,
+      status      : data.payload.profile_verified ? 'verified' : 'unverified',
       payload     : data.payload,
       signed_jwt_base64 : data.attestation,
       blinded_signed_jwt_base64 : data.blinded,
@@ -149,7 +149,7 @@ exports.update = function (req, res, next) {
         reporter.log("profile attestation created: ", id);
         result = {
           result      : 'success',
-          status      : blockscore.status,
+          status      : attestation.status,
           attestation : data.attestation,
           blinded     : data.blinded,
         }; 
@@ -192,19 +192,18 @@ exports.update = function (req, res, next) {
     payload.phone = profile.phone_number 
     if (profile.ip_address) 
     payload.ip_address = profile.ip_address
-  
-    if (blockscore.status === 'valid') payload.profile_valid   = true;
-    else                               payload.profile_invalid = true;
     
-    payload.address_risk = blockscore.details.address_risk;
-    payload.ofac_match   = blockscore.details.ofac;
-    payload.pep_match    = blockscore.details.pep; //ask blockscore what this is
+    payload.address_risk  = blockscore.details.address_risk;
+    payload.ofac_match    = blockscore.details.ofac;
+    payload.pep_match     = blockscore.details.pep; //ask blockscore what this is
     payload.context_match = {
       address        : blockscore.details.address,
       identification : blockscore.details.identification,
       birthdate      : blockscore.details.date_of_birth,
     };
-        
+    
+    payload.profile_verified = blockscore.status === 'valid' ? true : false;
+            
     //create blinded attestation
     blindPayload = {
       iss : payload.iss,

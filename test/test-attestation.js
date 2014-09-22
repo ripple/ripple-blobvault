@@ -167,8 +167,8 @@ describe('Attestation:', function() {
         type : 'profile',
         profile : {
           name : {
-            given  : 'matthew',
-            family : 'fettig',
+            given  : 'Bob',
+            family : 'Bobby',
           },
           ssn_last_4 : '0000',
           birthdate  : '1985-01-01',  
@@ -202,7 +202,7 @@ describe('Attestation:', function() {
       request.post({url:'http://localhost:5150/v1/attestation/profile/update?signature_blob_id='+testutils.person.id,json:options}, function(err,resp,body) {
         assert.ifError(err);  
         assert.strictEqual(body.result, 'success');
-        assert.strictEqual(body.status, 'valid'); 
+        assert.strictEqual(body.status, 'verified'); 
         assert.strictEqual(typeof body.attestation, 'string'); 
         assert.strictEqual(typeof body.blinded, 'string'); 
         done();
@@ -213,7 +213,7 @@ describe('Attestation:', function() {
       request.post({url:'http://localhost:5150/v1/attestation/profile?signature_blob_id='+testutils.person.id,json:true}, function(err,resp,body) {
         assert.ifError(err);  
         assert.strictEqual(body.result, 'success');
-        assert.strictEqual(body.status, 'valid'); 
+        assert.strictEqual(body.status, 'verified'); 
         assert.strictEqual(typeof body.attestation, 'string'); 
         assert.strictEqual(typeof body.blinded, 'string'); 
         done();
@@ -299,6 +299,7 @@ describe('Attestation:', function() {
   describe('Attestation Summary:', function() {
     it('should return a summary of all existing attestations', function(done) { 
       request.get({url:'http://localhost:5150/v1/attestation/summary?signature_blob_id='+testutils.person.id,json:true}, function(err,resp,body) {
+        console.log(body);
         assert.ifError(err);  
         assert.strictEqual(body.result, 'success');
         assert.strictEqual(typeof body.attestation, 'string'); 
