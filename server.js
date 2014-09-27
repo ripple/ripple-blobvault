@@ -49,6 +49,7 @@ app.post('/v1/lookup', api.user.batchlookup)
 app.delete('/v1/user/:username', ecdsa.middleware, api.blob.delete);
 app.get('/v1/user/:username', api.user.get);
 app.get('/v1/user/:username/verify/:token', api.user.verify);
+app.get('/v1/federation', api.federation.federation);
 
 // blob related
 app.get('/v1/blob/:blob_id', api.blob.get);
