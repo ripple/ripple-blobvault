@@ -85,7 +85,7 @@ exports.update = function (req, res, next) {
         response.json({result:'error', message:'attestation DB error'}).status(500).pipe(res); 
         lib.terminate();
             
-      } if (resp[0] && resp[0].status === 'valid' && resp[0].meta.verification_id) {
+      } if (resp[0] && resp[0].status === 'verified' && resp[0].meta.verification_id) {
         lib.set({profileAttestation:resp[0]});
         lib.done();
       
