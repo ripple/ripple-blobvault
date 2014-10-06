@@ -100,7 +100,7 @@ exports.update = function (req, res, next) {
     var identityAttestation = lib.get('identityAttestation'); 
       
     //score the answers to the questions  
-    if (req.body.answers) {
+    if (req.body.answers && identityAttestation) {
       var data = {
         verification_id : profileAttestation.meta.verification_id,
         question_set_id : identityAttestation.meta.questions_id,
@@ -197,9 +197,8 @@ exports.update = function (req, res, next) {
       iat : ~~(new Date().getTime() / 1000 - 60),
     };
     
-    if (score >= 80) payload.identity_verified   = true;
-    else             payload.identity_unverified = true;
-    if (score)       payload.score = score;
+    payload.identity_verified = score >= 80 ? true : false;
+    if (score) payload.score = score;
     
     //TODO: recalculate trust score, add to payload
     //TODO: catch error with signing
