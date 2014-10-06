@@ -81,10 +81,10 @@ exports.get = function (req, res, next) {
             
             //include values if requested
             if (req.query.full) {
-              summary.given_name = row.payload.given_name;
-              summary.full_name  = row.payload.full_name;
-              summary.birthdate  = row.payload.birthdate;
-              summary.address    = row.payload.address;
+              summary.given_name  = row.payload.given_name;
+              summary.family_name = row.payload.family_name;
+              summary.birthdate   = row.payload.birthdate;
+              summary.address     = row.payload.address;
               summary.identification = row.payload.identification;
               summary.ip_address     = row.payload.ip_address;
               summary.address_risk   = row.payload.address_risk;
