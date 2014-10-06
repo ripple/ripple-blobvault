@@ -34,43 +34,67 @@ exports.get = function (req, res, next) {
       return;
       
     } else {
-      if (!resp.length) {
-        summary.profile_verified  = false;
-        summary.identity_verified = false;
-        //summary.phone_number_verified = false;
-        //summary.email_verified = false;
-      
-      } else {    
+      summary.profile_verified  = false;
+      summary.identity_verified = false;
+      //summary.phone_number_verified = false;
+      //summary.email_verified = false;
+        
+      if (resp.length) { 
         resp.forEach(function(row) {
           var created = new Date();
           created.setTime(row.created);
           
           if (row.type === 'phone' && row.status === 'verified') {
+            attestation = true;
             summary.phone_number_verified = row.payload.phone_number_verified;
             summary.phone_verified_date   = created.toISOString();
-            attestation = true;
+            
+            //include values if requested
+            if (req.query.full) {
+              summary.phone_number = row.payload.phone_number;  
+            }
   
           } else if (row.type === 'email' && row.status === 'verified') {
+            attestation = true;
             summary.email_verified      = row.payload.email_verified;
             summary.email_verified_date = created.toISOString();
-            attestation = true;
-                      
+
+            //include values if requested
+            if (req.query.full) {
+              summary.email = row.payload.email;  
+            }
+                                  
           } else if (row.type === 'identity' && row.status === 'verified') {
+            attestation = true;
             summary.identity_verified      = row.payload.identity_verified;
             summary.identity_verified_date = created.toISOString();
-            attestation = true;
             
+            //include values if requested
+            if (req.query.full) {
+              summary.score = row.payload.score;  
+            }  
+                      
           } else if (row.type === 'profile' && row.status === 'verified') {
-            
+            attestation = true;
             summary.profile_verified      = row.payload.profile_verified;
             summary.profile_verified_date = created.toISOString();
-            attestation = true;          
+            
+            //include values if requested
+            if (req.query.full) {
+              summary.given_name = row.payload.given_name;
+              summary.full_name  = row.payload.full_name;
+              summary.birthdate  = row.payload.birthdate;
+              summary.address    = row.payload.address;
+              summary.identification = row.payload.identification;
+              summary.ip_address     = row.payload.ip_address;
+              summary.address_risk   = row.payload.address_risk;
+              summary.ofac_match     = row.payload.ofac_match;
+              summary.pep_match      = row.payload.pep_match;
+              summary.context_match  = row.payload.context_match;
+            }      
           } 
         });
       }
-      
-      if (!summary.profile_verified)  summary.profile_verified  = false;
-      if (!summary.identity_verified) summary.identity_verified = false;
       
       summary.iss = exports.issuer;
       summary.sub = identity_id;
