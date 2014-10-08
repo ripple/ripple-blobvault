@@ -26,7 +26,8 @@
     "timeout-protector": "0.0.1",
     "blockscore": "^3.0.0",
     "jwt-sign": "^0.1.0",
-    "nock": "^0.47.0"
+    "nock": "^0.47.0",
+    "bluebird": "^2.3.5"
   },
   "devDependencies": {
     "request": "^2.34.0",
@@ -36,7 +37,8 @@
   },
   "scripts": {
     "test": "./test.sh",
-    "start": "node server.js"
+    "start": "node server.js",
+    "postinstall" : "node postInstall.js"
   },
   "repository": {
     "type": "git",

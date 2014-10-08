@@ -57,6 +57,9 @@ exports.blockscore = {
     key : ''
 }
 
+//signed JWT iss
+exports.issuer = "https://id.ripple.com";
+
 // run campaign logic
 // should be true from only one instance
 exports.campaigns = false;
