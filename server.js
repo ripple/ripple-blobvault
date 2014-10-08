@@ -87,6 +87,10 @@ app.get('/v1/authinfo', api.user.authinfo);
 app.get('/health', health.status);
 app.get('/logs', api.blob.logs);
 
+app.get('/', function (req, res) {
+  res.send('');
+});
+
 try {
   var server = config.ssl ? https.createServer({
     key: fs.readFileSync(__dirname + '/blobvault.key'),

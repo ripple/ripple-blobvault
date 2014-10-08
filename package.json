@@ -33,12 +33,13 @@
     "request": "^2.34.0",
     "chai": "^1.9.1",
     "mocha": "https://github.com/visionmedia/mocha/archive/master.tar.gz",
-    "sinon": "^1.9.1"
+    "sinon": "^1.9.1",
+    "nodemon": "^1.2.1"
   },
   "scripts": {
     "test": "./test.sh",
-    "start": "node server.js",
-    "postinstall" : "node postInstall.js"
+    "start": "nodemon server.js",
+    "postinstall": "node postInstall.js"
   },
   "repository": {
     "type": "git",
