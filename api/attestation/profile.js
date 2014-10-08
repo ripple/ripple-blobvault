@@ -2,24 +2,17 @@ var config    = require('../../config');
 var reporter  = require('../../lib/reporter');
 var request   = require('request');
 var response  = require('response');
-var jwtSigner = require('jwt-sign');
 var utils     = require('../../lib/utils');
 var Queue     = require('queuelib');
 var client    = require('blockscore')(config.blockscore.key);
 var conformParams = require('../../lib/conformParams');
+var signer    = require('../../lib/signer');
 
 exports.store;
-exports.key;
-exports.issuer;
 
 exports.setStore = function(s) {
   exports.store  = s;
   reporter.store = s;
-};
-
-exports.setKey = function(key, issuer) {
-  exports.key    = key;
-  exports.issuer = issuer;
 };
 
 //get an existing profile attestation
@@ -109,17 +102,19 @@ exports.update = function (req, res, next) {
     var existing   = lib.get('attestation');
     var data       = createProfileAttestations(blockscore, lib.get('profile'));
     var id         = existing ? existing.id : utils.generate_uuid();
-  
+    var attestation;
+    var params;
+    
     if (!data) {
       response.json({result:'error', message:"unable to create attestations"}).status(500).pipe(res); 
       lib.terminate();   
       return;
     }
       
-    var attestation = {
+    attestation = {
       id          : id,
       identity_id : identity_id,
-      issuer      : exports.issuer,
+      issuer      : data.payload.iss,
       type        : 'profile',
       status      : data.payload.profile_verified ? 'verified' : 'unverified',
       payload     : data.payload,
@@ -131,7 +126,7 @@ exports.update = function (req, res, next) {
       }
     };
     
-    var params = {
+    params = {
       set   : attestation,
       table : 'attestations',
       where : {
@@ -166,7 +161,7 @@ exports.update = function (req, res, next) {
     var blindPayload;
    
     payload = {
-      iss : exports.issuer,
+      iss : config.issuer,
       sub : identity_id,
       exp : ~~(new Date().getTime() / 1000) + (30 * 60),
       iat : ~~(new Date().getTime() / 1000 - 60),
@@ -224,11 +219,12 @@ exports.update = function (req, res, next) {
     try {
       return {
         payload     : payload,
-        attestation : jwtSigner.sign(payload, exports.key),
-        blinded     : jwtSigner.sign(blindPayload, exports.key),
+        attestation : signer.signJWT(payload),
+        blinded     : signer.signJWT(blindPayload),
       };
+      
     } catch (e) {
-      console.log(e); 
+      reporter.log("unable to sign JWT:", e);
     } 
   };   
 };

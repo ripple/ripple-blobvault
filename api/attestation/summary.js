@@ -2,24 +2,13 @@ var config    = require('../../config');
 var reporter  = require('../../lib/reporter');
 var request   = require('request');
 var response  = require('response');
-var jwtSigner = require('jwt-sign');
-var utils     = require('../../lib/utils');
-var Queue     = require('queuelib');
-var client    = require('blockscore')(config.blockscore.key);
-var conformParams = require('../../lib/conformParams');
+var signer    = require('../../lib/signer');
 
 exports.store;
-exports.key;
-exports.issuer;
 
 exports.setStore = function(s) {
   exports.store  = s;
   reporter.store = s;
-};
-
-exports.setKey = function(key, issuer) {
-  exports.key    = key;
-  exports.issuer = issuer;
 };
 
 exports.get = function (req, res, next) {
@@ -96,17 +85,23 @@ exports.get = function (req, res, next) {
         });
       }
       
-      summary.iss = exports.issuer;
+      summary.iss = config.issuer;
       summary.sub = identity_id;
       summary.exp = ~~(new Date().getTime() / 1000) + (30 * 60);
       summary.iat = ~~(new Date().getTime() / 1000 - 60);
 
-      var result = {
-        result      : 'success',
-        attestation : jwtSigner.sign(summary, exports.key)
-      }
+      try {
+        var result = {
+          result      : 'success',
+          attestation : signer.signJWT(summary)
+        }
+
+        response.json(result).pipe(res); 
         
-      response.json(result).pipe(res); 
+      } catch (e) {
+        reporter.log("unable to sign JWT:", e);
+        response.json({result:'error', message:'unable to sign attestation'}).status(500).pipe(res);
+      }
     }
   });
 };

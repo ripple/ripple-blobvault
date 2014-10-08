@@ -1,7 +1,7 @@
 config.js
 testing.js
-
+*.pem
+jwks.json
 node_modules
-
 .DS_Store
 

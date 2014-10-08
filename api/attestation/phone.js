@@ -1,23 +1,16 @@
-var config    = require('../../config');
-var reporter  = require('../../lib/reporter');
-var request   = require('request');
-var response  = require('response');
-var jwtSigner = require('jwt-sign');
-var utils     = require('../../lib/utils');
-var Queue     = require('queuelib');
+var config   = require('../../config');
+var reporter = require('../../lib/reporter');
+var request  = require('request');
+var response = require('response');
+var utils    = require('../../lib/utils');
+var Queue    = require('queuelib');
+var signer   = require('../../lib/signer');
 
 exports.store;
-exports.key;
-exports.issuer;
 
 exports.setStore = function(s) {
   exports.store  = s;
   reporter.store = s;
-};
-
-exports.setKey = function(key, issuer) {
-  exports.key    = key;
-  exports.issuer = issuer;
 };
 
 /**
@@ -112,7 +105,7 @@ exports.update = function (req, res, next) {
         } else if (body.success === true) {
 
           var payload = {
-            iss : exports.issuer,
+            iss : config.issuer,
             sub : identity_id,
             exp : ~~(new Date().getTime() / 1000) + (30 * 60),
             iat : ~~(new Date().getTime() / 1000 - 60),
@@ -121,18 +114,26 @@ exports.update = function (req, res, next) {
           }; 
                   
           var blinded_payload = {
-            iss : exports.issuer,
+            iss : config.issuer,
             sub : identity_id,
             exp : ~~(new Date().getTime() / 1000) + (30 * 60),
             iat : ~~(new Date().getTime() / 1000 - 60),
             phone_number_verified : true          
           };
-              
-          existing.payload                   = payload;
-          existing.signed_jwt_base64         = jwtSigner.sign(payload, exports.key);
-          existing.blinded_signed_jwt_base64 = jwtSigner.sign(blinded_payload, exports.key);          
-          existing.status                    = 'verified';
-          existing.created                   = new Date().getTime();      
+          
+          try {
+            existing.signed_jwt_base64         = signer.signJWT(payload);
+            existing.blinded_signed_jwt_base64 = signer.signJWT(blinded_payload);  
+            
+          } catch (e) {
+            reporter.log("unable to sign JWT:", e);
+            response.json({result:'error', message:'unable to sign attestation'}).status(500).pipe(res);   
+            return;
+          }
+          
+          existing.payload = payload;        
+          existing.status  = 'verified';
+          existing.created = new Date().getTime();      
  
           exports.store.update_where({table:'attestations', set: existing, where:{key:'id',value:existing.id}}, function(db_resp) {
             if (db_resp.error) {
@@ -165,7 +166,7 @@ exports.update = function (req, res, next) {
       var attestation = {
         id          : existing ? existing.id : utils.generate_uuid(),
         identity_id : identity_id,
-        issuer      : exports.issuer,
+        issuer      : config.issuer,
         type        : 'phone',
         status      : 'pending',
         payload     : {

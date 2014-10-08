@@ -78,7 +78,10 @@ app.post('/v1/attestation/identity/update', hmac.middleware, blobIdentity.getID,
 app.get('/v1/attestation/summary', hmac.middleware, blobIdentity.getID, api.attestation.summary.get);
 app.post('/v1/profile', hmac.middleware, blobIdentity.getID, api.user.setProfile);
 app.get('/v1/profile', hmac.middleware, blobIdentity.getID, api.user.getProfile);
-//app.post('v1/profile/create', api.identity.create)
+
+//signing certificate endpoints
+app.get('/v1/oauth2/cert', api.keys.public);
+app.get('/v1/oauth2/jwks', api.keys.jwks);
 
 app.get('/v1/authinfo', api.user.authinfo);
 app.get('/health', health.status);

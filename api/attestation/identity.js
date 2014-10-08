@@ -2,23 +2,16 @@ var config    = require('../../config');
 var reporter  = require('../../lib/reporter');
 var request   = require('request');
 var response  = require('response');
-var jwtSigner = require('jwt-sign');
 var utils     = require('../../lib/utils');
 var Queue     = require('queuelib');
 var client    = require('blockscore')(config.blockscore.key);
+var signer    = require('../../lib/signer');
 
 exports.store;
-exports.key;
-exports.issuer;
 
 exports.setStore = function(s) {
   exports.store  = s;
   reporter.store = s;
-};
-
-exports.setKey = function(key, issuer) {
-  exports.key    = key;
-  exports.issuer = issuer;
 };
 
 /**
@@ -138,7 +131,7 @@ exports.update = function (req, res, next) {
         } else {
           saveIdentityAttestation(identityAttestation, resp, function (err, result) {
             if (err) {
-              response.json({result:'error', message:'attestation database error'}).status(500).pipe(res);              
+              response.json({result:'error', message:'unable to save attestations'}).status(500).pipe(res);              
             } else {
               result.questions = resp.questions;
               response.json(result).pipe(res);  
@@ -157,10 +150,16 @@ exports.update = function (req, res, next) {
     var data        = createIdentityAttestation(blockscore.score);
     var id          = existing ? existing.id : utils.generate_uuid();
     var attempts    = existing && existing.meta.attempts ? existing.meta.attempts : 0;
-    var attestation = {
+    var attestation;
+    
+    if (!data) {
+      return callback('unable to create attestations');    
+    }
+    
+    attestation = {
       id          : id,
       identity_id : identity_id,
-      issuer      : exports.issuer,
+      issuer      : data.payload.iss,
       type        : 'identity',
       status      : data.payload.identity_verified ? 'verified' : 'unverified',
       payload     : data.payload,
@@ -191,7 +190,7 @@ exports.update = function (req, res, next) {
   //create a new identity attestation
   var createIdentityAttestation = function (score) {
     payload = {
-      iss : exports.issuer,
+      iss : config.issuer,
       sub : identity_id,
       exp : ~~(new Date().getTime() / 1000) + (30 * 60),
       iat : ~~(new Date().getTime() / 1000 - 60),
@@ -201,10 +200,13 @@ exports.update = function (req, res, next) {
     if (score) payload.score = score;
     
     //TODO: recalculate trust score, add to payload
-    //TODO: catch error with signing
-    return {
-      payload     : payload,
-      attestation : jwtSigner.sign(payload, exports.key)
-    };       
+    try {
+      return {
+        payload     : payload,
+        attestation : signer.signJWT(payload)
+      }; 
+    } catch (e) {
+      reporter.log("unable to sign JWT:", e);
+    } 
   }
 };
