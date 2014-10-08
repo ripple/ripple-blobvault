@@ -2,7 +2,7 @@ exports.user = require('./user');
 exports.blob = require('./blob');
 exports.meta = require('./meta');
 exports.attestation = require('./attestation');
-exports.key = require('./key');
+exports.keys = require('./keys');
 
 exports.setStore = function(store) {
     exports.user.setStore(store);
