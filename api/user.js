@@ -22,49 +22,97 @@ var getUserInfo = function(username, res) {
     }
     var normalized_username = libutils.normalizeUsername(username);
 
-    if (username.length <= config.username_length) {
-        exports.store.read({username:username,res:res},function(resp) {
-            var obj = {}
-            obj.version = config.AUTHINFO_VERSION,
-            obj.blobvault = config.url,
-            obj.pakdf = config.defaultPakdfSetting
+    var q = new Queue;
+    q.series([
+        function (lib) {
+            if (username.length <= config.username_length) {
+                exports.store.read({username:username,res:res},function(resp) {
+                    var obj = {}
+                    obj.version = config.AUTHINFO_VERSION;
+                    obj.blobvault = config.url;
+                    obj.pakdf = config.defaultPakdfSetting;
 
-            obj.exists = resp.exists;
-            obj.username = resp.username,
-            obj.address = resp.address,
-            obj.emailVerified = resp.emailVerified,
+                    obj.exists = resp.exists;
+                    obj.username = resp.username;
+                    obj.address = resp.address;
+                    obj.emailVerified = resp.emailVerified;
+                    obj.reserved = config.reserved[normalized_username] || false;
 
-            obj.reserved = config.reserved[normalized_username] || false;
+                    lib.set({user:obj, identity_id:resp.identity_id});
+                    lib.done();
+                });
 
-            // this is a 200 
-            response.json(obj).pipe(res)
-        });
-    } else {
-        exports.store.read_where({key:"address",value:username,res:res},
-            function(resp) {
-                if (resp.error) {
-                    response.json({code:7498,result:'error',message:resp.error.message}).status(400).pipe(res)
-                    return;
-                }
-                var obj = {}
-                obj.version = config.AUTHINFO_VERSION,
-                obj.blobvault = config.url,
-                obj.pakdf = config.defaultPakdfSetting
-                if (resp.length) {
-                    var row = resp[0];
-                    obj.exists = true;
-                    obj.username = row.username,
-                    obj.address = row.address,
-                    obj.emailVerified = row.email_verified,
-                    response.json(obj).pipe(res)
-                } else {
-                    obj.exists = false;
-                    obj.reserved = false;
-                    response.json(obj).pipe(res)
-                }
+            } else {
+                exports.store.read_where({key:"address",value:username,res:res},
+                    function(resp) {
+                        if (resp.error) {
+                            response.json({code:7498,result:'error',message:resp.error.message}).status(400).pipe(res)
+                            return;
+                        }
+                        var obj = {}
+                        obj.version = config.AUTHINFO_VERSION,
+                        obj.blobvault = config.url,
+                        obj.pakdf = config.defaultPakdfSetting
+                        if (resp.length) {
+                            var row = resp[0];
+                            obj.exists = true;
+                            obj.username = row.username;
+                            obj.address = row.address;
+                            obj.emailVerified = row.email_verified;
+                            lib.set({user:obj, identity_id:row.identity_id});
+                            lib.done();
+                        } else {
+                            obj.exists = false;
+                            obj.reserved = false;
+                            response.json(obj).pipe(res);
+                            lib.terminate();
+                        }
+                    }
+                )
             }
-        )
-    }
+        },
+
+        function (lib) {
+          var id   = lib.get('identity_id');
+          var user = lib.get('user');
+          exports.store.getAttestations({identity_id:id}, function (resp) {
+            var summary = { };
+
+            if (resp.error) {
+              response.json({result:'error', message:'attestation DB error'}).status(500).pipe(res); 
+              lib.terminate();
+
+            } else {
+
+              //defaults
+              user.profile_verified  = false;
+              user.identity_verified = false;
+
+              if (resp.length) { 
+                resp.forEach(function(row) {
+
+                  if (row.type === 'phone' && row.status === 'verified') {
+                    user.phone_number_verified = row.payload.phone_number_verified;
+
+                  //for now email verified is based on the old method  
+                  //} else if (row.type === 'email' && row.status === 'verified') {
+                  //  user.email_verified = row.payload.email_verified;
+
+                  } else if (row.type === 'identity' && row.status === 'verified') {
+                    user.identity_verified = row.payload.identity_verified;
+
+                  } else if (row.type === 'profile' && row.status === 'verified') {
+                    user.profile_verified = row.payload.profile_verified;
+                  }
+                });
+              }
+
+              response.json(user).pipe(res);
+              lib.done();
+            }
+          });
+        }
+    ]);
 }
 var authinfo = function (req, res) {
     getUserInfo(req.query.username, res);
