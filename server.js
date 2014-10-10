@@ -10,7 +10,6 @@ var api = require('./api');
 var reporter = require('./lib/reporter');
 var guard = require('./guard')(store)
 var limiter = guard.resend_email();
-var requestAttestation = require('./api/requestAttestation');
 var blobIdentity = require('./lib/blobIdentity');
 var Ddos= require('ddos');
 var ddos = new Ddos({burst:10});
