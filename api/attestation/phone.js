@@ -34,11 +34,19 @@ exports.get = function(req,res,next) {
       response.json({result:'error', message:'attestation DB error'}).status(500).pipe(res); 
               
     } else if (resp[0]) {
+      
+      var data = createAttestations(identity_id, resp[0].payload);
+
+      if (!data) {
+        response.json({result:'error', message:"unable to create attestations"}).status(500).pipe(res); 
+        return;
+      }      
+      
       result = {
         result      : 'success',
         status      : resp[0].status,
-        attestation : resp[0].signed_jwt_base64,
-        blinded     : resp[0].blinded_signed_jwt_base64
+        attestation : data.attestation,
+        blinded     : data.blinded
       }; 
       
       response.json(result).pipe(res); 
@@ -103,38 +111,19 @@ exports.update = function (req, res, next) {
           lib.terminate();
                        
         } else if (body.success === true) {
-
-          var payload = {
-            iss : config.issuer,
-            sub : identity_id,
-            exp : ~~(new Date().getTime() / 1000) + (30 * 60),
-            iat : ~~(new Date().getTime() / 1000 - 60),
-            phone_number : existing.payload.phone_number,
-            phone_number_verified : true,
-          }; 
-                  
-          var blinded_payload = {
-            iss : config.issuer,
-            sub : identity_id,
-            exp : ~~(new Date().getTime() / 1000) + (30 * 60),
-            iat : ~~(new Date().getTime() / 1000 - 60),
-            phone_number_verified : true          
-          };
-          
-          try {
-            existing.signed_jwt_base64         = signer.signJWT(payload);
-            existing.blinded_signed_jwt_base64 = signer.signJWT(blinded_payload);  
-            
-          } catch (e) {
-            reporter.log("unable to sign JWT:", e);
-            response.json({result:'error', message:'unable to sign attestation'}).status(500).pipe(res);   
-            return;
-          }
-          
-          existing.payload = payload;        
+           
+          existing.payload.phone_number_verified = true,     
           existing.status  = 'verified';
           existing.created = new Date().getTime();      
  
+          var data = createAttestations(identity_id, existing.payload);
+
+          if (!data) {
+            response.json({result:'error', message:"unable to create attestations"}).status(500).pipe(res); 
+            lib.terminate();   
+            return;
+          }
+          
           exports.store.update_where({table:'attestations', set: existing, where:{key:'id',value:existing.id}}, function(db_resp) {
             if (db_resp.error) {
               response.json({result:'error', message:'attestation database error'}).status(500).pipe(res);
@@ -144,8 +133,8 @@ exports.update = function (req, res, next) {
               result = {
                 result      : 'success',
                 status      : existing.status,
-                attestation : existing.signed_jwt_base64,
-                blinded     : existing.blinded_signed_jwt_base64
+                attestation : data.attestation,
+                blinded     : data.blinded
               }; 
               
               response.json(result).pipe(res); 
@@ -219,7 +208,34 @@ exports.update = function (req, res, next) {
   }]);  
 };
 
-function normalizePhone (country, number) {
+var createAttestations = function (identity_id, payload) {
+  var blindedPayload;
+
+  payload.iss = config.issuer;
+  payload.sub = identity_id;
+  payload.exp = ~~(new Date().getTime() / 1000) + (30 * 60);
+  payload.iat = ~~(new Date().getTime() / 1000 - 60);
+
+  blindPayload = {
+    iss : payload.iss,
+    sub : payload.sub,
+    exp : payload.exp,
+    iat : payload.iat,
+    phone_number_verified : payload.phone_number_verified,
+  };
+
+  try {
+    return {
+      attestation : signer.signJWT(payload),
+      blinded     : signer.signJWT(blindPayload),
+    };
+
+  } catch (e) {
+    reporter.log("unable to sign JWT:", e);
+  }
+};
+
+var normalizePhone = function (country, number) {
   var normalized = "+" + country + ' ';
   
   var s2 = (""+number).replace(/\D/g, '');

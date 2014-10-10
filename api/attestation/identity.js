@@ -32,10 +32,19 @@ exports.get = function(req,res,next) {
       
     //if status is valid, return the attestation
     } else if (resp[0]) {
+      
+      var data = createAttestations(identity_id, resp[0].payload);
+
+      if (!data) {
+        response.json({result:'error', message:"unable to create attestations"}).status(500).pipe(res); 
+        return;
+      }
+      
       result = {
         result      : 'success',
         status      : resp[0].status,
-        attestation : resp[0].signed_jwt_base64
+        attestation : data.attestation,
+        blinded     : data.blinded
       };
       
       response.json(result).pipe(res);  
@@ -147,23 +156,22 @@ exports.update = function (req, res, next) {
   
   //save an identity attestation from the blockscore response
   var saveIdentityAttestation = function (existing, blockscore, callback) {
-    var data        = createIdentityAttestation(blockscore.score);
-    var id          = existing ? existing.id : utils.generate_uuid();
-    var attempts    = existing && existing.meta.attempts ? existing.meta.attempts : 0;
-    var attestation;
+    var payload = {
+      identity_verified : blockscore.score >= 80 ? true : false,
+      score             : blockscore.score
+    };
     
-    if (!data) {
-      return callback('unable to create attestations');    
-    }
+    var id       = existing ? existing.id : utils.generate_uuid();
+    var attempts = existing && existing.meta.attempts ? existing.meta.attempts : 0;
+    var attestation;
     
     attestation = {
       id          : id,
       identity_id : identity_id,
-      issuer      : data.payload.iss,
+      issuer      : payload.iss,
       type        : 'identity',
-      status      : data.payload.identity_verified ? 'verified' : 'unverified',
-      payload     : data.payload,
-      signed_jwt_base64 : data.attestation,
+      status      : payload.identity_verified ? 'verified' : 'unverified',
+      payload     : payload,
       created : new Date().getTime(),
       meta : {
         questions_id : blockscore.id,
@@ -176,37 +184,51 @@ exports.update = function (req, res, next) {
         callback(db_resp.error);
        
       } else {
+        
+        var data = createAttestations(identity_id, payload);
+        
+        if (!data) {
+          return callback('unable to create attestations');    
+        }
+        
         result = {
           result      : 'success',
           status      : attestation.status,
-          attestation : data.attestation
+          attestation : data.attestation,
+          blinded     : data.blinded
         };
         
         callback(null, result);
       }                  
     });    
   };
-  
-  //create a new identity attestation
-  var createIdentityAttestation = function (score) {
-    payload = {
-      iss : config.issuer,
-      sub : identity_id,
-      exp : ~~(new Date().getTime() / 1000) + (30 * 60),
-      iat : ~~(new Date().getTime() / 1000 - 60),
-    };
-    
-    payload.identity_verified = score >= 80 ? true : false;
-    if (score) payload.score = score;
-    
-    //TODO: recalculate trust score, add to payload
-    try {
-      return {
-        payload     : payload,
-        attestation : signer.signJWT(payload)
-      }; 
-    } catch (e) {
-      reporter.log("unable to sign JWT:", e);
-    } 
-  }
 };
+
+//create a new identity attestations
+var createAttestations = function (identity_id, payload) {
+  var blindPayload;
+  
+  payload.iss = config.issuer,
+  payload.sub = identity_id,
+  payload.exp = ~~(new Date().getTime() / 1000) + (30 * 60),
+  payload.iat = ~~(new Date().getTime() / 1000 - 60),
+
+  blindPayload = {
+    iss : payload.iss,
+    sub : payload.sub,
+    exp : payload.exp,
+    iat : payload.iat,
+    identity_verified : payload.identity_verified
+  };
+
+  try {
+    return {
+      attestation : signer.signJWT(payload),
+      blinded     : signer.signJWT(blindPayload)
+    }; 
+    
+  } catch (e) {
+    reporter.log("unable to sign JWT:", e);
+  } 
+};
+
