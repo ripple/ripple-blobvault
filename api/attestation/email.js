@@ -1,7 +1,6 @@
 var reporter  = require('../../lib/reporter');
 var request   = require('request');
 var response  = require('response');
-var jwtSigner = require('jwt-sign');
 var utils     = require('../../lib/utils');
 var Queue     = require('queuelib');
 

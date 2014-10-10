@@ -25,20 +25,21 @@
     "ripple-lib": "https://github.com/rook2pawn/ripple-lib/archive/develop.tar.gz",
     "timeout-protector": "0.0.1",
     "blockscore": "^3.0.0",
-    "jwt-sign": "^0.1.0",
     "nock": "^0.47.0",
-    "bluebird": "^2.3.5"
+    "bluebird": "^2.3.5",
+    "ursa": "^0.8.0"
   },
   "devDependencies": {
     "request": "^2.34.0",
     "chai": "^1.9.1",
     "mocha": "https://github.com/visionmedia/mocha/archive/master.tar.gz",
-    "sinon": "^1.9.1"
+    "sinon": "^1.9.1",
+    "nodemon": "^1.2.1"
   },
   "scripts": {
     "test": "./test.sh",
-    "start": "node server.js",
-    "postinstall" : "node postInstall.js"
+    "start": "nodemon server.js",
+    "postinstall": "node postInstall.js"
   },
   "repository": {
     "type": "git",
