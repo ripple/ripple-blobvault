@@ -131,9 +131,6 @@ describe('Attestation:', function() {
         assert.ifError(err);  
         assert.strictEqual(body.result, 'success'); 
         assert.strictEqual(typeof body.attestation, 'string'); 
-        assert.strictEqual(typeof body.blinded, 'string'); 
-        assert.strictEqual(validAttestation(body.attestation), true);
-        assert.strictEqual(validAttestation(body.blinded), true);
         done();
       });
     });
@@ -151,9 +148,6 @@ describe('Attestation:', function() {
         assert.strictEqual(body.result,  'success');
         assert.strictEqual(body.status, 'verified');
         assert.strictEqual(typeof body.attestation, 'string'); 
-        assert.strictEqual(typeof body.blinded, 'string'); 
-        assert.strictEqual(validAttestation(body.attestation), true);
-        assert.strictEqual(validAttestation(body.blinded), true);
         done();
       });
     });          
@@ -211,8 +205,6 @@ describe('Attestation:', function() {
         assert.strictEqual(body.status, 'verified'); 
         assert.strictEqual(typeof body.attestation, 'string'); 
         assert.strictEqual(typeof body.blinded, 'string'); 
-        assert.strictEqual(validAttestation(body.attestation), true);
-        assert.strictEqual(validAttestation(body.blinded), true);
         done();
       });      
     });
@@ -224,8 +216,6 @@ describe('Attestation:', function() {
         assert.strictEqual(body.status, 'verified'); 
         assert.strictEqual(typeof body.attestation, 'string'); 
         assert.strictEqual(typeof body.blinded, 'string'); 
-        assert.strictEqual(validAttestation(body.attestation), true);
-        assert.strictEqual(validAttestation(body.blinded), true);
         done();
       });
     });     
@@ -258,11 +248,8 @@ describe('Attestation:', function() {
         assert.ifError(err);  
         assert.strictEqual(body.result, 'success');
         assert.strictEqual(body.status, 'unverified'); 
-        assert.strictEqual(typeof body.questions, 'object'); 
         assert.strictEqual(typeof body.attestation, 'string'); 
-        assert.strictEqual(typeof body.blinded, 'string'); 
-        assert.strictEqual(validAttestation(body.attestation), true);
-        assert.strictEqual(validAttestation(body.blinded), true);
+        assert.strictEqual(typeof body.questions, 'object'); 
         done();
       });
     });
@@ -294,9 +281,6 @@ describe('Attestation:', function() {
         assert.strictEqual(body.result, 'success');
         assert.strictEqual(body.status, 'verified'); 
         assert.strictEqual(typeof body.attestation, 'string'); 
-        assert.strictEqual(typeof body.blinded, 'string'); 
-        assert.strictEqual(validAttestation(body.attestation), true);
-        assert.strictEqual(validAttestation(body.blinded), true);
         done();
       });      
     });
@@ -307,9 +291,6 @@ describe('Attestation:', function() {
         assert.strictEqual(body.result, 'success');
         assert.strictEqual(body.status, 'verified'); 
         assert.strictEqual(typeof body.attestation, 'string'); 
-        assert.strictEqual(typeof body.blinded, 'string'); 
-        assert.strictEqual(validAttestation(body.attestation), true);
-        assert.strictEqual(validAttestation(body.blinded), true);
         done();
       });
     });    
@@ -321,31 +302,8 @@ describe('Attestation:', function() {
         assert.ifError(err);  
         assert.strictEqual(body.result, 'success');
         assert.strictEqual(typeof body.attestation, 'string'); 
-        assert.strictEqual(validAttestation(body.attestation), true);
         done();
       });      
     }); 
   });
 });
-
-
-var validAttestation = function (attestation) {
-
-  var utils = require('../lib/utils');
-  var segments =  decodeURIComponent(attestation).split('.');
-  var decoded;
-  
-  // base64 decode and parse JSON
-  try {
-    decoded = {
-      header    : JSON.parse(utils.atob(segments[0])),
-      payload   : JSON.parse(utils.atob(segments[1])),
-      signature : segments[2]
-    }; 
-    
-  } catch (e) {
-    console.log("invalid attestation:", e);
-  }
-  
-  return true;
-};
