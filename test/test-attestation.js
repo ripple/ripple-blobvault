@@ -10,6 +10,8 @@ var assert = require('chai').assert;
 var api = require('../api');
 var nock = require('nock');
 
+console.log(config);
+
 api.setStore(store);
 blobIdentity.setStore(store);
 
@@ -266,6 +268,51 @@ describe('Attestation:', function() {
         done();
       });
     });
+    
+    it('should return an error if the time the user takes more than 3 minutes to answer the questions', function (done) {
+      store.getAttestations({identity_id:testutils.person.identity_id, type:'identity'}, function (resp) {
+        var created = new Date().getTime() - (5 * 60 * 1000);
+        var options = {
+          type    : 'identity',
+          answers : []
+        };
+          
+        store.update_where({set:{created:created}, table:'attestations',where:{key:'id',value:resp[0].id}}, function(db_resp) {
+          request.post({url:'http://localhost:5150/v1/attestation/identity/update?signature_blob_id='+testutils.person.id,json:options}, function(err,resp,body) { 
+            assert.ifError(err);  
+            assert.strictEqual(body.result,  'error'); 
+            done();
+          });   
+        });
+      })
+    });
+    
+    it('should return an error if the user attempts to answer questions more than 4 times in 24 hours', function (done) {
+      store.getAttestations({identity_id:testutils.person.identity_id, type:'identity'}, function (resp) {
+        var created = new Date().getTime();
+        var meta    = resp[0].meta;
+        var id      = resp[0].id;
+        var options = {
+          type    : 'identity',
+          answers : []
+        };
+        
+        meta.attempts = [created-86000000, created-8000000, created-80000, created];
+          
+        store.update_where({set:{meta:meta, created:created}, table:'attestations',where:{key:'id',value:id}}, function(db_resp) {
+          request.post({url:'http://localhost:5150/v1/attestation/identity/update?signature_blob_id='+testutils.person.id,json:options}, function(err,resp,body) { 
+            assert.ifError(err);  
+            assert.strictEqual(body.result,  'error'); 
+            
+            //reset so the next test passes
+            meta.attempts = [];
+            store.update_where({set:{meta:meta}, table:'attestations',where:{key:'id',value:id}}, function(db_resp) {
+              done();
+            });
+          });   
+        });
+      })
+    });    
     
     it('should return a verified identity attestation given correctly answered questions', function(done) {
       var options = {
