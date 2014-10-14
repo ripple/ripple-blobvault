@@ -30,6 +30,7 @@ exports.get = function(req,res,next) {
   var phoneNumber = normalizePhone(req.body.phone.country_code, req.body.phone.number);
 
   exports.store.getPhoneAttestation(identity_id, phoneNumber, function(resp){
+    console.log("GetPhoneAttestation Response:", resp)
     if (resp.error) {
       response.json({result:'error', message:'attestation DB error'}).status(500).pipe(res); 
               
@@ -78,10 +79,13 @@ exports.update = function (req, res, next) {
   var identity_id = req.params.identity_id;
   var phoneNumber = normalizePhone(req.body.phone.country_code, req.body.phone.number);
   var q           = new Queue;
+
+    console.log("attestation:phone:update:identity_id", identity_id,"phoneNumber:", phoneNumber)
   
   q.series([
   function(lib) { 
     exports.store.getPhoneAttestation(identity_id, phoneNumber, function(resp){
+    console.log("update:getPhoneAttestation:", resp)
       if (resp.error) {
         response.json({result:'error', message:'attestation DB error'}).status(500).pipe(res); 
         lib.terminate();
@@ -181,6 +185,7 @@ exports.update = function (req, res, next) {
       };
       
       exports.store.insert_or_update_where(options, function(db_resp) {
+        console.log("inert_or_update_where:resp:", db_resp)
         if (db_resp.error) {
           response.json({result:'error', message:'attestation database error'}).status(500).pipe(res);
           lib.terminate();
