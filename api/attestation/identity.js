@@ -100,9 +100,39 @@ exports.update = function (req, res, next) {
   function(lib) {
     var profileAttestation  = lib.get('profileAttestation');
     var identityAttestation = lib.get('identityAttestation'); 
-      
+    var time = new Date().getTime();
+    
+    if (identityAttestation) {
+      while(identityAttestation.meta.attempts.length) {
+        var attempted = identityAttestation.meta.attempts[0];
+
+        if (time - attempted > (24 * 60 * 60 * 1000)) {
+          identityAttestation.meta.attempts.shift();
+        } else {
+          break;
+        }
+      }
+        
+      //only allow 4 attempts per 24 hours
+      if (identityAttestation.meta.attempts.length > 3) {
+        reporter.log("Max attempts exceeded:", identityAttestation.identity_id);
+        response.json({result:'error', message:'Max attempts exceeded. Try again in 24 hours.'}).status(400).pipe(res); 
+        lib.terminate();
+        return;
+      } 
+    }
+    
     //score the answers to the questions  
     if (req.body.answers && identityAttestation) {
+
+
+      //dont allow it to pass if it has been more than 3 minutes
+      if (time - identityAttestation.created > (3 * 60 * 1000)) {
+        response.json({result:'error', message:'time limit exceeded'}).status(400).pipe(res); 
+        lib.terminate();
+        return;
+      } 
+      
       var data = {
         verification_id : profileAttestation.meta.verification_id,
         question_set_id : identityAttestation.meta.questions_id,
@@ -162,22 +192,24 @@ exports.update = function (req, res, next) {
     };
     
     var id       = existing ? existing.id : utils.generate_uuid();
-    var attempts = existing && existing.meta.attempts ? existing.meta.attempts : 0;
+    var attempts = existing && existing.meta.attempts ? existing.meta.attempts : [];
     var attestation;
     
     attestation = {
       id          : id,
       identity_id : identity_id,
-      issuer      : payload.iss,
+      issuer      : config.issuer,
       type        : 'identity',
       status      : payload.identity_verified ? 'verified' : 'unverified',
       payload     : payload,
       created : new Date().getTime(),
       meta : {
         questions_id : blockscore.id,
-        attempts     : ++attempts
       }
     };
+    
+    attempts.push(attestation.created);
+    attestation.meta.attempts = attempts;
     
     exports.store.insert_or_update_where({set:attestation,table:'attestations',where:{key:'id',value:id}}, function(db_resp) {
       if (db_resp.error) {
@@ -197,6 +229,11 @@ exports.update = function (req, res, next) {
           attestation : data.attestation,
           blinded     : data.blinded
         };
+        
+        if (attestation.status !== 'verified' && attestation.meta.attempts.length > 3) {
+          reporter.log("Max attempts reached:", attestation.identity_id);
+          result.maxAttempts = true;
+        }
         
         callback(null, result);
       }                  
