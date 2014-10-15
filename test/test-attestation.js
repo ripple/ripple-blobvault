@@ -375,7 +375,6 @@ describe('Attestation:', function() {
   });
 });
 
-
 var validAttestation = function (attestation) {
 
   var utils = require('../lib/utils');
