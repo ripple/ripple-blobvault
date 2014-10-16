@@ -1,4 +1,3 @@
-var config   = require('./config');
 var Promise  = require('bluebird');
 var fs       = Promise.promisifyAll(require("fs"));
 var crypto   = require('crypto');
