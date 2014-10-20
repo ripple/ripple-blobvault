@@ -9,6 +9,10 @@ var blobIdentity = require('../lib/blobIdentity');
 var assert = require('chai').assert;
 var api = require('../api');
 var nock = require('nock');
+var jwt = require('jsonwebtoken');
+var base64Url = require('base64-url');
+var fs  = require('fs');
+var key = fs.readFileSync('./public.pem');
 
 console.log(config);
 
@@ -134,9 +138,17 @@ describe('Attestation:', function() {
         assert.strictEqual(body.result, 'success'); 
         assert.strictEqual(typeof body.attestation, 'string'); 
         assert.strictEqual(typeof body.blinded, 'string'); 
-        assert.strictEqual(validAttestation(body.attestation), true);
-        assert.strictEqual(validAttestation(body.blinded), true);
-        done();
+        
+        validAttestation(body.attestation, function(err, payload) {
+          assert.ifError(err); 
+          assert.strictEqual(typeof payload, 'object'); 
+          
+          validAttestation(body.blinded, function(err, payload) {
+            assert.ifError(err); 
+            assert.strictEqual(typeof payload, 'object'); 
+            done();
+          });
+        });
       });
     });
     
@@ -154,9 +166,17 @@ describe('Attestation:', function() {
         assert.strictEqual(body.status, 'verified');
         assert.strictEqual(typeof body.attestation, 'string'); 
         assert.strictEqual(typeof body.blinded, 'string'); 
-        assert.strictEqual(validAttestation(body.attestation), true);
-        assert.strictEqual(validAttestation(body.blinded), true);
-        done();
+        
+        validAttestation(body.attestation, function(err, payload) {
+          assert.ifError(err); 
+          assert.strictEqual(typeof payload, 'object'); 
+          
+          validAttestation(body.blinded, function(err, payload) {
+            assert.ifError(err); 
+            assert.strictEqual(typeof payload, 'object'); 
+            done();
+          });
+        });
       });
     });          
   });
@@ -213,9 +233,17 @@ describe('Attestation:', function() {
         assert.strictEqual(body.status, 'verified'); 
         assert.strictEqual(typeof body.attestation, 'string'); 
         assert.strictEqual(typeof body.blinded, 'string'); 
-        assert.strictEqual(validAttestation(body.attestation), true);
-        assert.strictEqual(validAttestation(body.blinded), true);
-        done();
+        
+        validAttestation(body.attestation, function(err, payload) {
+          assert.ifError(err); 
+          assert.strictEqual(typeof payload, 'object'); 
+          
+          validAttestation(body.blinded, function(err, payload) {
+            assert.ifError(err); 
+            assert.strictEqual(typeof payload, 'object'); 
+            done();
+          });
+        });
       });      
     });
     
@@ -226,9 +254,17 @@ describe('Attestation:', function() {
         assert.strictEqual(body.status, 'verified'); 
         assert.strictEqual(typeof body.attestation, 'string'); 
         assert.strictEqual(typeof body.blinded, 'string'); 
-        assert.strictEqual(validAttestation(body.attestation), true);
-        assert.strictEqual(validAttestation(body.blinded), true);
-        done();
+        
+        validAttestation(body.attestation, function(err, payload) {
+          assert.ifError(err); 
+          assert.strictEqual(typeof payload, 'object'); 
+          
+          validAttestation(body.blinded, function(err, payload) {
+            assert.ifError(err); 
+            assert.strictEqual(typeof payload, 'object'); 
+            done();
+          });
+        });
       });
     });     
   }); 
@@ -263,9 +299,17 @@ describe('Attestation:', function() {
         assert.strictEqual(typeof body.questions, 'object'); 
         assert.strictEqual(typeof body.attestation, 'string'); 
         assert.strictEqual(typeof body.blinded, 'string'); 
-        assert.strictEqual(validAttestation(body.attestation), true);
-        assert.strictEqual(validAttestation(body.blinded), true);
-        done();
+        
+        validAttestation(body.attestation, function(err, payload) {
+          assert.ifError(err); 
+          assert.strictEqual(typeof payload, 'object'); 
+          
+          validAttestation(body.blinded, function(err, payload) {
+            assert.ifError(err); 
+            assert.strictEqual(typeof payload, 'object'); 
+            done();
+          });
+        });
       });
     });
     
@@ -342,9 +386,17 @@ describe('Attestation:', function() {
         assert.strictEqual(body.status, 'verified'); 
         assert.strictEqual(typeof body.attestation, 'string'); 
         assert.strictEqual(typeof body.blinded, 'string'); 
-        assert.strictEqual(validAttestation(body.attestation), true);
-        assert.strictEqual(validAttestation(body.blinded), true);
-        done();
+        
+        validAttestation(body.attestation, function(err, payload) {
+          assert.ifError(err); 
+          assert.strictEqual(typeof payload, 'object'); 
+          
+          validAttestation(body.blinded, function(err, payload) {
+            assert.ifError(err); 
+            assert.strictEqual(typeof payload, 'object'); 
+            done();
+          });
+        });
       });      
     });
     
@@ -355,9 +407,17 @@ describe('Attestation:', function() {
         assert.strictEqual(body.status, 'verified'); 
         assert.strictEqual(typeof body.attestation, 'string'); 
         assert.strictEqual(typeof body.blinded, 'string'); 
-        assert.strictEqual(validAttestation(body.attestation), true);
-        assert.strictEqual(validAttestation(body.blinded), true);
-        done();
+        
+        validAttestation(body.attestation, function(err, payload) {
+          assert.ifError(err); 
+          assert.strictEqual(typeof payload, 'object'); 
+          
+          validAttestation(body.blinded, function(err, payload) {
+            assert.ifError(err); 
+            assert.strictEqual(typeof payload, 'object'); 
+            done();
+          });
+        });
       });
     });    
   });
@@ -368,30 +428,32 @@ describe('Attestation:', function() {
         assert.ifError(err);  
         assert.strictEqual(body.result, 'success');
         assert.strictEqual(typeof body.attestation, 'string'); 
-        assert.strictEqual(validAttestation(body.attestation), true);
-        done();
+        validAttestation(body.attestation, function(err, payload) {
+          assert.ifError(err); 
+          assert.strictEqual(typeof payload, 'object'); 
+          done();
+        });
       });      
     }); 
   });
 });
 
-var validAttestation = function (attestation) {
-
-  var utils = require('../lib/utils');
-  var segments =  decodeURIComponent(attestation).split('.');
+var validAttestation = function (attestation, callback) {
+  var segments =  attestation.split('.');
   var decoded;
   
   // base64 decode and parse JSON
   try {
     decoded = {
-      header    : JSON.parse(utils.atob(segments[0])),
-      payload   : JSON.parse(utils.atob(segments[1])),
+      header    : JSON.parse(base64Url.decode(segments[0])),
+      payload   : JSON.parse(base64Url.decode(segments[1])),
       signature : segments[2]
     }; 
     
   } catch (e) {
     console.log("invalid attestation:", e);
-  }
+    callback(e);
+  }  
   
-  return true;
+  jwt.verify(attestation, key, callback);
 };
