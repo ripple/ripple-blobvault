@@ -38,7 +38,43 @@ app.post('/v1/attestation/identity/update', blobIdentity.getID, api.attestation.
 app.get('/v1/attestation/summary', blobIdentity.getID, api.attestation.summary.get);
 
 var server = http.createServer(app);
-      
+ 
+var blockscoreResponse = {
+  "id": "51f5b51f8fcf0e4d59000001",
+  "created_at": 1403762295,
+  "updated_at": 1403762295,
+  "status": "valid",
+  "livemode": false,
+  "date_of_birth": "1980-08-23",
+  "phone_number": null,
+  "ip_address": null,
+  "identification": {
+    "ssn": "0000"
+  },
+  "details": {
+      "address": "mismatch",
+      "address_risk": "low",
+      "identification": "match",
+      "date_of_birth": "match",
+      "ofac": "not_found"
+  },
+  "name": {
+      "first": "John",
+      "middle": "Pearce",
+      "last": "Doe"
+  },
+  "address": {
+      "street1": "1 Infinite Loop",
+      "street2": "Apt 6",
+      "city": "Cupertino",
+      "state": "CA",
+      "postal_code": "95014",
+      "country_code": "US"
+  }
+};
+
+
+
 describe('Attestation:', function() {
 
   before(function(done) {
@@ -195,37 +231,26 @@ describe('Attestation:', function() {
         type : 'profile',
         profile : {
           name : {
-            given  : 'Bob',
-            family : 'Bobby',
+            given  : blockscoreResponse.name.first,
+            family : blockscoreResponse.name.last,
+            middle : blockscoreResponse.name.middle,
           },
-          ssn_last_4 : '0000',
-          birthdate  : '1985-01-01',  
-          address  : {
-            line1       : "1236 Fake St.",
-            locality    : "San Francisco",
-            region      : "CA",
-            postal_code : "94709",
-            country     : "US"
+          ssn_last_4 : blockscoreResponse.identification.ssn,
+          birthdate  : blockscoreResponse.date_of_birth,  
+          address : {
+            line1       : blockscoreResponse.address.street1,
+            line2       : blockscoreResponse.address.street2,
+            locality    : blockscoreResponse.address.city,
+            region      : blockscoreResponse.address.state,
+            postal_code : blockscoreResponse.address.postal_code,
+            country     : blockscoreResponse.address.country_code
           }
         }
-      };
-
-      var response = { 
-        id: '541631e13261310002ab0300',
-        status: 'valid',
-        details: { 
-          address: 'no_match',
-          address_risk: 'low',
-          identification: 'no_match',
-          date_of_birth: 'not_found',
-          ofac: 'no_match',
-          pep: 'no_match' 
-        },
       };
       
       nock('https://api.blockscore.com/')
         .post('/verifications')
-        .reply(200, response, {'Content-Type': 'text/plain'}); 
+        .reply(200, blockscoreResponse, {'Content-Type': 'text/plain'}); 
              
       request.post({url:'http://localhost:5150/v1/attestation/profile/update?signature_blob_id='+testutils.person.id,json:options}, function(err,resp,body) {
         assert.ifError(err);  
@@ -248,7 +273,13 @@ describe('Attestation:', function() {
     });
     
     it('should return a profile attestation if it exists', function(done) {
+      
+      nock('https://api.blockscore.com/')
+        .get('/verifications/51f5b51f8fcf0e4d59000001')
+        .reply(200, blockscoreResponse, {'Content-Type': 'text/plain'}); 
+      
       request.post({url:'http://localhost:5150/v1/attestation/profile?signature_blob_id='+testutils.person.id,json:true}, function(err,resp,body) {
+        console.log(err, body);
         assert.ifError(err);  
         assert.strictEqual(body.result, 'success');
         assert.strictEqual(body.status, 'verified'); 
@@ -435,7 +466,27 @@ describe('Attestation:', function() {
         });
       });      
     }); 
-  });
+
+  
+    it('should return a summary of all existing attestations with full details', function(done) { 
+      
+      nock('https://api.blockscore.com/')
+        .get('/verifications/51f5b51f8fcf0e4d59000001')
+        .reply(200, blockscoreResponse, {'Content-Type': 'text/plain'}); 
+      
+      request.get({url:'http://localhost:5150/v1/attestation/summary?full=true&signature_blob_id='+testutils.person.id,json:true}, function(err,resp,body) {
+        console.log(err, body);
+        assert.ifError(err);  
+        assert.strictEqual(body.result, 'success');
+        assert.strictEqual(typeof body.attestation, 'string'); 
+        validAttestation(body.attestation, function(err, payload) {
+          assert.ifError(err); 
+          assert.strictEqual(typeof payload, 'object'); 
+          done();
+        });
+      });      
+    }); 
+  });  
 });
 
 var validAttestation = function (attestation, callback) {
