@@ -851,6 +851,7 @@ var batchlookup = function(req,res,next) {
     })
 }
 
+/*
 var setProfile = function(req,res,next) {
     var identity_id = req.params.identity_id
     reporter.log("setProfile:identity_id:", identity_id)
@@ -992,9 +993,9 @@ var getProfile = function(req,res,next) {
     ])
         
 }
-
-exports.setProfile = setProfile;
-exports.getProfile = getProfile;
+*/
+//exports.setProfile = setProfile;
+//exports.getProfile = getProfile;
 exports.batchlookup = batchlookup;
 exports.request2faToken = request2faToken;
 exports.verify2faToken = verify2faToken;
