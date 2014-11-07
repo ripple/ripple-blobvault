@@ -12,7 +12,7 @@ var guard = require('./guard')(store)
 var limiter = guard.resend_email();
 var blobIdentity = require('./lib/blobIdentity');
 var Ddos= require('ddos');
-var ddos = new Ddos({burst:10});
+var ddos = new Ddos({burst:50});
 
 var health = require('./health')(store.db)
 health.start()
