@@ -174,7 +174,6 @@ exports.update = function (req, res, next) {
     var params;
 
     try {
-      console.log(blockscore);
       var payload = exports.createPayload(blockscore);
 
     } catch (e) {
