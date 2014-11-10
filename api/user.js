@@ -59,6 +59,7 @@ var getUserInfo = function(username, res) {
                             obj.username = row.username;
                             obj.address = row.address;
                             obj.emailVerified = row.email_verified;
+                            obj.recoverable = row.encrypted_blobdecrypt_key ? true : false;
                             lib.set({user:obj, identity_id:row.identity_id});
                             lib.done();
                         } else {
