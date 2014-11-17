@@ -17,6 +17,8 @@ var ddos = new Ddos({burst:50});
 var health = require('./health')(store.db)
 health.start()
 
+console.log(ecdsa);
+
 api.setStore(store);
 hmac.setStore(store);
 blobIdentity.setStore(store);
@@ -35,12 +37,12 @@ var cors = require('cors');
 app.use(cors());
 
 // JSON handlers
-app.post('/v1/user', ecdsa.middleware, api.blob.create);
-app.post('/v1/user/email', limiter.check, ecdsa.middleware, api.user.emailChange);
-app.post('/v1/user/email/resend', limiter.check, api.user.emailResend);
+app.post('/v1/user', ecdsa.create, api.blob.create);
+app.post('/v1/user/email', limiter.check, ecdsa.middleware, api.user.emailResend);
 app.post('/v1/user/:username/rename', ecdsa.middleware, api.user.rename);
 app.post('/v1/user/:username/updatekeys', ecdsa.middleware, api.user.updatekeys);
-app.get('/v1/user/recov/:username', ecdsa.recov, api.user.recov);
+app.get('/v1/user/recov/:username', ecdsa.recover, api.user.recover);//DEPRECIATE THIS
+app.get('/v1/user/recover/:username', ecdsa.recover, api.user.recover);
 app.post('/v1/user/:username/profile', hmac.middleware, api.user.profile);
 
 app.post('/v1/lookup', api.user.batchlookup)

@@ -43,10 +43,14 @@ test('test-2fa',function(done) {
     },
     function(lib) {
         testutils.person.id = testutils.person.blob_id;
-        delete testutils.person.blob_id
-        delete testutils.person.date
-        testutils.person.phone_verified = true
-        testutils.person.email = 'rook2pawn@gmail.com'
+        delete testutils.person.blob_id;
+        delete testutils.person.date;
+        delete testutils.person.password;
+        delete testutils.person.secret;
+      
+        testutils.person.phone_verified = true;
+        testutils.person.email = 'rook2pawn@gmail.com';
+      
         store.db('blob')
         .truncate()
         .then(function() {
@@ -250,6 +254,12 @@ test('test-2fa',function(done) {
             lib.done()
             done()
         })
+    },
+    
+    function(lib) {
+      server.close(function() {
+        lib.done();
+      });
     }
-    ])
+  ]);
 })

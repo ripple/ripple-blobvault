@@ -65,7 +65,9 @@ test('create , patch, patch, get specific patch #2, delete', function(done) {
         // create user
         function(lib) {
         request.post({
-            url:'http://localhost:5050/v1/user',
+            url:'http://localhost:5050/v1/user?' + 
+    'signature_account='  + testutils.person.address +
+    '&signature_blob_id=' + testutils.person.blob_id,
             json: testutils.person
             },
             function(err, resp, body) {

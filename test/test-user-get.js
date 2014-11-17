@@ -26,17 +26,21 @@ app.get('/v1/user/:username', api.user.get);
 var testutils = require('./utils');
 var assert = require('chai').assert;
 test('create, get, the cleanup and delete', function(done) {
-    var server = http.createServer(app);
+    var server  = http.createServer(app);
+    var baseUrl = 'http://localhost:' + config.port;
+  
     q.series([
         function(lib) {
-            server.listen(5050,function() {
+            server.listen(config.port,function() {
                 lib.done();
             });
         },
         // create the user first
         function(lib) {
             request.post({
-                url:'http://localhost:5050/v1/user',
+                url: baseUrl + '/v1/user?' + 
+                  'signature_account='  + testutils.person.address +
+                  '&signature_blob_id=' + testutils.person.blob_id,
                 json: testutils.person
                 }, function(err, resp, body) {
                     
@@ -48,7 +52,7 @@ test('create, get, the cleanup and delete', function(done) {
         // should work
         function(lib) {
             request.get({
-                url:'http://localhost:5050/v1/user/'+testutils.person.username
+                url: baseUrl + '/v1/user/'+testutils.person.username
             },function(err, resp, body) {
                     assert.equal(resp.statusCode,200,'newly created user GET should have statuscode 200');
                     lib.done();
@@ -57,7 +61,7 @@ test('create, get, the cleanup and delete', function(done) {
         // should work
         function(lib) {
             request.get({
-                url:'http://localhost:5050/v1/user/'+testutils.person.address
+                url : baseUrl + '/v1/user/'+testutils.person.address
             },function(err, resp, body) {
                     assert.equal(resp.statusCode,200,'newly created user GET by ripple address should have statuscode 200');
                     lib.done();
@@ -66,8 +70,8 @@ test('create, get, the cleanup and delete', function(done) {
         // should fail, but we return 200 anyways since we check for exist : false
         function(lib) {
             request.get({
-                url:'http://localhost:5050/v1/user/abob5051',
-                json: true 
+                url  : baseUrl + '/v1/user/abob5051',
+                json : true 
             },function(err, resp, body) {
                 assert.equal(body.exists,false,'this user should not exist');
                 lib.done();
@@ -76,8 +80,8 @@ test('create, get, the cleanup and delete', function(done) {
         // should fail
         function(lib) {
             request.get({
-                url:'http://localhost:5050/v1/user/r24242asdfe0fe0fe0fea0sfesfjke',
-                json:true
+                url  : baseUrl + '/v1/user/r24242asdfe0fe0fe0fea0sfesfjke',
+                json : true
             },function(err, resp, body) {
                     assert.equal(body.exists, false,'this user should not exist');
                     lib.done();
@@ -86,7 +90,7 @@ test('create, get, the cleanup and delete', function(done) {
         // should fail
         function(lib) {
             request.get({
-                url:'http://localhost:5050/v1/user/FFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0A',
+                url  : baseUrl + '/v1/user/FFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0A',
                 json : true
             },function(err, resp, body) {
                     assert.equal(body.exists, false,'this user should not exist');
@@ -96,7 +100,7 @@ test('create, get, the cleanup and delete', function(done) {
         // delete user after 
         function(lib) {
             var sig = testutils.createSignature({method:'DELETE',url:'/v1/user',secret:testutils.person.auth_secret,date:testutils.person.date});
-            var url = 'http://localhost:5050/v1/user?signature=' + sig + '&signature_date='+testutils.person.date + '&signature_blob_id='+ testutils.person.blob_id;
+            var url = baseUrl + '/v1/user?signature=' + sig + '&signature_date='+testutils.person.date + '&signature_blob_id='+ testutils.person.blob_id;
             request.del({
                 url:url,
                 json:true

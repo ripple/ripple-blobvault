@@ -59,6 +59,7 @@ var getUserInfo = function(username, res) {
                             obj.username = row.username;
                             obj.address = row.address;
                             obj.emailVerified = row.email_verified;
+                            obj.recoverable = row.encrypted_blobdecrypt_key ? true : false;
                             lib.set({user:obj, identity_id:row.identity_id});
                             lib.done();
                         } else {
@@ -156,27 +157,66 @@ var verify = function(req,res) {
         }
     });
 }
-var email_change = function(req,res) {
-    reporter.log("email_change");
-    var keyresp = libutils.hasKeys(req.body,['email','blob_id','username','hostlink']);
-    if (!keyresp.hasAllKeys) {
-        response.json({result:'error', message:'Missing keys',missing:keyresp.missing}).status(400).pipe(res)
-        return
-    } 
-    if (!libutils.isValidEmail(req.body.email)) {
-        response.json({result:'error', message:'invalid email address'}).status(400).pipe(res)
-        return
-    }
-    var token = libutils.generateToken();
-    exports.store.update_where({set:{email_verified:false,email:req.body.email,email_token:token},where:{key:'id',value:req.body.blob_id}},function(resp) {
-        if ((resp.result) && (resp.result == 'success')) {
-            email.send({email:req.body.email,hostlink:req.body.hostlink,token:token,name:req.body.username});
-            response.json({result:'success'}).pipe(res)
-        } else {
-            response.json({result:'error',message:'unspecified error'}).status(400).pipe(res)
+var emailResend = function(req,res) {
+  var keyresp = libutils.hasKeys(req.body,['email','hostlink']);
+  var token   = libutils.generateToken();
+  
+  if (!keyresp.hasAllKeys) {
+    response.json({
+      result  : 'error', 
+      message : 'Missing keys',
+      missing : keyresp.missing
+    }).status(400).pipe(res)
+    return;
+  } 
+  
+  if (!libutils.isValidEmail(req.body.email)) {
+    response.json({
+      result  : 'error', 
+      message : 'invalid email address'
+    }).status(400).pipe(res)
+    return;
+  }
+  
+  //get the existing blob
+  exports.store.db('blob')
+  .where('id', req.query.signature_blob_id)
+  .select('username','email','hostlink') 
+  .then(function(blobs) {
+    if (!blobs.length) {
+      response.json({result:'error',message:'invalid blob_id'}).status(400).pipe(res)
+    } else {
+      
+      //save the email, hostlink, and new token
+      exports.store.update_where({
+        set:{
+          email_verified : req.body.email !== blobs[0].email ? false : true,
+          email          : req.body.email,
+          hostlink       : req.body.hostlink,
+          email_token    : token
+        },
+        where:{
+          key   : 'id',
+          value : req.query.signature_blob_id
         }
-    });
+      },function(resp) {
+        if ((resp.result) && (resp.result == 'success')) {
+          email.send({
+            email    : req.body.email,
+            hostlink : req.body.hostlink,
+            token    : token,
+            name     : blobs[0].username
+          });
+
+          response.json({result:'success'}).pipe(res)
+        } else {
+          response.json({result:'error',message:'unspecified error'}).status(400).pipe(res)
+        }          
+      });
+    }
+  });
 }
+/*
 var resend = function(req,res) {
     var keyresp = libutils.hasKeys(req.body,['email','username','hostlink']);
     if (!keyresp.hasAllKeys) {
@@ -189,6 +229,7 @@ var resend = function(req,res) {
         response.json({result:'success'}).pipe(res)
     });
 }
+*/
 var rename = function(req,res) {
     var keyresp = libutils.hasKeys(req.body,['username','blob_id','data','revision','encrypted_secret']);
     if (!keyresp.hasAllKeys) {
@@ -200,8 +241,14 @@ var rename = function(req,res) {
         response.json({result:'error', message:'Missing keys',missing:keyresp.missing}).status(400).pipe(res)
         return
     } 
+  
+    if (!req.query.signature_blob_id) {
+        response.json({result:'error', message:'Missing keys',missing:{signature_blob_id:true}}).status(400).pipe(res)
+        return  
+    }
     
     var old_username = req.params.username;
+    var old_blob_id  = req.query.signature_blob_id;
     var new_username = req.body.username;
     reporter.log("rename: from:", old_username, " to:" , new_username)
     var new_blob_id = req.body.blob_id;
@@ -240,8 +287,6 @@ var rename = function(req,res) {
         exports.store.read_where({key:'username',value:old_username},
         function(resp) {
             if (resp.length) {
-                lib.set({old_blob_id:resp[0].id})
-                lib.set({address:resp[0].address})
                 lib.set({email:resp[0].email})
                 lib.done();
             } else {
@@ -266,17 +311,34 @@ var rename = function(req,res) {
         }
         // quota is updated in consolidate
         reporter.log('user: rename : blobConsolidate on old_blob_id:', lib.get('old_blob_id'))
-        exports.store.blobConsolidate({blob_id:lib.get('old_blob_id'),revision:req.body.revision,data:req.body.data},function(resp) {
+        exports.store.blobConsolidate({
+          blob_id  : req.query.signature_blob_id,
+          revision : req.body.revision,
+          data     : req.body.data
+        },function(resp) {
             lib.done()
         });    
     
     },
     function(lib) {
-        var obj = {id:new_blob_id,encrypted_secret:encrypted_secret,username:new_username,normalized_username:new_normalized_username};
+        var obj = { 
+          id : new_blob_id,
+          encrypted_secret : encrypted_secret,
+          username : new_username,
+          normalized_username : new_normalized_username
+        };
+      
         if (req.body.encrypted_blobdecrypt_key) {
             obj.encrypted_blobdecrypt_key = req.body.encrypted_blobdecrypt_key;
         }
-        exports.store.update_where({set:obj,where:{key:'username',value:old_username}},function(resp) {
+      
+        exports.store.update_where({
+          set   : obj,
+          where : {
+            key   : 'id',
+            value : old_blob_id
+          }
+        }, function(resp) {
             var insertobj = {
                 address : lib.get('address'),
                 from_username : old_username,
@@ -285,7 +347,9 @@ var rename = function(req,res) {
                 fulldate : new Date()
             }
             if (resp) {
-                reporter.log({table:'name_change_history',obj:insertobj})
+                
+                //NOTE: looks like name_change_history is not being updated
+                reporter.log({table:'name_change_history',obj:insertobj});
                 response.json({result:'success',message:'rename'}).pipe(res)
             } else 
                 response.json({result:'error',message:'rename'}).status(400).pipe(res)
@@ -386,7 +450,7 @@ var phonevalidate = function(req,res) {
     })
 }
 
-var recov = function(req,res) {
+var recover = function(req,res) {
     var obj = {}
     exports.store.read_where({key:'normalized_username',value:libutils.normalizeUsername(req.params.username)},function(resp) {
         if (resp.length) {
@@ -492,7 +556,7 @@ var set2fa = function(req,res) {
     } 
     var blob_id = req.query.signature_blob_id;
     var enabled = req.body.enabled;
-    var phone = req.body.phone;
+    var phone   = req.body.phone;
     if (phone)
         phone = libutils.normalizePhone(phone)
     var country_code = req.body.country_code;
@@ -1001,12 +1065,11 @@ exports.request2faToken = request2faToken;
 exports.verify2faToken = verify2faToken;
 exports.set2fa = set2fa;
 exports.get2fa = get2fa;
-exports.recov = recov;
+exports.recover = recover;
 exports.phoneRequest = phonerequest;
 exports.phoneValidate = phonevalidate;
 exports.profile = profiledetail;
-exports.emailResend = resend;
-exports.emailChange = email_change;
+exports.emailResend = emailResend;
 exports.get = get;
 exports.verify = verify;
 exports.authinfo = authinfo;
