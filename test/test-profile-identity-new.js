@@ -73,5 +73,10 @@ var addr_list = [addr_a]
             console.log(body)
             lib.done()
         })
+    },
+    function(lib) {
+      server.close(function() {
+        lib.done();
+      });
     }
     ])

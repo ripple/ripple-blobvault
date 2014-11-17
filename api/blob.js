@@ -1,12 +1,13 @@
-var reporter = require('../lib/reporter');
-var response = require('response');
-var Queue = require('queuelib');
-var config = require('../config');
-var libutils = require('../lib/utils')
-var email = require('../lib/email');
-var Counter = require('../lib/counter');
-var protector = require('timeout-protector')
-var count = new Counter;
+var reporter  = require('../lib/reporter');
+var response  = require('response');
+var Queue     = require('queuelib');
+var config    = require('../config');
+var libutils  = require('../lib/utils')
+var email     = require('../lib/email');
+var Counter   = require('../lib/counter');
+var protector = require('timeout-protector');
+var signer    = require('../lib/signer');
+var count     = new Counter;
 var store;
 
 exports.setStore = function(newstore) {
@@ -34,16 +35,15 @@ exports.logs = function(req,res) {
 }
     
 var create = function (req, res) {
-    if (!config.testmode) {
-        if (req.query.signature_blob_id != req.body.blob_id) {
-            response.json({result:'error', message:'query.signature_blob_id does not match body.blob_id'}).status(400).pipe(res)
-            return
-        }
-        if (req.query.signature_account != req.body.address) {
-            response.json({result:'error', message:'query.signature_account does not match body.address'}).status(400).pipe(res)
-            return
-        }
+    if (req.query.signature_blob_id != req.body.blob_id) {
+        response.json({result:'error', message:'query.signature_blob_id does not match body.blob_id'}).status(400).pipe(res)
+        return
     }
+    if (req.query.signature_account != req.body.address) {
+        response.json({result:'error', message:'query.signature_account does not match body.address'}).status(400).pipe(res)
+        return
+    }
+    
     var keyresp = libutils.hasKeys(req.body,['encrypted_blobdecrypt_key','blob_id','username','auth_secret','data','email','address','hostlink','encrypted_secret','domain']);
     if (!keyresp.hasAllKeys) {
         response.json({result:'error', message:'Missing keys',missing:keyresp.missing}).status(400).pipe(res)
@@ -471,6 +471,26 @@ exports.get = function (req, res) {
                     lib.done()
                 });
             },
+            
+          /*
+            //get id_token
+            function (lib) {
+              var obj = lib.get('blobget');
+              getIdToken(obj.identity_id, function (err, resp) {
+                if (err) {
+                  response.json({error:err}).status(500).pipe(res);
+                  lib.terminate();
+                  
+                } else {
+                  
+                  obj.id_token = resp;
+                  lib.set({blobget:obj});
+                  lib.done();
+                }
+              });
+            },
+            */
+          
             function(lib) {
                 var _blob = lib.get('_blob');
                 var obj = lib.get('blobget')
@@ -501,3 +521,24 @@ exports.getPatch = function (req, res) {
         response.json(resp).pipe(res)
     });
 };
+
+
+function getIdToken (identity_id, callback) {
+  var payload = {
+    iss : config.issuer,
+    sub : identity_id,
+    exp : ~~(new Date().getTime() / 1000) + (30 * 60),
+    iat : ~~(new Date().getTime() / 1000 - 60),
+  };
+  var token;
+  
+  try {
+    token = signer.signJWT(payload);
+    callback (null, token);
+    
+  } catch (e) {
+    reporter.log("unable to sign JWT:", e);
+    callback(null); //ignore error for now
+  } 
+  
+}

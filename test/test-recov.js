@@ -50,6 +50,11 @@ test('test-recov',function(done) {
             lib.done()
             done()
         })
+    },
+    function(lib) {
+      server.close(function() {
+        lib.done();
+      });
     }
     ])
 })

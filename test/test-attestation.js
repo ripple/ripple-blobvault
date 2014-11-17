@@ -13,7 +13,7 @@ var jwt = require('jsonwebtoken');
 var base64Url = require('base64-url');
 var fs  = require('fs');
 var key = fs.readFileSync('./public.pem');
-
+var attestations = require('../api/attestations');
 console.log(config);
 
 api.setStore(store);
@@ -36,6 +36,9 @@ app.post('/v1/attestation/profile/update', blobIdentity.getID, api.attestation.p
 app.post('/v1/attestation/identity', blobIdentity.getID, api.attestation.identity.get);
 app.post('/v1/attestation/identity/update', blobIdentity.getID, api.attestation.identity.update);
 app.get('/v1/attestation/summary', blobIdentity.getID, api.attestation.summary.get);
+
+app.post('/v1/attestation', blobIdentity.getID, attestations.update);
+app.get('/v1/attestation', blobIdentity.getID, attestations.get);
 
 var server = http.createServer(app);
  
@@ -73,6 +76,69 @@ var blockscoreResponse = {
   }
 };
 
+var questionsResponse = { 
+  id: '5463d5a83266390002080100',
+  created_at: 1415828904,
+  updated_at: 1415828904,
+  livemode: false,
+  verification_id: '5463d5a73266390002070100',
+  score: null,
+  expired: false,
+  time_limit: 0,
+  questions: [ 
+    { 
+      id: 1,
+      question: 'Which one of the following adult individuals is most closely associated with you?',
+      answers: [ 
+        { id: 1, answer: 'Nicole' },
+        { id: 2, answer: 'Jose' },
+        { id: 3, answer: 'Cecilia' },
+        { id: 4, answer: 'Evan' },
+        { id: 5, answer: 'None Of The Above' } 
+      ] 
+    }, { 
+      id: 2,
+      question: 'Which one of the following counties is associated with you?',
+      answers: [ 
+        { id: 1, answer: 'Sangamon' },
+        { id: 2, answer: 'El Paso' },
+        { id: 3, answer: 'Niagara' },
+        { id: 4, answer: 'Jasper' },
+        { id: 5, answer: 'None Of The Above' } 
+      ] 
+    }, { 
+      id: 3,
+      question: 'Which one of the following area codes is associated with you?',
+      answers: [ 
+        { id: 1, answer: '812' },
+        { id: 2, answer: '308' },
+        { id: 3, answer: '336' },
+        { id: 4, answer: '870' },
+        { id: 5, answer: 'None Of The Above' } 
+      ] 
+    }, { 
+      id: 4,
+      question: 'Which one of the following addresses is associated with you?',
+      answers: [ 
+        { id: 1, answer: '863 Carelton' },
+        { id: 2, answer: '902 Grass Lake Rd' },
+        { id: 3, answer: '221 Wolf Lake' },
+        { id: 4, answer: '309 Colver Rd' },
+        { id: 5, answer: 'None Of The Above' } 
+      ]
+    }, { 
+      id: 5,
+      question: 'What state was your SSN issued in?',
+      answers: [ 
+        { id: 1, answer: 'Oregon' },
+        { id: 2, answer: 'Idaho' },
+        { id: 3, answer: 'Oklahoma' },
+        { id: 4, answer: 'Maine' },
+        { id: 5, answer: 'None Of The Above' } 
+      ] 
+    }
+  ]
+};
 
 
 describe('Attestation:', function() {
@@ -82,6 +148,8 @@ describe('Attestation:', function() {
       testutils.person.id = testutils.person.blob_id;
       delete testutils.person.blob_id;
       delete testutils.person.date;
+      delete testutils.person.password;
+      delete testutils.person.secret;
       testutils.person.phone_verified = true;
       testutils.person.email = 'rook2pawn@gmail.com';
   
@@ -489,6 +557,7 @@ describe('Attestation:', function() {
   });  
 });
 
+
 var validAttestation = function (attestation, callback) {
   var segments =  attestation.split('.');
   var decoded;
@@ -508,3 +577,77 @@ var validAttestation = function (attestation, callback) {
   
   jwt.verify(attestation, key, callback);
 };
+
+/*
+describe('Attestation2:', function() {
+
+  var profile = {
+    name : {
+      given  : 'john',
+      middle : 'allen',
+      family : 'doe'
+    },
+
+    national_id : {
+      number  : '0000',
+      type    : 'ssn',
+      country : 'US'
+    },
+
+    birthdate  : '1985-05-01',
+
+    address  : {
+      line1       : "1236 Fake St.",
+      locality    : "San Francisco",
+      region      : "CA",
+      postal_code : "94709",
+      country     : "US"
+    }
+  };
+  
+  before(function(done) {
+    server.listen(5150, function() {
+      testutils.person.id = testutils.person.blob_id;
+      delete testutils.person.blob_id;
+      delete testutils.person.date;
+      delete testutils.person.password;
+      delete testutils.person.secret;
+      testutils.person.phone_verified = true;
+      testutils.person.email = 'rook2pawn@gmail.com';
+  
+      store.db('blob')
+      .truncate()
+      .then(function() {
+          return store.db('blob')
+          .insert(testutils.person)
+      })
+      .then(function() {
+          done()
+      });     
+    });  
+  });
+  
+  describe('Create attestation:', function() {
+    it('should initiate a new attestation', function(done) {
+
+      var params = {
+        profile     : profile,
+      };
+      
+      nock('https://api.blockscore.com/')
+        .post('/verifications')
+        .reply(200, blockscoreResponse, {'Content-Type': 'text/plain'}); 
+      
+      nock('https://api.blockscore.com/')
+        .post('/questions')
+        .reply(200, questionsResponse, {'Content-Type': 'text/plain'}); 
+      
+      
+      request.post({url:'http://localhost:5150/v1/attestation?signature_blob_id='+testutils.person.id,json:params}, function(err,resp,body) {
+        console.log(err, body);
+        done();
+      });
+    });
+  });
+});
+*/

@@ -493,7 +493,7 @@ var set2fa = function(req,res) {
     } 
     var blob_id = req.query.signature_blob_id;
     var enabled = req.body.enabled;
-    var phone = req.body.phone;
+    var phone   = req.body.phone;
     if (phone)
         phone = libutils.normalizePhone(phone)
     var country_code = req.body.country_code;

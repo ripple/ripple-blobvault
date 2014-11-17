@@ -3,16 +3,19 @@ var crypto = require('crypto');
 var libutils = require('../lib/utils');
 var _ = require('lodash');
 
-var rp = 'rwUNHL9AdSupre4tGb7NXZpRS1ift5sR7W'; 
+var rp = 'raVUps4RghLYkVBcpMaRbVKRTTzhesPXd'; 
+var secret = 'ssize4HrSYZShMWBtK6BhALGEk8VH';
 
 exports.person = {
     username : 'bob5050',
+    password : 'pass word',
     normalized_username: 'bob5050',
     auth_secret :'FFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0AFFFF0A0A',
     blob_id : 'ffff0a0affff0a0affff0a0affff0a0affff0a0affff0a0affff0a0affff0a0a',
     identity_id : libutils.generate_uuid(),
     data : libutils.btoa('foo'),
     address : rp,
+    secret : secret,
     email: 'bob5050@bob.com',
     hostlink: 'http://localhost:8080/activate',
     date: 'april',
@@ -24,6 +27,13 @@ exports.person = {
     '2fa_auth_id' : "2469"
 }
 
+exports.ecdsa = {
+  signature         : 'AAAAHBs5ujTPwPDf_L2FtRVT_9GvzXBciwoK-3BCe5r1kJuHXUN2NLljq9F7PLghmepQ3W8iRX2hswmap44lYTEeqHU',
+  signature_date    : '2014-11-14T18%3A50%3A52.000Z',
+  signature_blob_id : '547ef68397a0c216816ee690ba5bc091fd86b14174a3d5bf08c82b3f16ff4cce',
+  signature_account : 'raVUps4RghLYkVBcpMaRbVKRTTzhesPXd',
+  signature_type    : 'RIPPLE1-ECDSA-SHA512',
+}
 
 exports.createSignature = function (params) {
     var method = params.method;

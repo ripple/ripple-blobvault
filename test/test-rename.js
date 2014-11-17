@@ -37,8 +37,11 @@ test('test-rename',function(done) {
     },
     function(lib) {
         testutils.person.id = testutils.person.blob_id;
-        delete testutils.person.blob_id
-        delete testutils.person.date
+        delete testutils.person.blob_id;
+        delete testutils.person.date;
+        delete testutils.person.password;
+        delete testutils.person.secret;
+      
         store.db('blob')
         .truncate()
         .then(function() {
@@ -77,6 +80,13 @@ test('test-rename',function(done) {
             assert.equal('bob2',resp[0].username)
             done()
         });
+    },
+    
+    function(lib) {
+      server.close(function() {
+        lib.done();
+        done();
+      });
     }
     ])
 })

@@ -30,7 +30,7 @@ app.use(function(req,res,next) {
 app.use(express.json());
 app.use(express.urlencoded());
 
-app.post('/v1/user/email', ecdsa.middleware, api.user.emailChange);
+app.post('/v1/user/email', api.user.emailChange);
 app.post('/v1/user/email/resend', limiter.check, api.user.emailResend);
 app.get('/v1/user/:username',api.user.get);
 app.get('/v1/user/:username/verify/:token',api.user.verify);
@@ -51,7 +51,9 @@ test('email verification', function(done) {
         // create the user
         function(lib) {
         request.post({
-            url:'http://localhost:5050/v1/user',
+            url:'http://localhost:5050/v1/user?' + 
+              'signature_account='  + testutils.person.address +
+              '&signature_blob_id=' + testutils.person.blob_id,
             json: testutils.person
             },
             function(err, resp, body) {

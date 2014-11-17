@@ -26,7 +26,6 @@ app.delete('/v1/user',hmac.middleware, api.blob.delete);
 app.post('/v1/user',api.blob.create);
 app.get('/v1/user/:username', api.user.get);
 
-
 var assert = require('chai').assert;
 test('test case insensitive lookup',function(done) {
     var server = http.createServer(app);
@@ -39,7 +38,9 @@ test('test case insensitive lookup',function(done) {
         // first we create user bob5050
         function(lib) {
         request.post({
-            url:'http://localhost:5050/v1/user',
+            url:'http://localhost:5050/v1/user?' + 
+    'signature_account='  + testutils.person.address +
+    '&signature_blob_id=' + testutils.person.blob_id,
             json: testutils.person
             },
             function(err, resp, body) {

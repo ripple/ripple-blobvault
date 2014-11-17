@@ -34,8 +34,10 @@ test('test-profile-details',function(done) {
     },
     function(lib) {
         testutils.person.id = testutils.person.blob_id;
-        delete testutils.person.blob_id
-        delete testutils.person.date
+        delete testutils.person.blob_id;
+        delete testutils.person.date;
+        delete testutils.person.password;
+        delete testutils.person.secret;
         store.db('blob')
         .truncate()
         .then(function() {
@@ -65,6 +67,11 @@ test('test-profile-details',function(done) {
             lib.done()
             done()
         })
+    },
+    function(lib) {
+      server.close(function() {
+        lib.done();
+      });
     }
     ])
 })
