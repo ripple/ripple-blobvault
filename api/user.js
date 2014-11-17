@@ -157,27 +157,66 @@ var verify = function(req,res) {
         }
     });
 }
-var email_change = function(req,res) {
-    reporter.log("email_change");
-    var keyresp = libutils.hasKeys(req.body,['email','blob_id','username','hostlink']);
-    if (!keyresp.hasAllKeys) {
-        response.json({result:'error', message:'Missing keys',missing:keyresp.missing}).status(400).pipe(res)
-        return
-    } 
-    if (!libutils.isValidEmail(req.body.email)) {
-        response.json({result:'error', message:'invalid email address'}).status(400).pipe(res)
-        return
-    }
-    var token = libutils.generateToken();
-    exports.store.update_where({set:{email_verified:false,email:req.body.email,email_token:token},where:{key:'id',value:req.body.blob_id}},function(resp) {
-        if ((resp.result) && (resp.result == 'success')) {
-            email.send({email:req.body.email,hostlink:req.body.hostlink,token:token,name:req.body.username});
-            response.json({result:'success'}).pipe(res)
-        } else {
-            response.json({result:'error',message:'unspecified error'}).status(400).pipe(res)
+var emailResend = function(req,res) {
+  var keyresp = libutils.hasKeys(req.body,['email','hostlink']);
+  var token   = libutils.generateToken();
+  
+  if (!keyresp.hasAllKeys) {
+    response.json({
+      result  : 'error', 
+      message : 'Missing keys',
+      missing : keyresp.missing
+    }).status(400).pipe(res)
+    return;
+  } 
+  
+  if (!libutils.isValidEmail(req.body.email)) {
+    response.json({
+      result  : 'error', 
+      message : 'invalid email address'
+    }).status(400).pipe(res)
+    return;
+  }
+  
+  //get the existing blob
+  exports.store.db('blob')
+  .where('id', req.query.signature_blob_id)
+  .select('username','email','hostlink') 
+  .then(function(blobs) {
+    if (!blobs.length) {
+      response.json({result:'error',message:'invalid blob_id'}).status(400).pipe(res)
+    } else {
+      
+      //save the email, hostlink, and new token
+      exports.store.update_where({
+        set:{
+          email_verified : req.body.email !== blobs[0].email ? false : true,
+          email          : req.body.email,
+          hostlink       : req.body.hostlink,
+          email_token    : token
+        },
+        where:{
+          key   : 'id',
+          value : req.query.signature_blob_id
         }
-    });
+      },function(resp) {
+        if ((resp.result) && (resp.result == 'success')) {
+          email.send({
+            email    : req.body.email,
+            hostlink : req.body.hostlink,
+            token    : token,
+            name     : blobs[0].username
+          });
+
+          response.json({result:'success'}).pipe(res)
+        } else {
+          response.json({result:'error',message:'unspecified error'}).status(400).pipe(res)
+        }          
+      });
+    }
+  });
 }
+/*
 var resend = function(req,res) {
     var keyresp = libutils.hasKeys(req.body,['email','username','hostlink']);
     if (!keyresp.hasAllKeys) {
@@ -190,6 +229,7 @@ var resend = function(req,res) {
         response.json({result:'success'}).pipe(res)
     });
 }
+*/
 var rename = function(req,res) {
     var keyresp = libutils.hasKeys(req.body,['username','blob_id','data','revision','encrypted_secret']);
     if (!keyresp.hasAllKeys) {
@@ -387,7 +427,7 @@ var phonevalidate = function(req,res) {
     })
 }
 
-var recov = function(req,res) {
+var recover = function(req,res) {
     var obj = {}
     exports.store.read_where({key:'normalized_username',value:libutils.normalizeUsername(req.params.username)},function(resp) {
         if (resp.length) {
@@ -1002,12 +1042,11 @@ exports.request2faToken = request2faToken;
 exports.verify2faToken = verify2faToken;
 exports.set2fa = set2fa;
 exports.get2fa = get2fa;
-exports.recov = recov;
+exports.recover = recover;
 exports.phoneRequest = phonerequest;
 exports.phoneValidate = phonevalidate;
 exports.profile = profiledetail;
-exports.emailResend = resend;
-exports.emailChange = email_change;
+exports.emailResend = emailResend;
 exports.get = get;
 exports.verify = verify;
 exports.authinfo = authinfo;
