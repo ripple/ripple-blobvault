@@ -13,7 +13,7 @@ var jwt = require('jsonwebtoken');
 var base64Url = require('base64-url');
 var fs  = require('fs');
 var key = fs.readFileSync('./public.pem');
-var attestations = require('../api/attestations');
+//var attestations = require('../api/attestations');
 console.log(config);
 
 api.setStore(store);
@@ -37,8 +37,8 @@ app.post('/v1/attestation/identity', blobIdentity.getID, api.attestation.identit
 app.post('/v1/attestation/identity/update', blobIdentity.getID, api.attestation.identity.update);
 app.get('/v1/attestation/summary', blobIdentity.getID, api.attestation.summary.get);
 
-app.post('/v1/attestation', blobIdentity.getID, attestations.update);
-app.get('/v1/attestation', blobIdentity.getID, attestations.get);
+//app.post('/v1/attestation', blobIdentity.getID, attestations.update);
+//app.get('/v1/attestation', blobIdentity.getID, attestations.get);
 
 var server = http.createServer(app);
  

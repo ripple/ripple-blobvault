@@ -54,18 +54,40 @@ test('test-rename',function(done) {
     },
     // we test that a non-existant user cannot be renamed
     function(lib) {
-        request.post({url:'http://localhost:5150/v1/user/foo',
-        json:{encrypted_secret:testutils.person.encrypted_secret,data:testutils.person.data,revision:1,blob_id:'35435a',username:'bob2'}},function(err,resp,body) {
-            console.log(body)
+        request.post({
+          url : 'http://localhost:5150/v1/user/foo?' + 
+          '&signature_blob_id=' + testutils.person.id,
+          json : {   
+            encrypted_secret : testutils.person.encrypted_secret,
+            data:testutils.person.data,
+            revision:1,
+            blob_id:'35435a',
+            username:'bob2'
+          }
+        },function(err,resp,body) {
+            console.log(err, body);
             assert.equal(resp.statusCode,400)
             assert.equal(body.result,'error')
             assert.equal(body.message,'invalid user')
             lib.done()
         })
     },
+      
+    //test with a real username  
     function(lib) {
-        request.post({url:'http://localhost:5150/v1/user/'+testutils.person.username,
-        json:{encrypted_secret:testutils.person.encrypted_secret,data:testutils.person.data,revision:1,blob_id:'35435a',username:'bob2'}},function(err,resp,body) {
+        console.log(testutils.person);
+        request.post({
+          url : 'http://localhost:5150/v1/user/'+testutils.person.username + '?' +
+            '&signature_blob_id=' + testutils.person.id,
+          json:{ 
+            encrypted_secret : testutils.person.encrypted_secret,
+            data:testutils.person.data,
+            revision:1,
+            blob_id:'35435a',
+            username:'bob2'
+          }
+        }, function(err,resp,body) {
+            console.log(err, body);
             assert.equal(resp.statusCode,200)
             assert.equal(body.result,'success')
             lib.done()
