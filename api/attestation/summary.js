@@ -1,8 +1,10 @@
-var config    = require('../../config');
-var reporter  = require('../../lib/reporter');
-var request   = require('request');
-var response  = require('response');
-var signer    = require('../../lib/signer');
+var config   = require('../../config');
+var reporter = require('../../lib/reporter');
+var request  = require('request');
+var response = require('response');
+var signer   = require('../../lib/signer');
+var client   = require('blockscore')(config.blockscore.key);
+var profile  = require('./profile.js');
 
 exports.store;
 
@@ -12,9 +14,10 @@ exports.setStore = function(s) {
 };
 
 exports.get = function (req, res, next) {
-  var identity_id = req.params.identity_id;
+  var identity_id     = req.params.identity_id;
+  var verification_id;
   var result;
-
+  
   exports.store.getAttestations({identity_id:identity_id}, function (resp) {
     var summary = { };
     
@@ -68,40 +71,65 @@ exports.get = function (req, res, next) {
             summary.profile_verified      = row.payload.profile_verified;
             summary.profile_verified_date = created.toISOString();
             
-            //include values if requested
+            //need to get values from blockscore
             if (req.query.full) {
-              summary.given_name  = row.payload.given_name;
-              summary.family_name = row.payload.family_name;
-              summary.birthdate   = row.payload.birthdate;
-              summary.address     = row.payload.address;
-              summary.identification = row.payload.identification;
-              summary.ip_address     = row.payload.ip_address;
-              summary.address_risk   = row.payload.address_risk;
-              summary.ofac_match     = row.payload.ofac_match;
-              summary.pep_match      = row.payload.pep_match;
-              summary.context_match  = row.payload.context_match;
+              verification_id = row.meta.verification_id;
             }      
           } 
         });
       }
       
-      summary.iss = config.issuer;
-      summary.sub = identity_id;
-      summary.exp = ~~(new Date().getTime() / 1000) + (30 * 60);
-      summary.iat = ~~(new Date().getTime() / 1000 - 60);
+      if (!verification_id) {
+        return handleResponse(summary);
+      
+      } else {
+        client.verifications.retrieve(verification_id, function (err, resp) {      
+          if (err) {
+            var json = {
+              result  : 'error',
+              message : err.message,
+              error   : err.param + ": " + err.code
+            }
 
-      try {
-        var result = {
-          result      : 'success',
-          attestation : signer.signJWT(summary)
-        }
-
-        response.json(result).pipe(res); 
+            response.json(json).status(400).pipe(res); 
+            return;
+          } 
         
-      } catch (e) {
-        reporter.log("unable to sign JWT:", e);
-        response.json({result:'error', message:'unable to sign attestation'}).status(500).pipe(res);
+          var payload = profile.createPayload(resp);
+          summary.given_name     = payload.given_name;
+          summary.family_name    = payload.family_name;
+          summary.birthdate      = payload.birthdate;
+          summary.address        = payload.address;
+          summary.identification = payload.identification;
+          summary.ip_address     = payload.ip_address;
+          summary.address_risk   = payload.address_risk;
+          summary.ofac_match     = payload.ofac_match;
+          summary.pep_match      = payload.pep_match;
+          summary.context_match  = payload.context_match;
+          
+          return handleResponse(summary);
+        });
       }
     }
   });
+  
+  function handleResponse (summary) {
+    summary.iss = config.issuer;
+    summary.sub = identity_id;
+    summary.exp = ~~(new Date().getTime() / 1000) + (30 * 60);
+    summary.iat = ~~(new Date().getTime() / 1000 - 60);
+
+    try {
+      var result = {
+        result      : 'success',
+        attestation : signer.signJWT(summary)
+      }
+
+      response.json(result).pipe(res); 
+
+    } catch (e) {
+      reporter.log("unable to sign JWT:", e);
+      response.json({result:'error', message:'unable to sign attestation'}).status(500).pipe(res);
+    }    
+  }
 };

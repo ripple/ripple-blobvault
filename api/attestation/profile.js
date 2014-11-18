@@ -19,39 +19,101 @@ exports.setStore = function(s) {
 exports.get = function(req,res,next) {
   var identity_id = req.params.identity_id;
   var result;
+  var q = new Queue;
 
-  exports.store.getAttestations({identity_id:identity_id, type:'profile'}, function (resp){
-    if (resp.error) {
-      response.json({result:'error', message:'attestation DB error'}).status(500).pipe(res); 
-
-    //otherwise return the existing attestation
-    } else if (resp[0]) {
-      var data = createAttestations(identity_id, resp[0].payload);
-
-      if (!data) {
-        response.json({result:'error', message:"unable to create attestations"}).status(500).pipe(res); 
-        return;
-      }
+  q.series([
+    function(lib) {
       
-      result = {
-        result  : 'success',
-        status  : resp[0].status,
-        id      : resp[0].id,
-        attestation : data.attestation,
-        blinded     : data.blinded
-      };
+      exports.store.getAttestations({identity_id:identity_id, type:'profile'}, function (resp){
+        if (resp.error) {
+          response.json({result:'error', message:'attestation DB error'}).status(500).pipe(res); 
+          lib.terminate();
+          
+        } else if (resp[0]) {
+          lib.set({
+            verification_id : resp[0].meta.verification_id,
+            status          : resp[0].status,
+            id              : resp[0].id
+          });
+          lib.done();
+        
+        } else {
+          result = {
+            result  : 'error', 
+            message : 'no profile attestation for this identity'
+          };
 
-      response.json(result).pipe(res);  
-
-    } else {
-      result = {
-        result  : 'error', 
-        message : 'no profile attestation for this identity'
-      };
+          response.json(result).status(404).pipe(res); 
+          lib.terminate();
+        }
+      });
+    }, 
+    
+    function (lib) {
+      client.verifications.retrieve(lib.get('verification_id'), function (err, resp) {
       
-      response.json(result).status(404).pipe(res); 
+        if (err) {
+          var json = {
+            result  : 'error',
+            message : err.message,
+            error   : err.param + ": " + err.code
+          }
+
+          response.json(json).status(400).pipe(res);  
+          lib.terminate();
+          return;
+        } 
+        
+        try {
+          var payload = exports.createPayload(resp);
+        } catch (e) {
+          reporter.log('invalid response from blockscore');  
+          response.json({result:'error', message:"unable to create attestations"}).status(500).pipe(res); 
+          return;          
+        }
+        
+        var data    = createAttestations(identity_id, payload);
+        
+        if (!data) {
+          response.json({result:'error', message:"unable to create attestations"}).status(500).pipe(res); 
+          return;
+        }
+
+        var status = payload.profile_verified ? 'verified' : 'unverified';
+        
+        //if the status of the attestation has changed,
+        //update the DB
+        if (status !== lib.get('status')) {
+          var params = {
+            set   : {status: status},
+            table : 'attestations',
+            where : {
+              key   : 'id',
+              value : lib.get('id')
+            }
+          };
+    
+          exports.store.update_where(params, function(db_resp) {
+            if (db_resp.error) {
+              reporter.log('error updating attestation status - identity:', identity_id);
+            } else {
+              reporter.log('updated attestation status - identity:', identity_id, 'status:', status);
+            }
+          });
+        }
+            
+        result = {
+          result  : 'success',
+          status  : payload.profile_verified ? 'verified' : 'unverified',
+          attestation : data.attestation,
+          blinded     : data.blinded
+        };
+
+        response.json(result).pipe(res);  
+    
+      });
     }
-  });
+  ]);
 };
 
 exports.update = function (req, res, next) {
@@ -107,18 +169,26 @@ exports.update = function (req, res, next) {
   function(lib) {  
     var blockscore = lib.get('blockscore'); 
     var existing   = lib.get('attestation');
-    var payload    = createPayload(blockscore, lib.get('profile'));
     var id         = existing ? existing.id : utils.generate_uuid();
     var attestation;
     var params;
-      
+
+    try {
+      var payload = exports.createPayload(blockscore);
+
+    } catch (e) {
+      reporter.log('invalid response from blockscore');  
+      response.json({result:'error', message:"unable to create attestations"}).status(500).pipe(res); 
+      return;          
+    }
+        
     attestation = {
       id          : id,
       identity_id : identity_id,
       issuer      : config.issuer,
       type        : 'profile',
+      payload     : { profile_verified: payload.profile_verified },
       status      : payload.profile_verified ? 'verified' : 'unverified',
-      payload     : payload,
       created     : new Date().getTime(),
       meta : {
         verification_id : blockscore.id
@@ -163,50 +233,51 @@ exports.update = function (req, res, next) {
       lib.done();                   
     });        
   }]);
-  
-  function createPayload (blockscore, profile) {
-    
-    var payload = {
-      //sub : identity_id,
-      //exp : ~~(new Date().getTime() / 1000) + (30 * 60),
-      //iat : ~~(new Date().getTime() / 1000 - 60),
-      given_name  : profile.name.first,
-      family_name : profile.name.last,
-      birthdate   : profile.date_of_birth,
-      address : {
-          line1       : profile.address.street1,
-          locality    : profile.address.city,
-          region      : profile.address.state,
-          postal_code : profile.address.postal_code,
-          country     : profile.address.country_code
-      }
-    };
-    
-    if (profile.address.street2) 
-    payload.address.line2 = profile.address.street2;  
-    if (profile.identification.ssn)
-    payload.ssn_last_4 = profile.identification.ssn;
-    if (profile.identification.passport)
-    payload.passport = profile.identification.passport
-    if (profile.phone_number)
-    payload.phone = profile.phone_number 
-    if (profile.ip_address) 
-    payload.ip_address = profile.ip_address
-    
-    payload.address_risk  = blockscore.details.address_risk;
-    payload.ofac_match    = blockscore.details.ofac;
-    payload.pep_match     = blockscore.details.pep; //ask blockscore what this is
-    payload.context_match = {
-      address        : blockscore.details.address,
-      identification : blockscore.details.identification,
-      birthdate      : blockscore.details.date_of_birth,
-    };
-    
-    payload.profile_verified = blockscore.status === 'valid' ? true : false;  
-    
-    return payload;
-  } 
 };
+
+exports.createPayload = function (blockscore) {
+
+  var payload = {
+    //sub : identity_id,
+    //exp : ~~(new Date().getTime() / 1000) + (30 * 60),
+    //iat : ~~(new Date().getTime() / 1000 - 60),
+    given_name  : blockscore.name.first,
+    family_name : blockscore.name.last,
+    birthdate   : blockscore.date_of_birth,
+    address : {
+        line1       : blockscore.address.street1,
+        locality    : blockscore.address.city,
+        region      : blockscore.address.state,
+        postal_code : blockscore.address.postal_code,
+        country     : blockscore.address.country_code
+    }
+  };
+  if (blockscore.name.middle)
+    payload.middle_name = blockscore.name.middle;   
+  if (blockscore.address.street2) 
+    payload.address.line2 = blockscore.address.street2;  
+  if (blockscore.identification.ssn)
+    payload.ssn_last_4 = blockscore.identification.ssn;
+  if (blockscore.identification.passport)
+    payload.passport = blockscore.identification.passport
+  if (blockscore.phone_number)
+    payload.phone = blockscore.phone_number 
+  if (blockscore.ip_address) 
+    payload.ip_address = blockscore.ip_address
+
+  payload.address_risk  = blockscore.details.address_risk;
+  payload.ofac_match    = blockscore.details.ofac;
+  payload.pep_match     = blockscore.details.pep; //ask blockscore what this is
+  payload.context_match = {
+    address        : blockscore.details.address,
+    identification : blockscore.details.identification,
+    birthdate      : blockscore.details.date_of_birth,
+  };
+
+  payload.profile_verified = blockscore.status === 'valid' ? true : false;  
+
+  return payload;
+} 
 
 var createAttestations = function (identity_id, payload) {
   var blindedPayload;
