@@ -37,7 +37,7 @@ var blockscoreResponse = {
   "id": "51f5b51f8fcf0e4d59000001",
   "created_at": 1403762295,
   "updated_at": 1403762295,
-  "status": "valid",
+  "status": "invalid",
   "livemode": false,
   
   "birth_day": 1,
@@ -205,7 +205,7 @@ var profile = {
   },
 
   id_document : {
-    value   : '0000',
+    value   : '0001',
     type    : 'ssn',
     country : 'US',
   },
@@ -262,7 +262,7 @@ var validAttestation = function (attestation, callback) {
     
   } catch (e) {
     console.log("invalid attestation:", e);
-    callback(e);
+    return callback(e);
   }  
   
   jwt.verify(attestation, key, callback);
@@ -294,8 +294,79 @@ describe('Attestations v2:', function() {
     });  
   });
   
+  it('should attempt to get an existing attestation', function(done) {
+    
+    request.get({
+      url  : 'http://localhost:5150/v1/attestation?signature_blob_id='+testutils.person.id,
+      json : true
+    }, function(err,resp,body) {   
+      assert.ifError(err);  
+      assert.strictEqual(body.result,  'error'); 
+      assert.strictEqual(body.message, 'attestation not found');
+      done();
+    });
+  }); 
+  
+  it('should initiate a new attestation (person, invalid)', function(done) {
+
+    var params = {
+      type    : 'person',
+      profile : profile
+    };
+    
+    nock('https://api.blockscore.com/')
+      .post('/people')
+      .reply(200, blockscoreResponse, {'Content-Type': 'text/plain'});   
+
+    request.post({
+      url  : 'http://localhost:5150/v1/attestation?signature_blob_id='+testutils.person.id,
+      json : params
+    }, function(err,resp,body) {
+      assert.ifError(err);
+      assert.strictEqual(body.result, 'success');
+      assert.strictEqual(body.status, 'incomplete');
+      assert.strictEqual(typeof body.questions, 'undefined');
+      assert.strictEqual(body.requirements[0], 'photo');
+      assert.strictEqual(body.requirements[1], 'photo_id');
+      assert.strictEqual(body.requirements[2], 'profile');
+      done();
+    });
+  });  
+  
+  it('should attempt to get an existing attestation (person, invalid)', function(done) {
+
+    nock('https://api.blockscore.com/')
+      .get('/people/' + blockscoreResponse.id)
+      .reply(200, blockscoreResponse, {'Content-Type': 'text/plain'}); 
+    
+    request.get({
+      url  : 'http://localhost:5150/v1/attestation?signature_blob_id='+testutils.person.id,
+      json : true
+    }, function(err,resp,body) {   
+      assert.strictEqual(body.result, 'success');
+      assert.strictEqual(body.status, 'incomplete');
+      validAttestation(body.attestation, function(err, payload) {
+        assert.ifError(err); 
+        assert.strictEqual(typeof payload, 'object'); 
+        assert.strictEqual(payload.profile_verified, false);
+        assert.strictEqual(payload.identity_verified, false);
+        
+        validAttestation(body.blinded, function(err, payload) {
+          assert.ifError(err); 
+          assert.strictEqual(typeof payload, 'object'); 
+          assert.strictEqual(payload.profile_verified, false);
+          assert.strictEqual(payload.identity_verified, false);
+          done();
+        });
+      });
+    });
+  }); 
+  
   it('should initiate a new attestation (person)', function(done) {
 
+    profile.id_document.value = '0000';
+    blockscoreResponse.status = 'valid';
+    
     var params = {
       type    : 'person',
       profile : profile
@@ -322,22 +393,52 @@ describe('Attestations v2:', function() {
     });
   });
   
+  it('should attempt to get an existing attestation (person, incomplete)', function(done) {
+
+    nock('https://api.blockscore.com/')
+      .get('/people/' + blockscoreResponse.id)
+      .reply(200, blockscoreResponse, {'Content-Type': 'text/plain'}); 
+    
+    request.get({
+      url  : 'http://localhost:5150/v1/attestation?signature_blob_id='+testutils.person.id,
+      json : true
+    }, function(err,resp,body) { 
+      assert.strictEqual(body.result, 'success');
+      assert.strictEqual(body.status, 'incomplete');
+      validAttestation(body.attestation, function(err, payload) {
+        assert.ifError(err); 
+        assert.strictEqual(typeof payload, 'object'); 
+        assert.strictEqual(payload.profile_verified, true);
+        assert.strictEqual(payload.identity_verified, false);
+        
+        validAttestation(body.blinded, function(err, payload) {
+          assert.ifError(err); 
+          assert.strictEqual(typeof payload, 'object'); 
+          assert.strictEqual(payload.profile_verified, true);
+          assert.strictEqual(payload.identity_verified, false);
+          done();
+        });
+      });
+    });
+  });    
+  
   it('should update an existing attestation (person, score < 80)', function(done) {
     var params = {
       answers : answers
     };
 
     nock('https://api.blockscore.com/')
-      .post('/question_sets/5463d5a83266390002080100/score')
+      .post('/question_sets/' + questionsResponse.id + '/score')
       .reply(200, answersResponse, {'Content-Type': 'text/plain'}); 
     
 
     request.post({
       url  : 'http://localhost:5150/v1/attestation?signature_blob_id='+testutils.person.id,
       json : params
-    }, function(err,resp,body) {      
-      assert.strictEqual(body.result, 'success');
-      assert.strictEqual(body.status, 'failed');
+    }, function(err,resp,body) {  
+      assert.ifError(err);
+      assert.strictEqual(body.result, 'error');
+      assert.strictEqual(body.message, 'questions not adequately answered');
       done();
     });
   });  
@@ -350,19 +451,64 @@ describe('Attestations v2:', function() {
     answersResponse.score = 80;
 
     nock('https://api.blockscore.com/')
-      .post('/question_sets/5463d5a83266390002080100/score')
+      .post('/question_sets/' + questionsResponse.id + '/score')
       .reply(200, answersResponse, {'Content-Type': 'text/plain'}); 
-    
+
+    nock('https://api.blockscore.com/')
+      .get('/people/' + blockscoreResponse.id)
+      .reply(200, blockscoreResponse, {'Content-Type': 'text/plain'}); 
 
     request.post({
       url  : 'http://localhost:5150/v1/attestation?signature_blob_id='+testutils.person.id,
       json : params
-    }, function(err,resp,body) {      
+    }, function(err,resp,body) { 
       assert.strictEqual(body.result, 'success');
       assert.strictEqual(body.status, 'verified');
-      done();
+      
+      validAttestation(body.attestation, function(err, payload) {
+        assert.ifError(err); 
+        assert.strictEqual(typeof payload, 'object'); 
+        assert.strictEqual(payload.profile_verified, true);
+        assert.strictEqual(payload.identity_verified, true);
+        validAttestation(body.blinded, function(err, payload) {
+          assert.ifError(err); 
+          assert.strictEqual(typeof payload, 'object');
+          assert.strictEqual(payload.profile_verified, true);
+          assert.strictEqual(payload.identity_verified, true);          
+          done();
+        });
+      });
     });
-  });  
+  }); 
+  
+  it('should retrieve an existing attestation (person, verified)', function(done) {
+
+    nock('https://api.blockscore.com/')
+      .get('/people/' + blockscoreResponse.id)
+      .reply(200, blockscoreResponse, {'Content-Type': 'text/plain'}); 
+    
+    request.get({
+      url  : 'http://localhost:5150/v1/attestation?signature_blob_id='+testutils.person.id,
+      json : true
+    }, function(err,resp,body) {   
+      assert.strictEqual(body.result, 'success');
+      assert.strictEqual(body.status, 'verified');
+      
+      validAttestation(body.attestation, function(err, payload) {
+        assert.ifError(err); 
+        assert.strictEqual(typeof payload, 'object'); 
+        assert.strictEqual(payload.profile_verified, true);
+        assert.strictEqual(payload.identity_verified, true); 
+        validAttestation(body.blinded, function(err, payload) {
+          assert.ifError(err); 
+          assert.strictEqual(typeof payload, 'object'); 
+          assert.strictEqual(payload.profile_verified, true);
+          assert.strictEqual(payload.identity_verified, true);           
+          done();
+        });
+      });
+    });
+  });
 
   it('should initiate a new attestation (organzation)', function(done) {
 

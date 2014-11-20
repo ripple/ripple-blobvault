@@ -1,4 +1,5 @@
 var update   = require('./update');
+var get      = require('./get');
 var request  = require('request');
 var response = require('response');
 
@@ -24,6 +25,22 @@ exports.update = function (req, res, next) {
 };
 
 //get existing attestation
-exports.get    = function (req, res, next) {
-
+exports.get = function (req, res, next) {
+  var options       = req.body;
+  options.subject   = req.params.identity_id;
+  options.client_id = 'http://id.ripple.com'; 
+  
+  get(options, function (err, resp) {
+    if (err) {
+      response.json({
+        result  : 'error',
+        message : err.message
+      }).status(err.code).pipe(res);
+    
+    } else {
+      if (!resp) resp = {};
+      resp.result = 'success';
+      response.json(resp).pipe(res);
+    }
+  });
 };

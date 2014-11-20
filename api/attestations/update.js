@@ -4,8 +4,8 @@ var utils    = require('../../lib/utils');
 var Queue    = require('queuelib');
 var client   = require('blockscore')(config.blockscore.key);
 var sjcl     = require('ripple-lib').sjcl;
-
-var identities = { };
+var store    = require('./store');
+var getAttestation = require('./get');
 
 module.exports = function (options, callback) {
   
@@ -184,7 +184,15 @@ function createPersonAttestation (options, callback) {
         
       //need webcam photo, and photo ID  
       } else {
-        lib.set({requirements:['photo','photo_id']});
+        var requirements = ['photo','photo_id'];
+        
+        //if the profile was not valid, the person may
+        //want to modify the profile and try again
+        if (blockscore.status !== 'valid') {
+          requirements.push('profile');
+        }
+        
+        lib.set({requirements:requirements});
         lib.done();
       }
     },
@@ -219,7 +227,7 @@ function createPersonAttestation (options, callback) {
       }
       
       //store it in our 'db'
-      identities[row.client_id + row.subject] = row;
+      store[row.client_id + row.subject] = row;
       callback(null, result);
       lib.done();
     }
@@ -266,7 +274,7 @@ function createOrganizationAttestation (options, callback) {
       };
       
       //store it in our 'db'
-      identities[row.client_id + row.subject] = row;
+      store[row.client_id + row.subject] = row; 
       callback(null, result);
     }
   });
@@ -274,7 +282,7 @@ function createOrganizationAttestation (options, callback) {
 }
 
 function answerQuestions (options, callback) {
-  var row = identities[options.client_id + options.subject];
+  var row = store[options.client_id + options.subject];
   var q   = new Queue;
 
   //if not row...
@@ -307,7 +315,6 @@ function answerQuestions (options, callback) {
     
     function (lib) {
       var score    = lib.get('score');
-      var result;
       
       //if score is >= 80, save score,
       //set status to 'verified'
@@ -320,14 +327,23 @@ function answerQuestions (options, callback) {
         row.status = 'failed';
       }
       
-      //create attestation, if successful
-      //save row
-      result = {
-        subject : row.subject,
-        status  : row.status,
-      };
+      //store it in our 'db'
+      store[row.client_id + row.subject] = row; 
       
-      callback(null, result);
+      //fetch the attestation if the user is verified
+      if (row.status === 'verified') {
+        getAttestation({
+          subject   : row.subject,
+          client_id : row.client_id
+        }, callback);
+      
+      //otherwise return an error
+      } else {
+        callback({
+          message : 'questions not adequately answered',
+          code    : 400
+        });     
+      }
     }
   ]);
 }
