@@ -29,7 +29,8 @@
     "bluebird": "^2.3.5",
     "ursa": "^0.8.0",
     "base64-url": "^1.0.0",
-    "jsonwebtoken": "^1.1.2"
+    "jsonwebtoken": "^1.1.2",
+    "superagent": "^0.21.0"
   },
   "devDependencies": {
     "request": "^2.34.0",

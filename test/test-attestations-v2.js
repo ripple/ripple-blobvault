@@ -197,6 +197,11 @@ var organizationResponse = {
    } 
 }
 
+var netverifyResponse = {
+  "timestamp" : "2012-08-16T10:37:44.623Z",
+  "jumioIdScanReference" : "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+}
+
 var profile = {
   name : {
     given  : 'john',
@@ -520,15 +525,31 @@ describe('Attestations v2:', function() {
     nock('https://api.blockscore.com/')
       .post('/companies')
       .reply(200, organizationResponse, {'Content-Type': 'text/plain'}); 
+    
+    nock('https://api.blockscore.com/')
+      .get('/companies/' + organizationResponse.id)
+      .reply(200, organizationResponse, {'Content-Type': 'text/plain'});     
 
     request.post({
       url  : 'http://localhost:5150/v1/attestation?signature_blob_id='+testutils.person.id,
       json : params
     }, function(err,resp,body) {
+
       assert.ifError(err);
       assert.strictEqual(body.result, 'success');
       assert.strictEqual(body.status, 'verified');
-      done();
+      validAttestation(body.attestation, function(err, payload) {
+        assert.ifError(err); 
+        assert.strictEqual(typeof payload, 'object'); 
+        assert.strictEqual(payload.profile_verified, true);
+        
+        validAttestation(body.blinded, function(err, payload) {
+          assert.ifError(err); 
+          assert.strictEqual(typeof payload, 'object'); 
+          assert.strictEqual(payload.profile_verified, true);
+          done();
+        });
+      });
     });
   });    
 
@@ -558,5 +579,28 @@ describe('Attestations v2:', function() {
       assert.strictEqual(body.requirements[1], 'photo_id');
       done();
     });
-  });   
+  });
+
+/*  
+  it('should update an attestation with photo, and photo_id (person, non-US)', function(done) {
+
+    var params = {
+      type      : 'person',
+      photo     : 'zzzzzzz',
+      photo_id  : 'aaaaaa',
+    };
+    
+    nock('https://netverify.com/api/netverify/v2/')
+      .post('/peformNetverify')
+      .reply(200, netverifyResponse, {'Content-Type': 'text/plain'}); 
+
+    request.post({
+      url  : 'http://localhost:5150/v1/attestation?signature_blob_id='+testutils.person.id,
+      json : params
+    }, function(err,resp,body) {
+      console.log(err, body);
+      done();
+    });
+  });    
+*/  
 });

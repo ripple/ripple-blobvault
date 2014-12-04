@@ -3,6 +3,7 @@ var reporter = require('../../lib/reporter');
 var utils    = require('../../lib/utils');
 var Queue    = require('queuelib');
 var client   = require('blockscore')(config.blockscore.key);
+var jumio    = require('../../lib/jumio');
 var sjcl     = require('ripple-lib').sjcl;
 var store    = require('./store');
 var getAttestation = require('./get');
@@ -39,6 +40,7 @@ module.exports = function (options, callback) {
     
   //submitting photos for verification  
   } else if (options.photo || options.photo_id) {
+    savePhotos(options, callback);
     
   //initiating a new attestation  
   } else {
@@ -266,16 +268,22 @@ function createOrganizationAttestation (options, callback) {
         country           : country
       };
       
-      //if valid, create attestation
-      
-      var result = {
-        subject : row.subject,
-        status  : row.status,
-      };
-      
       //store it in our 'db'
       store[row.client_id + row.subject] = row; 
-      callback(null, result);
+      
+      //fetch the attestation if the user is verified
+      if (row.status === 'verified') {
+        getAttestation({
+          subject   : row.subject,
+          client_id : row.client_id
+        }, callback);
+        
+      } else {
+        callback(null, {
+          subject : row.subject,
+          status  : row.status,
+        });      
+      }
     }
   });
     
@@ -348,6 +356,20 @@ function answerQuestions (options, callback) {
   ]);
 }
 
+/**
+ * savePhotos
+ * save photos to Jumio
+ * for a person
+ */
+
+function savePhotos (options, callback) {
+  jumio.performNetverify(options, function (err, resp) {
+    console.log(err, resp);
+  });
+}
+
+/*
+
 function PII (data) {
   var self = this;
   this._data = data;
@@ -358,3 +380,4 @@ function PII (data) {
   
   return this;
 }
+*/
