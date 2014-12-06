@@ -1,8 +1,47 @@
 ## Attestation API Reference
-#### POST /v1/attestation
+Creating an attestation is a multiple step process that is different depending on user's country of origin.  The first step is the same for all users, collecting and attempting to validate basic profile information.  In the US, this can be done for organizations as well as individuals.  Right now, organizations have no second step for verification.  For people in the US, and Canada, the second step of verification is to answer knowledge based questions.  For everyone else, the second step requires a webcam photo and an upload of a photo ID.  The process of verifying this info requires some time, so the user's status will be pending until customer support confirms the verificaton.
+
+### Attestation JWT 
+Attestations come in the form of JSON web tokens (JWT) consisting of a header, payload, and signature.  The payload can contain identification of the user, personal identity info, and attestation claims about the user.
+
++ header
+    + typ (string) ... 'JWT'
+    + alg (string) ... 'RS256'
+    + kid (string) ... key id for verifiying the signature
++ payload
+    + iss (string) ... issuer 
+    + sub (string) ... subject - identity_id from blob
+    + exp (int) ... expiration (unix timestamp)
+    + iat (int) ... issued at (unix timestamp)
+    + profile_verified (boolean) ... profile verification status
+    + identity_verified (boolean) ... identity verification status
+    + .... (additional claims, PII)
++ signature (string) ... base64 encoded signature
+
+
+#### GET  /v1/attestation (HMAC signed request)
+Get a user's attestation
+
++ Parameters:
+    + signature (required, string) ... the HMAC signature
+    + signature_blob_id (required, string) ... the blob id
+    + signature_date (required, string) ... the date string
+
++ **Response 201 (application/json)**
+    + result (string) ... query result (success, error)
+    + status (string) ... attestation status ('incomplete', 'verified', 'unverified')
+    + attestation (string) ... signed JWT attestation, including PII
+    + blinded (string) ... signed JWT attestation, excluding PII   
+
+#### POST /v1/attestation (HMAC signed request)
 Create or update an attestation
 
-+ **Request (application/json)**
++ Parameters:
+    + signature (required, string) ... the HMAC signature
+    + signature_blob_id (required, string) ... the blob id
+    + signature_date (required, string) ... the date string
+      
++ **Request (application/json)** (HMAC signed request)
     + type (string) ... "person", "organization"
     + profile (JSON) ... profile details to be attested
     + 'person' profile:    
@@ -55,7 +94,7 @@ Create or update an attestation
     + photo_id (base64) .... photo/scan of photo identification
 + **Response 201 (application/json)**
     + result (string) ... query result (success, error)
-    + status (string) ... attestation status (incomplete, verified, unverified)
+    + status (string) ... attestation status ('incomplete', 'verified', 'unverified')
     + questions (array) ... questions set
         + questions[0].id (int) ... question identifier
         + questions[0].question (string) ... question text
@@ -63,4 +102,7 @@ Create or update an attestation
         + questions[0].answers[0].id (int) ... answer identifier
         + questions[0].answers[0].answer (string) ... answer text    
         + ....
-    + requirements (array) ... additional requirements to complete attestation
+    + requirements (array) ... additional requirements to complete attestation (one or more of 'profile', 'answers', 'photo','photo_id') 
+    + attestation (string) ... signed JWT attestation, including PII
+    + blinded (string) ... signed JWT attestation, excluding PII      
+    
