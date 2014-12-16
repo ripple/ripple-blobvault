@@ -99,6 +99,17 @@ var create = function (req, res) {
             }
        });
     },
+    function(lib) {
+        store.read_where({key:'auth_secret',value:authSecret}, function(resp) {
+            if (resp && resp.length > 0) {
+                response.json({result:'error',message:"User with this secret key already exists"}).status(400).pipe(res)
+                lib.terminate(authSecret);
+                return;
+            } else {
+                lib.done();
+            }
+        });
+    },
 /*
     function(lib,id) {
         // check if account is funded
