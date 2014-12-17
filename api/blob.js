@@ -104,7 +104,7 @@ var create = function (req, res) {
         store.read_where({key:'address',value:address}, function(resp) {
             if (resp && resp.length > 0) {
                 response.json({result:'error',message:"User with this ripple address already exists."}).status(400).pipe(res)
-                lib.terminate(authSecret);
+                lib.terminate();
                 return;
             } else {
                 lib.done();
