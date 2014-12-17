@@ -143,7 +143,7 @@ test('create then delete',function(done) {
       });
     },
     
-    // here we are going to modify the username but violate the constraint on the unique ripple address 
+    // here we are going to modify the username but violate the constraint on the unique ripple address/secret key 
     // we want to .catch from the store since it should be throwing at the db level
     // step 1 modify the testutils.person.username 
     function(lib) {
