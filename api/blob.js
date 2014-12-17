@@ -81,6 +81,7 @@ var create = function (req, res) {
     }
 
     var authSecret = req.body.auth_secret;
+    var address = req.body.address;
     authSecret = authSecret.toLowerCase();
     if (!/^[0-9a-f]{64}$/.exec(authSecret)) {
         response.json({result:'error',message:"Auth secret must be 32 bytes hex."}).status(400).pipe(res)
@@ -98,6 +99,17 @@ var create = function (req, res) {
                 return;
             }
        });
+    },
+    function(lib) {
+        store.read_where({key:'address',value:address}, function(resp) {
+            if (resp && resp.length > 0) {
+                response.json({result:'error',message:"User with this ripple address already exists."}).status(400).pipe(res)
+                lib.terminate(authSecret);
+                return;
+            } else {
+                lib.done();
+            }
+        });
     },
 /*
     function(lib,id) {
