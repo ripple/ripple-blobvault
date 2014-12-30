@@ -11,8 +11,8 @@ var reporter = require('./lib/reporter');
 var guard = require('./guard')(store)
 var limiter = guard.resend_email();
 var blobIdentity = require('./lib/blobIdentity');
-var Ddos= require('ddos');
-var ddos = new Ddos({burst:30});
+// var Ddos= require('ddos');
+// var ddos = new Ddos({burst:30});
 
 var health = require('./health')(store.db)
 health.start()
@@ -24,11 +24,11 @@ hmac.setStore(store);
 blobIdentity.setStore(store);
 
 var app = express();
-app.use(ddos.express)
+//app.use(ddos.express)
 app.use(reporter.inspect);
 
 // app.use(express.limit('1mb')); is deprecated and has no functionality
-// now delegated to raw-body; has a default 1mb limit 
+// now delegated to raw-body; has a default 1mb limit
 
 app.use(express.json());
 app.use(express.urlencoded());
