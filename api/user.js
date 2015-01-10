@@ -80,7 +80,7 @@ var getUserInfo = function(username, res) {
             var summary = { };
 
             if (resp.error) {
-              response.json({result:'error', message:'attestation DB error'}).status(500).pipe(res); 
+              response.json({result:'error', message:'attestation DB error'}).status(500).pipe(res);
               lib.terminate();
 
             } else {
@@ -89,13 +89,13 @@ var getUserInfo = function(username, res) {
               user.profile_verified  = false;
               user.identity_verified = false;
 
-              if (resp.length) { 
+              if (resp.length) {
                 resp.forEach(function(row) {
 
                   if (row.type === 'phone' && row.status === 'verified') {
                     user.phone_number_verified = row.payload.phone_number_verified;
 
-                  //for now email verified is based on the old method  
+                  //for now email verified is based on the old method
                   //} else if (row.type === 'email' && row.status === 'verified') {
                   //  user.email_verified = row.payload.email_verified;
 
@@ -145,7 +145,7 @@ var verify = function(req,res) {
                 // TODO all fields have to be normalized the same
                 // including blobId -> blob_id (not id)
                 // emailVerify -> email_verified etc
-                exports.store.update({username:username,res:res,hash:{email_verified:true}},function(resp) { 
+                exports.store.update({username:username,res:res,hash:{email_verified:true}},function(resp) {
                     // only after we mark that the email is verified, we inform
                     obj.result = 'success';
                     response.json(obj).pipe(res);
@@ -153,44 +153,44 @@ var verify = function(req,res) {
             } else {
                 response.json({result:'error',code:5895,message:'Invalid token'}).status(400).pipe(res)
                 return;
-            } 
+            }
         }
     });
 }
 var emailResend = function(req,res) {
   var keyresp = libutils.hasKeys(req.body,['email','hostlink']);
   var token   = libutils.generateToken();
-  
+
   if (!keyresp.hasAllKeys) {
     response.json({
-      result  : 'error', 
+      result  : 'error',
       message : 'Missing keys',
       missing : keyresp.missing
     }).status(400).pipe(res)
     return;
-  } 
-  
+  }
+
   if (!libutils.isValidEmail(req.body.email)) {
     response.json({
-      result  : 'error', 
+      result  : 'error',
       message : 'invalid email address'
     }).status(400).pipe(res)
     return;
   }
-  
+
   //get the existing blob
   exports.store.db('blob')
   .where('id', req.query.signature_blob_id)
-  .select('username','email','hostlink') 
+  .select('username','email','hostlink')
   .then(function(blobs) {
     if (!blobs.length) {
       response.json({result:'error',message:'invalid blob_id'}).status(400).pipe(res)
     } else {
-      
+
       //save the email, hostlink, and new token
       exports.store.update_where({
         set:{
-          email_verified : req.body.email !== blobs[0].email ? false : true,
+          email_verified : false,
           email          : req.body.email,
           hostlink       : req.body.hostlink,
           email_token    : token
@@ -211,7 +211,7 @@ var emailResend = function(req,res) {
           response.json({result:'success'}).pipe(res)
         } else {
           response.json({result:'error',message:'unspecified error'}).status(400).pipe(res)
-        }          
+        }
       });
     }
   });
@@ -222,7 +222,7 @@ var resend = function(req,res) {
     if (!keyresp.hasAllKeys) {
         response.json({result:'error', message:'Missing keys',missing:keyresp.missing}).status(400).pipe(res)
         return
-    } 
+    }
     var token = libutils.generateToken();
     exports.store.update_where({set:{email:req.body.email,email_token:token},where:{key:'username',value:req.body.username}},function(resp) {
         email.send({email:req.body.email,hostlink:req.body.hostlink,token:token,name:req.body.username});
@@ -235,18 +235,18 @@ var rename = function(req,res) {
     if (!keyresp.hasAllKeys) {
         response.json({result:'error', message:'Missing keys',missing:keyresp.missing}).status(400).pipe(res)
         return
-    } 
+    }
     keyresp = libutils.hasKeys(req.params,['username']);
     if (!keyresp.hasAllKeys) {
         response.json({result:'error', message:'Missing keys',missing:keyresp.missing}).status(400).pipe(res)
         return
-    } 
-  
+    }
+
     if (!req.query.signature_blob_id) {
         response.json({result:'error', message:'Missing keys',missing:{signature_blob_id:true}}).status(400).pipe(res)
-        return  
+        return
     }
-    
+
     var old_username = req.params.username;
     var old_blob_id  = req.query.signature_blob_id;
     var new_username = req.body.username;
@@ -317,21 +317,21 @@ var rename = function(req,res) {
           data     : req.body.data
         },function(resp) {
             lib.done()
-        });    
-    
+        });
+
     },
     function(lib) {
-        var obj = { 
+        var obj = {
           id : new_blob_id,
           encrypted_secret : encrypted_secret,
           username : new_username,
           normalized_username : new_normalized_username
         };
-      
+
         if (req.body.encrypted_blobdecrypt_key) {
             obj.encrypted_blobdecrypt_key = req.body.encrypted_blobdecrypt_key;
         }
-      
+
         exports.store.update_where({
           set   : obj,
           where : {
@@ -347,17 +347,17 @@ var rename = function(req,res) {
                 fulldate : new Date()
             }
             if (resp) {
-                
+
                 //NOTE: looks like name_change_history is not being updated
                 reporter.log({table:'name_change_history',obj:insertobj});
                 response.json({result:'success',message:'rename'}).pipe(res)
-            } else 
+            } else
                 response.json({result:'error',message:'rename'}).status(400).pipe(res)
             lib.done()
         })
     },
     function(lib) {
-        // RT-2036 send email when user changes Ripple Name 
+        // RT-2036 send email when user changes Ripple Name
         if (lib.get('email') !== undefined) {
             email.notifynamechange({email:lib.get('email'),new_username:new_username,old_username:old_username});
         }
@@ -367,13 +367,13 @@ var rename = function(req,res) {
 }
 var profiledetail = function(req,res) {
     var params = {};
-    if (req.body.phone) 
+    if (req.body.phone)
         params.phone = req.body.phone
-    if (req.body.country) 
+    if (req.body.country)
         params.country = req.body.country
-    if (req.body.region) 
+    if (req.body.region)
         params.region = req.body.region
-    if (req.body.city) 
+    if (req.body.city)
         params.city = req.body.city
     for (key in params) {
         if (params[key].length > 100) {
@@ -415,13 +415,13 @@ var phonerequest = function(req,res) {
     if (!keyresp.hasAllKeys) {
         response.json({result:'error', message:'Missing keys',missing:keyresp.missing}).status(400).pipe(res)
         return
-    } 
+    }
 /*
     keyresp = libutils.hasKeys(req.params,['username']);
     if (!keyresp.hasAllKeys) {
         response.json({result:'error', message:'Missing keys',missing:keyresp.missing}).status(400).pipe(res)
         return
-    } 
+    }
 */
     var produrl = config.phone.url+'/protected/json/phones/verification/start?api_key='+config.phone.key
     var obj = { via:req.body.via, phone_number:req.body.phone_number,country_code:req.body.country_code }
@@ -438,7 +438,7 @@ var phonevalidate = function(req,res) {
     if (!keyresp.hasAllKeys) {
         response.json({result:'error', message:'Missing keys',missing:keyresp.missing}).status(400).pipe(res)
         return
-    } 
+    }
     var obj = {api_key:config.phone.key,phone_number:req.body.phone_number,country_code:req.body.country_code,verification_code:req.body.token}
     var produrl = config.phone.url+'/protected/json/phones/verification/check'
     request.get({url:produrl,qs:obj,json:true},function(err,resp,body) {
@@ -476,12 +476,12 @@ var updatekeys = function(req,res) {
     if (!keyresp.hasAllKeys) {
         response.json({result:'error', message:'Missing keys',missing:keyresp.missing}).status(400).pipe(res)
         return
-    } 
+    }
     keyresp = libutils.hasKeys(req.params,['username']);
     if (!keyresp.hasAllKeys) {
         response.json({result:'error', message:'Missing keys',missing:keyresp.missing}).status(400).pipe(res)
         return
-    } 
+    }
     var username = req.params.username;
     var new_blob_id = req.body.blob_id;
     var encrypted_secret = req.body.encrypted_secret;
@@ -519,8 +519,8 @@ var updatekeys = function(req,res) {
         reporter.log('user: updatekeys: blobConsolidate on old_blob_id:', lib.get('old_blob_id'))
         exports.store.blobConsolidate({blob_id:lib.get('old_blob_id'),revision:req.body.revision,data:req.body.data},function(resp) {
             lib.done()
-        });    
-    
+        });
+
     },
     function(lib) {
         var obj = {id:new_blob_id,encrypted_secret:encrypted_secret,encrypted_blobdecrypt_key:req.body.encrypted_blobdecrypt_key}
@@ -528,7 +528,7 @@ var updatekeys = function(req,res) {
             reporter.log("user: updatekeys : update response", resp)
             if (resp) {
                 response.json({result:'success',message:'updatekeys'}).pipe(res)
-            } else 
+            } else
                 response.json({result:'error',message:'updatekeys'}).status(400).pipe(res)
             lib.done()
         })
@@ -553,7 +553,7 @@ var set2fa = function(req,res) {
     if (!keyresp.hasAllKeys) {
         response.json({result:'error', message:'Missing keys',missing:keyresp.missing}).status(400).pipe(res)
         return
-    } 
+    }
     var blob_id = req.query.signature_blob_id;
     var enabled = req.body.enabled;
     var phone   = req.body.phone;
@@ -597,7 +597,7 @@ var set2fa = function(req,res) {
         var _blob = lib.get('_blob');
         reporter.log("set2fa:check phone verified: blob:", _blob)
         if (!_blob.phone_verified) {
-        // check if phone is different ... actually we will reset phone_verified on 
+        // check if phone is different ... actually we will reset phone_verified on
             if (enabled === true) {
                 response.json({result:'error',message:'enabled cannot be set if phone number is not verified'}).status(400).pipe(res)
                 lib.terminate()
@@ -605,7 +605,7 @@ var set2fa = function(req,res) {
             } else {
                 lib.done()
             }
-        } else 
+        } else
             lib.done()
     },
     function(lib) {
@@ -615,7 +615,7 @@ var set2fa = function(req,res) {
         // we don't need to normalize the phone check since the saved phone is already normalized as is the phone from the request
         // this check is saying do they not have an auth id OR has the phone changed
         if ((!_blob["2fa_auth_id"]) || (phone && (phone != _blob['2fa_phone']))) {
-            reporter.log("set2fa:auth id not set or we need a new one. getting auth id from provider") 
+            reporter.log("set2fa:auth id not set or we need a new one. getting auth id from provider")
             if (country_code && _blob.email && phone) {
                 var produrl = config.phone.url+'/protected/json/users/new/?api_key='+config.phone.key
                 var obj = { email:_blob.email, cellphone:phone,country_code:country_code }
@@ -636,28 +636,28 @@ var set2fa = function(req,res) {
                         return;
                     }
                 })
-            } else 
+            } else
                 lib.done()
         } else {
-            reporter.log("set2fa:auth id is set. not getting auth id from provider") 
+            reporter.log("set2fa:auth id is set. not getting auth id from provider")
             lib.done()
         }
     },
     function(lib) {
         var obj = {}
-        if (enabled !== undefined) 
+        if (enabled !== undefined)
             obj["2fa_enabled"] = enabled;
         if (phone !== undefined) {
-            obj['phone_verified'] = false; 
+            obj['phone_verified'] = false;
             obj["2fa_phone"] = phone;
         }
-        if (country_code !== undefined) 
+        if (country_code !== undefined)
             obj["2fa_country_code"] = country_code;
         exports.store.update_where({set:obj,where:{key:'id',value:blob_id}},function(resp) {
             if (resp.result) {
-                if (resp.result == 'success') 
+                if (resp.result == 'success')
                     response.json({result:'success'}).pipe(res)
-                else if (resp.result == 'error') 
+                else if (resp.result == 'error')
                     response.json({result:'error',message:'error setting 2fa'}).status(400).pipe(res)
                 lib.done();
                 return
@@ -674,10 +674,10 @@ var get2fa = function(req,res) {
     if (!keyresp.hasAllKeys) {
         response.json({result:'error', message:'Missing keys',missing:keyresp.missing}).status(400).pipe(res)
         return
-    } 
+    }
     var device_id = req.query.device_id || undefined;
     var blob_id = req.query.signature_blob_id;
-    
+
     exports.store.read_where({key:'id',value:blob_id},function(resp) {
         var blobsettings = resp;
         if (device_id !== undefined) {
@@ -686,18 +686,18 @@ var get2fa = function(req,res) {
                 var deviceidrow;
                 if (resp.length) {
                     deviceidrow = resp[0]
-                } 
+                }
                 if (blobsettings.length) {
                     var row = blobsettings[0]
                     var phone = row["2fa_phone"]
                     var masked_phone = libutils.maskphone(phone);
-                    
+
                     var obj = { auth_id:row["2fa_auth_id"],country_code:row["2fa_country_code"],enabled:row["2fa_enabled"],remember_me:row["2fa_remember_me"],phone:phone,masked_phone:masked_phone}
                     obj.result = 'success';
                     if (deviceidrow) {
                         obj.remember_me = deviceidrow.remember_me;
                         obj.device_id = deviceidrow.device_id;
-                        obj.is_auth = deviceidrow.is_auth; 
+                        obj.is_auth = deviceidrow.is_auth;
                     }
                     response.json(obj).pipe(res)
                 } else {
@@ -710,7 +710,7 @@ var get2fa = function(req,res) {
                 console.log("THE ROW:",row)
                 var phone = row["2fa_phone"]
                 var masked_phone = libutils.maskphone(phone);
-                
+
                 var obj = { auth_id:row["2fa_auth_id"],country_code:row["2fa_country_code"],enabled:row["2fa_enabled"],remember_me:row["2fa_remember_me"],phone:phone,masked_phone:masked_phone}
                 obj.result = 'success';
                 console.log("THE OBJ:",obj)
@@ -744,7 +744,7 @@ var request2faToken = function(req,res) {
         // create the auth id
         var _blob = lib.get('_blob')
         if (!_blob["2fa_auth_id"]) {
-            reporter.log("request2fa:auth id not set. getting auth id from provider") 
+            reporter.log("request2fa:auth id not set. getting auth id from provider")
             if (country_code && _blob.email && phone) {
                 var produrl = config.phone.url+'/protected/json/users/new/?api_key='+config.phone.key
                 var obj = { email:_blob.email, cellphone:phone,country_code:country_code }
@@ -759,13 +759,13 @@ var request2faToken = function(req,res) {
                             reporter.log("request2fa:2fa_auth_id:",body.user.id);
                             lib.done()
                         })
-                    } else 
+                    } else
                         lib.done()
                 })
-            } else 
+            } else
                 lib.done()
         } else {
-            reporter.log("set2fa:auth id is set. not getting auth id from provider") 
+            reporter.log("set2fa:auth id is set. not getting auth id from provider")
             lib.done()
         }
     },
@@ -793,11 +793,11 @@ var request2faToken = function(req,res) {
                     obj.result = 'error';
                 if ((body.ignored !== undefined) && (body.ignored === true))
                     obj.via = 'app';
-                else 
+                else
                     obj.via = 'sms';
                 if (body.success === true)
                     response.json(obj).pipe(res)
-                else 
+                else
                     response.json(obj).status(400).pipe(res)
                 lib.done()
             });
@@ -813,7 +813,7 @@ var verify2faToken = function(req,res) {
     if (!keyresp.hasAllKeys) {
         response.json({result:'error', message:'Missing keys',missing:keyresp.missing}).status(400).pipe(res)
         return
-    } 
+    }
     var device_id = req.body.device_id;
     var token  = req.body.token;
     var remember_me = req.body.remember_me;
@@ -825,7 +825,7 @@ var verify2faToken = function(req,res) {
             exports.store.update_where({table:'twofactor',where:{key:'device_id',value:device_id},set:{remember_me:remember_me}},function(resp) {
                 lib.done()
             })
-        else 
+        else
             lib.done()
     },
     function(lib) {
@@ -838,10 +838,10 @@ var verify2faToken = function(req,res) {
                     reporter.log("verify2fa: already is_auth. no need to verify")
                     response.json({result:'success'}).pipe(res)
                     lib.terminate()
-                } else 
+                } else
                     reporter.log("verify2fa: is NOT is_auth. contacting verification")
                     lib.done()
-            } else 
+            } else
                 lib.done()
         })
     },
@@ -897,7 +897,7 @@ var batchlookup = function(req,res,next) {
     if (!keyresp.hasAllKeys) {
         response.json({result:'error', message:'Missing keys',missing:keyresp.missing}).status(400).pipe(res)
         return
-    } 
+    }
     var list = req.body.list;
     exports.store.batchlookup({list:list},function(resp) {
         if (resp.error) {
@@ -928,7 +928,7 @@ var setProfile = function(req,res,next) {
             function(obj,idx,lib2) {
                 reporter.log("setProfile attr obj:",obj)
                 // set default type
-                if (obj.type == undefined) 
+                if (obj.type == undefined)
                     obj.type = 'default';
                 obj.identity_id = identity_id
                 exports.store.read_where({table:'identity_attributes',key:'identity_id',value:identity_id},
@@ -966,7 +966,7 @@ var setProfile = function(req,res,next) {
                 reporter.log("setProfile:all done with attributes")
                 lib.done()
             })
-        } else 
+        } else
             lib.done()
     },
     function(lib) {
@@ -976,7 +976,7 @@ var setProfile = function(req,res,next) {
             function(obj,idx,lib2) {
                 reporter.log("setProfile addr obj:",obj)
                 // set default type
-                if (obj.type == undefined) 
+                if (obj.type == undefined)
                     obj.type = 'default';
                 obj.identity_id = identity_id
                 exports.store.read_where({table:'identity_addresses',key:'identity_id',value:identity_id},
@@ -1014,7 +1014,7 @@ var setProfile = function(req,res,next) {
                 reporter.log("setProfile:all done with addresses")
                 lib.done()
             })
-        } else 
+        } else
             lib.done()
     },
     function(lib) {
@@ -1055,7 +1055,7 @@ var getProfile = function(req,res,next) {
         lib.done()
     }
     ])
-        
+
 }
 */
 //exports.setProfile = setProfile;
