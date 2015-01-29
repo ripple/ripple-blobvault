@@ -13,8 +13,6 @@ var guard = require('./guard')(store)
 var limiter = guard.resend_email();
 var blobIdentity = require('./lib/blobIdentity');
 var log = require('./lib/log.js').winston;
-// var Ddos= require('ddos');
-// var ddos = new Ddos({burst:30});
 
 var health = require('./health')(store.db)
 health.start()
@@ -26,11 +24,7 @@ hmac.setStore(store);
 blobIdentity.setStore(store);
 
 var app = express();
-//app.use(ddos.express)
 app.use(morgan(':remote-addr - :remote-user [:date[clf]] ":method :url HTTP/:http-version" :status :res[content-length] ":referrer" ":user-agent"', {stream: log.winstonStream}));
-
-// app.use(express.limit('1mb')); is deprecated and has no functionality
-// now delegated to raw-body; has a default 1mb limit
 
 app.use(express.json());
 app.use(express.urlencoded());

@@ -11,7 +11,6 @@
     "concat-stream": "^1.4.5",
     "cors": "^2.4.1",
     "csv-write-stream": "^0.1.2",
-    "ddos": "",
     "emailjs": "^0.3.8",
     "express": "~3.4.0",
     "hashish": "0.0.4",
@@ -30,13 +29,12 @@
     "queuelib": "",
     "request": "^2.36.0",
     "response": "https://github.com/mikeal/response/archive/master.tar.gz",
-    "ripple-lib": "https://github.com/rook2pawn/ripple-lib/archive/develop.tar.gz",
+    "ripple-lib": "^0.10.0",
     "timeout-protector": "0.0.1",
     "ursa": "^0.8.0",
     "winston": "^0.9.0"
   },
   "devDependencies": {
-    "request": "^2.34.0",
     "chai": "^1.9.1",
     "mocha": "https://github.com/visionmedia/mocha/archive/master.tar.gz",
     "sinon": "^1.9.1",
