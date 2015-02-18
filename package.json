@@ -20,6 +20,7 @@
     "lodash": "~2.4.1",
     "mandrill-api": "^1.0.41",
     "mysql": "~2.0.0-alpha9",
+    "newrelic": "^1.16.2",
     "nock": "^0.47.0",
     "node-uuid": "^1.4.1",
     "optimist": "^0.6.1",
