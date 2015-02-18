@@ -138,3 +138,5 @@ exports.reserved = {};
 // Then this option should be set to this:
 // exports.urlPrefix = '/ripple-blobvault';
 exports.urlPrefix = '';
+
+exports.newrelic = 'YOUR KEY';

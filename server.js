@@ -1,3 +1,4 @@
+require('newrelic');
 var config = require('./config');
 var http = require('http');
 var https = require('https');
