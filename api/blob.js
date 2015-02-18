@@ -33,7 +33,7 @@ exports.logs = function(req,res) {
     break;
     }
 }
-    
+
 var create = function (req, res) {
     if (req.query.signature_blob_id != req.body.blob_id) {
         response.json({result:'error', message:'query.signature_blob_id does not match body.blob_id'}).status(400).pipe(res)
@@ -43,12 +43,12 @@ var create = function (req, res) {
         response.json({result:'error', message:'query.signature_account does not match body.address'}).status(400).pipe(res)
         return
     }
-    
+
     var keyresp = libutils.hasKeys(req.body,['encrypted_blobdecrypt_key','blob_id','username','auth_secret','data','email','address','hostlink','encrypted_secret','domain']);
     if (!keyresp.hasAllKeys) {
         response.json({result:'error', message:'Missing keys',missing:keyresp.missing}).status(400).pipe(res)
         return
-    } 
+    }
 
     var domain = req.body.domain;
     if (domain.length > 255) {
@@ -119,7 +119,7 @@ var create = function (req, res) {
                 lib.done();
                 return
             }
-            if (!isFunded) { 
+            if (!isFunded) {
                 if (!count.check()) {
                     response.json({result:'error',message:"We have reached the daily signup limit. Please try again tomorrow."}).status(400).pipe(res)
                     lib.terminate(id);
@@ -138,7 +138,7 @@ var create = function (req, res) {
         count.checkLedger(req.body.address,protector(cb,5000,'timeout'))
     },
 */
-    function(lib) { 
+    function(lib) {
         // TODO : inner key is required on updates
 
         var create_date = new Date();
@@ -177,7 +177,7 @@ var create = function (req, res) {
 /*
             if (!lib.get('isFunded'))
                 count.adddb();
-            else 
+            else
                 count.markdb(); // for funded user migration
 */
             // RT-2048 we treat all users as funded for purpose of counting
@@ -205,7 +205,7 @@ exports.patch = function (req, res) {
     if (!keyresp.hasAllKeys) {
         response.json({result:'error', message:'Missing keys',missing:keyresp.missing}).status(400).pipe(res)
         return
-    } 
+    }
     // check patch size <= 1kb
     var size = libutils.atob(req.body.patch).length;
     if (size > config.patchsize*1024) {
@@ -225,13 +225,13 @@ exports.patch = function (req, res) {
                     response.json({result:'error',code:6682, message:'quota exceeded'}).status(400).pipe(res)
                     lib.terminate(id);
                     return;
-                } else 
+                } else
                     lib.done();
             } else if (resp.error) {
                 response.json({result:'error',code:8383, message:resp.error.message}).status(400).pipe(res)
                 lib.terminate(id);
                 return;
-            } 
+            }
         })
     },
     function(lib,id) {
@@ -245,7 +245,7 @@ exports.patch = function (req, res) {
     },
     // update quota amount
     function(lib,id) {
-        var newquota = size + lib.get('quota'); 
+        var newquota = size + lib.get('quota');
         store.update_where({
             set:{quota:newquota},
             where:{key:'id',value:req.body.blob_id}},
@@ -278,7 +278,7 @@ exports.patch = function (req, res) {
             lib.done();
         });
     }
-    ]); 
+    ]);
 };
 exports.consolidate = function (req, res) {
     var keyresp = libutils.hasKeys(req.body,['data','revision','blob_id']);
@@ -317,7 +317,7 @@ exports.consolidate = function (req, res) {
 
     store.blobConsolidate({revision:req.body.revision,blob_id:req.body.blob_id,data:req.body.data},function(resp) {
         response.json(resp).pipe(res)
-    });    
+    });
 };
 exports.delete = function (req, res) {
     console.log("DELETE:",req.query)
@@ -381,12 +381,12 @@ exports.get = function (req, res) {
             function(lib) {
                 var _blob = lib.get('_blob');
                 if (lib.get('needUpdateToIdentityTable')) {
-                    store.insert({set:{id:lib.get('identity_id')},table:'identity'}, 
+                    store.insert({set:{id:lib.get('identity_id')},table:'identity'},
                     function() {
                         lib.done()
                     })
-                } else 
-                    lib.done() 
+                } else
+                    lib.done()
             },
             function(lib) {
                 // handle remember me
@@ -397,7 +397,7 @@ exports.get = function (req, res) {
                     function(resp2) {
                         if (resp2.length) {
                             var row = resp2[0]
-                            reporter.log("handleRememberMe:getBlob:twofactor on device id", device_id,row) 
+                            reporter.log("handleRememberMe:getBlob:twofactor on device id", device_id,row)
                             // if rembmer me is off we want to to take diff of current time and last auth timestamp and diff < 24 hours else
                             var curr = new Date().getTime()
                             var diff = curr - parseInt(row.last_auth_timestamp)
@@ -423,12 +423,12 @@ exports.get = function (req, res) {
                                     reporter.log("handleRememberMe:invalidated ", device_id, row.remember_me, hours)
                                     lib.done()
                                 })
-                            } else 
+                            } else
                                 lib.done()
-                        } else 
+                        } else
                             lib.done()
                     })
-                } else 
+                } else
                     lib.done()
             },
             function(lib) {
@@ -438,8 +438,8 @@ exports.get = function (req, res) {
                     if (device_id !== undefined) {
                         store.read_where({table:'twofactor',key:'device_id',value:device_id},
                         function(resp2) {
-                            reporter.log("getBlob:twofactor on device id", device_id,resp2) 
-                            if (resp2.length) {
+                            reporter.log("getBlob:twofactor on device id", device_id,resp2)
+                            if (resp2.length && resp2[0].blob_id === _blob["id"]) {
                                 var row = resp2[0];
                                 twofactor.is_auth = row.is_auth;
                                 twofactor.device_id = row.device_id;
@@ -452,7 +452,7 @@ exports.get = function (req, res) {
                                     lib.done()
                                     return
                                 } else {
-                                    // send via, masked phone, 
+                                    // send via, masked phone,
                                     console.log("no authorization")
                                     response.json({result:'error',twofactor:{via:_blob["2fa_via"], masked_phone:libutils.maskphone(_blob["2fa_phone"])},message:'Two factor auth enabled but device is not authorized'}).status(404).pipe(res)
                                     lib.terminate()
@@ -483,7 +483,7 @@ exports.get = function (req, res) {
                     lib.done()
                 });
             },
-            
+
           /*
             //get id_token
             function (lib) {
@@ -492,9 +492,9 @@ exports.get = function (req, res) {
                 if (err) {
                   response.json({error:err}).status(500).pipe(res);
                   lib.terminate();
-                  
+
                 } else {
-                  
+
                   obj.id_token = resp;
                   lib.set({blobget:obj});
                   lib.done();
@@ -502,7 +502,7 @@ exports.get = function (req, res) {
               });
             },
             */
-          
+
             function(lib) {
                 var _blob = lib.get('_blob');
                 var obj = lib.get('blobget')
@@ -510,8 +510,8 @@ exports.get = function (req, res) {
                 var tf = lib.get('twofactor')
                 if (tf && obj["2fa_enabled"]) {
                     obj.twofactor = tf;
-                    // if two factor is enabled but phone is not verified we include 
-                    // a message stating the phne needs to be verified in order for 2fa 
+                    // if two factor is enabled but phone is not verified we include
+                    // a message stating the phne needs to be verified in order for 2fa
                     // to work
                     if (!_blob.phone_verified)
                         obj.message = 'Two factor auth is enabled but the phone needs to be verified in order for two factor to work.'
@@ -528,7 +528,7 @@ exports.getPatch = function (req, res) {
     var keyresp = libutils.hasKeys(req.params,['blob_id','patch_id']);
     if (!keyresp.hasAllKeys) {
         response.json({result:'error', message:'Missing keys',missing:keyresp.missing}).status(400).pipe(res)
-    } else 
+    } else
     store.blobGetPatch(req,res,function(resp) {
         response.json(resp).pipe(res)
     });
@@ -543,14 +543,14 @@ function getIdToken (identity_id, callback) {
     iat : ~~(new Date().getTime() / 1000 - 60),
   };
   var token;
-  
+
   try {
     token = signer.signJWT(payload);
     callback (null, token);
-    
+
   } catch (e) {
     reporter.log("unable to sign JWT:", e);
     callback(null); //ignore error for now
-  } 
-  
+  }
+
 }
