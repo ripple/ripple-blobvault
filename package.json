@@ -6,6 +6,7 @@
   "dependencies": {
     "async": "^0.9.0",
     "base64-url": "^1.0.0",
+    "blockscore": "^3.0.0",
     "bluebird": "^2.3.5",
     "concat-stream": "^1.4.5",
     "cors": "^2.4.1",
@@ -19,6 +20,7 @@
     "knex": "",
     "lodash": "~2.4.1",
     "mandrill-api": "^1.0.41",
+    "morgan": "^1.5.1",
     "mysql": "~2.0.0-alpha9",
     "newrelic": "^1.16.2",
     "nock": "^0.47.0",
@@ -30,12 +32,8 @@
     "response": "https://github.com/mikeal/response/archive/master.tar.gz",
     "ripple-lib": "https://github.com/rook2pawn/ripple-lib/archive/develop.tar.gz",
     "timeout-protector": "0.0.1",
-    "blockscore": "^3.0.0",
-    "nock": "^0.47.0",
-    "bluebird": "^2.3.5",
     "ursa": "^0.8.0",
-    "base64-url": "^1.0.0",
-    "jsonwebtoken": "^1.1.2"
+    "winston": "^0.9.0"
   },
   "devDependencies": {
     "request": "^2.34.0",
