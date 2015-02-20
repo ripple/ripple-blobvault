@@ -44,14 +44,14 @@ while(!ripple.sjcl.random.isReady()) {
 }
 
 test('create then delete',function(done) {
-  this.timeout(10*1000); 
+  this.timeout(10*1000);
   var server   = http.createServer(app);
-  var validUrl = 'http://localhost:'+config.port+'/v1/user?' + 
+  var validUrl = 'http://localhost:'+config.port+'/v1/user?' +
     'signature_account='  + testutils.person.address +
     '&signature_blob_id=' + testutils.person.blob_id;
-  
+
   q.series([
-    
+
     //clear blob table
     function(lib) {
       store.db('blob')
@@ -60,22 +60,22 @@ test('create then delete',function(done) {
           lib.done();
       })
     },
-    
+
     //start the server
     function(lib) {
       server.listen(config.port,function() {
         lib.done();
       });
     },
-    
+
     //invalid ecdsa signature
     function(lib) {
       request.post({
-        url  : 'http://localhost:'+config.port+'/v1/user/ecdsa?' + 
+        url  : 'http://localhost:'+config.port+'/v1/user/ecdsa?' +
           'signature_account='  + testutils.person.address +
           '&signature_type='    + 'ECDSA' +
           '&signature='         + 'zzzz' +
-          '&signature_date='    + 'zzzz' + 
+          '&signature_date='    + 'zzzz' +
           '&signature_blob_id=' + 'zzzz',
         json : testutils.person
       }, function(err, resp, body) {
@@ -86,10 +86,10 @@ test('create then delete',function(done) {
         lib.done();
       });
     },
-   
+
     //missing necessary keys
     function(lib) {
-/* 
+/*
       var options = {
         username  : testutils.person.username,
         password  : testutils.person.password,
@@ -103,8 +103,8 @@ test('create then delete',function(done) {
         assert.ifError(err);
         lib.done();
       });
-*/      
-      
+*/
+
       var mod_person = Hash(testutils.person).clone.end;
       delete mod_person.encrypted_secret;
       request.post({
@@ -119,7 +119,7 @@ test('create then delete',function(done) {
         lib.done();
       });
     },
-    
+
     //successful create
     function(lib) {
     console.log(testutils.person);
@@ -131,7 +131,7 @@ test('create then delete',function(done) {
       lib.done();
     });
     },
-    
+
     //user already exists
     function(lib) {
       request.post({
@@ -142,10 +142,10 @@ test('create then delete',function(done) {
         lib.done();
       });
     },
-    
-    // here we are going to modify the username but violate the constraint on the unique ripple address/secret key 
+
+    // here we are going to modify the username but violate the constraint on the unique ripple address/secret key
     // we want to .catch from the store since it should be throwing at the db level
-    // step 1 modify the testutils.person.username 
+    // step 1 modify the testutils.person.username
     function(lib) {
       var mod_person = Hash(testutils.person).clone.end;
       mod_person.username = 'zed';
@@ -168,8 +168,8 @@ test('create then delete',function(done) {
       })
     },
     */
-    
-    // delete user after 
+
+    // delete user after
     function(lib) {
       var sig = testutils.createSignature({
         method : 'DELETE',
@@ -177,12 +177,12 @@ test('create then delete',function(done) {
         secret : testutils.person.auth_secret,
         date   : testutils.person.date
       });
-      
-      var url = 'http://localhost:' + config.port + '/v1/user?' + 
-        'signature=' + sig + 
-        '&signature_date='+testutils.person.date + 
+
+      var url = 'http://localhost:' + config.port + '/v1/user?' +
+        'signature=' + sig +
+        '&signature_date='+testutils.person.date +
         '&signature_blob_id='+ testutils.person.blob_id;
-      
+
       console.log(url);
       request.del({
           url  : url,
@@ -192,7 +192,7 @@ test('create then delete',function(done) {
         lib.done();
       });
     },
-    
+
     function(lib) {
       server.close(function() {
         lib.done();

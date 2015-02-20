@@ -20,7 +20,7 @@ exports.is_proxy = false;
 
 // The disk quota per user in kilobytes
 // 1mb = 1024kb = 1024 bytes / kb * 1024 kb / mb = 1048576 bytes / mb
-exports.quota = 1024; 
+exports.quota = 1024;
 
 // The maximum patch size in kilobytes
 exports.patchsize = 1;
@@ -88,10 +88,10 @@ exports.database = {
 }
 
 exports.email = {
-    user: "", 
-    password: "" , 
+    user: "",
+    password: "" ,
     host:  "" ,
-    from : ""
+    from : "Company Name <email@example.com>"
 }
 
 exports.ripplelib = {
