@@ -4,14 +4,15 @@ var http = require('http');
 var https = require('https');
 var fs = require('fs');
 var express = require('express');
+var morgan = require('morgan');
 var store = require('./lib/store')(config.dbtype);
 var hmac = require('./lib/hmac');
 var ecdsa = require('./lib/ecdsa')(store);
 var api = require('./api');
-var reporter = require('./lib/reporter');
 var guard = require('./guard')(store)
 var limiter = guard.resend_email();
 var blobIdentity = require('./lib/blobIdentity');
+var log = require('./lib/log.js').winston;
 // var Ddos= require('ddos');
 // var ddos = new Ddos({burst:30});
 
@@ -26,7 +27,7 @@ blobIdentity.setStore(store);
 
 var app = express();
 //app.use(ddos.express)
-app.use(reporter.inspect);
+app.use(morgan(':remote-addr - :remote-user [:date[clf]] ":method :url HTTP/:http-version" :status :res[content-length] ":referrer" ":user-agent"', {stream: log.winstonStream}));
 
 // app.use(express.limit('1mb')); is deprecated and has no functionality
 // now delegated to raw-body; has a default 1mb limit
@@ -99,23 +100,24 @@ try {
   }, app) : http.createServer(app);
   var port = config.port || (config.ssl ? 443 : 8080);
   server.listen(port, config.host);
-  reporter.log("Blobvault listening on port "+port);
+  log.info("Blobvault listening on port "+port);
 } catch (e) {
-  reporter.log("Could not launch SSL server: " + (e.stack ? e.stack : e.toString()));
+  log.info("Could not launch SSL server: " + (e.stack ? e.stack : e.toString()));
 }
 
 process.on('SIGTERM',function() {
-    reporter.log("caught sigterm");
-    process.exit();
+  log.warn("caught sigterm");
+  process.exit();
 });
 process.on('SIGINT',function() {
-    reporter.log("caught sigint");
-    process.exit();
+  log.warn("caught sigint");
+  process.exit();
 });
 process.on('exit',function() {
-    reporter.log("Shutting down.");
+  log.info("Shutting down.");
 //    emailCampaign.stop();
-    if (store.db && store.db.client)
-        store.db.client.pool.destroy();
-    reporter.log("Done");
+  if (store.db && store.db.client) {
+    store.db.client.pool.destroy();
+  }
+  log.info("Done");
 });
