@@ -36,9 +36,9 @@
   },
   "devDependencies": {
     "chai": "^1.9.1",
-    "mocha": "https://github.com/visionmedia/mocha/archive/master.tar.gz",
-    "sinon": "^1.9.1",
-    "nodemon": "^1.2.1"
+    "mocha": "^2.1.0",
+    "nodemon": "^1.2.1",
+    "sinon": "^1.9.1"
   },
   "scripts": {
     "test": "./test.sh",
