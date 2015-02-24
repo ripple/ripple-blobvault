@@ -6,72 +6,86 @@ var store = require('../lib/store')(config.dbtype);
 var guard = require('../guard')(store)
 var app = express();
 var api = require('../api');
-api.setStore(store);
-
-var testutils = require('./utils');
 var request = require('request');
 var response = require('response')
+var assert = require('chai').assert;
+api.setStore(store);
 
-app.use(express.json());
-app.use(express.urlencoded());
+var util = require('util');
 
-app.post('/v1/user/:username/profile', api.user.profile);
+var server = null;
+var app = express();
+var testutils = require('./utils');
+var testPerson = JSON.parse(JSON.stringify(testutils.person));
 
+suite('Test Profile Details', function() {
 
-var server = http.createServer(app)
-var assert = require('chai').assert
+  // Setup the Suite server and truncate db
+  suiteSetup(function(done) {
 
-var QL = require('queuelib')
-var q = new QL;
+    app.use(express.json());
+    app.use(express.urlencoded());
 
+    app.post('/v1/user/:username/profile', api.user.profile);
 
-test('test-profile-details',function(done) {
-    q.series([
-    function(lib) {
-        server.listen(5150,function() {
-           lib.done() 
-        })
-    },
-    function(lib) {
-        testutils.person.id = testutils.person.blob_id;
-        delete testutils.person.blob_id;
-        delete testutils.person.date;
-        delete testutils.person.password;
-        delete testutils.person.secret;
-        store.db('blob')
-        .truncate()
-        .then(function() {
-            return store.db('blob')
-            .insert(testutils.person)
-        })
-        .then(function() {
-            lib.done()
-        })
-    },
-    function(lib) {
-        request.post({url:'http://localhost:5150/v1/user/'+testutils.person.username + '/profile',
-        json: {country:'US',phone:'555-555-1212'}}
-        ,function(err,resp,body) {
-            assert.equal(body.result,'success')
-            lib.done()
-        })
-    },
-    function(lib) {
-        store.db('blob')
-        .where('username','=',testutils.person.username)
-        .select()
-        .then(function(resp) {
-            var row = resp[0];
-            assert.equal(row.phone,'555-555-1212')
-            assert.equal(row.country,'US')
-            lib.done()
-            done()
-        })
-    },
-    function(lib) {
-      server.close(function() {
-        lib.done();
+    server = http.createServer(app);
+
+    store.db('blob')
+    .truncate()
+    .then(function() {
+      return store.db('blob_patches')
+      .truncate();
+    })
+    .then(function() {
+      server.listen(5050,function() {
+          done();
       });
-    }
-    ])
-})
+    });
+
+  });
+
+  // Teardown the Suite server
+  suiteTeardown(function(done) {
+    server.close(function() {
+      done();
+    });
+  });
+
+  // Tests
+  test('Create user', function(done) {
+
+    testPerson.id = testPerson.blob_id;
+    delete testPerson.blob_id;
+    delete testPerson.date;
+    delete testPerson.password;
+    delete testPerson.secret;
+
+    store.db('blob')
+    .insert(testPerson)
+    .then(function() {
+      done();
+    });
+  });
+
+  test('Post to profile', function(done) {
+    request.post({url:'http://localhost:5050/v1/user/'+testPerson.username + '/profile',
+    json: {country:'US',phone:'555-555-1212'}}
+    ,function(err,resp,body) {
+      assert.equal(body.result,'success')
+      done();
+    });
+  });
+
+  test('Validate profile', function(done) {
+    store.db('blob')
+    .where('username','=',testPerson.username)
+    .select()
+    .then(function(resp) {
+      var row = resp[0];
+      assert.equal(row.phone,'555-555-1212');
+      assert.equal(row.country,'US');
+      done();
+    });
+  });
+
+});

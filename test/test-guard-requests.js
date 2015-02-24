@@ -8,120 +8,132 @@ var app = express();
 var testutils = require('./utils');
 var request = require('request');
 var response = require('response')
-
-app.use(express.json());
-app.use(express.urlencoded());
+var assert = require('chai').assert;
 
 var reflector = function(req,res) {
     response.json({foo:'bar'}).pipe(res)
 }
-app.delete('/v1/user', guard.locked,reflector);
-app.post('/v1/blob/patch', guard.locked,reflector);
-app.post('/v1/blob/consolidate', guard.locked,reflector);
-app.get('/v1/locked', guard.locked,reflector);
-var server = http.createServer(app)
-var assert = require('chai').assert
 
-var QL = require('queuelib')
-var q = new QL;
+var util = require('util');
 
-// the way these tests work is that the endpoint is ended with a "reflector"
-// to see if we get through the guard middleware
+var server = null;
+var app = express();
+var testutils = require('./utils');
+var testPerson = JSON.parse(JSON.stringify(testutils.person));
 
-test('test-locked-through-middleware',function(done) {
-    q.series([
-    function(lib) {
-        server.listen(5150,function() {
-           lib.done() 
-        })
-    },
-    function(lib) {
-        testutils.person.id = testutils.person.blob_id;
-        delete testutils.person.blob_id;
-        delete testutils.person.date;
-        delete testutils.person.password;
-        delete testutils.person.secret;
-        store.db('blob')
-        .truncate()
-        .then(function() {
-            return store.db('blob')
-            .insert(testutils.person)
-        })
-        .then(function() {
-            lib.done()
-        })
-    },
-    function(lib) {
-        store.db('campaigns')
-        .truncate()
-        .then(function() {
-            var obj = {address:testutils.person.address,
-            last_emailed:1400762460231,
-            start_time:1400762460219,
-            campaign:'fund-name',
-            isFunded:false,
-            locked:'30 day not funded'}
-            lib.set({obj:obj})
-            lib.done()
-        })
-    },
-    function(lib) {
-        store.db('campaigns')
-        .insert(lib.get('obj'))
-        .then(function(resp) {
-            lib.done()
-        })
-    },
-    function(lib) {
-        request({url:'http://localhost:5150/v1/locked?address='+testutils.person.address,
-        json:true},
-        function(err,resp,body) {
-            assert.equal(resp.statusCode,403,'status should be 403 forbidden')
-            assert.equal(body.result,'locked','result should be locked')
-            lib.done()
-        })
-    },
-    function(lib) {
-        store.db('campaigns')
-        .update({locked:''})
-        .then(function(resp) {
-            lib.done()
-        })
-    },
-    function(lib) {
-        request({url:'http://localhost:5150/v1/locked?address='+testutils.person.address,
-        json:true},
-        function(err,resp,body) {
-            assert.equal(body.foo,'bar','reflector should be passed through')
-            lib.done()
-        })
-    },
-    function(lib) {
-        // we let invalid id pass through the guard
-        request.post({url:'http://localhost:5150/v1/blob/patch',
-        json:{
-            blob_id:'asdf'
-        }},
-        function(err,resp,body) {
-            assert.equal(body.foo,'bar','reflector should be passed through')
-            lib.done()
-        })
-    },
-    function(lib) {
-        // we let valid id pass through the guard
-        request.post({url:'http://localhost:5150/v1/blob/patch',
-        json:{
-            blob_id:testutils.person.id
-        }},
-        function(err,resp,body) {
-            assert.equal(body.foo,'bar','reflector should be passed through')
-            lib.done()
-            done()
-        })
-    },
-    function(lib) {
-      server.close(function() {
-        lib.done();
+suite('Test Guard Requests', function() {
+
+  // Setup the Suite server and truncate db
+  suiteSetup(function(done) {
+
+    app.use(express.json());
+    app.use(express.urlencoded());
+
+    app.delete('/v1/user', guard.locked,reflector);
+    app.post('/v1/blob/patch', guard.locked,reflector);
+    app.post('/v1/blob/consolidate', guard.locked,reflector);
+    app.get('/v1/locked', guard.locked,reflector);
+
+    server = http.createServer(app);
+
+    store.db('blob')
+    .truncate()
+    .then(function() {
+      return store.db('campaigns')
+      .truncate();
+    })
+    .then(function() {
+      server.listen(5050,function() {
+        done();
       });
-    }]);
-})
+    });
+
+  });
+
+  // Teardown the Suite server
+  suiteTeardown(function(done) {
+    server.close(function() {
+      done();
+    });
+  });
+
+  // Tests
+  test('Create user', function(done) {
+    testPerson.id = testPerson.blob_id;
+    delete testPerson.blob_id;
+    delete testPerson.date;
+    delete testPerson.password;
+    delete testPerson.secret;
+    store.db('blob')
+    .insert(testPerson)
+    .then(function() {
+      done();
+    });
+  });
+
+  test('Insert campaign', function(done) {
+    var obj = {
+      address:testPerson.address,
+      last_emailed:1400762460231,
+      start_time:1400762460219,
+      campaign:'fund-name',
+      isFunded:false,
+      locked:'30 day not funded'
+    };
+    store.db('campaigns')
+    .insert(obj)
+    .then(function(resp) {
+      done();
+    });
+  });
+
+  test('Confirm locked', function(done) {
+    request({
+      url:'http://localhost:5050/v1/locked?address='+testPerson.address,
+      json:true
+    },
+    function(err,resp,body) {
+      assert.equal(resp.statusCode,403,'status should be 403 forbidden');
+      assert.equal(body.result,'locked','result should be locked');
+      done();
+    });
+  });
+
+  test('Check after unlocked', function(done) {
+    store.db('campaigns')
+    .update({locked:''})
+    .then(function(resp) {
+      request({url:'http://localhost:5050/v1/locked?address='+testPerson.address,
+      json:true},
+      function(err,resp,body) {
+        assert.equal(body.foo,'bar','reflector should be passed through');
+        done();
+      });
+    });
+  });
+
+  test('Invalid id should pass through', function(done) {
+    request.post({url:'http://localhost:5050/v1/blob/patch',
+      json:{
+        blob_id:'asdf'
+      }
+    },
+    function(err,resp,body) {
+      assert.equal(body.foo,'bar','reflector should be passed through');
+      done();
+    });
+  });
+
+  test('Valid id should pass through', function(done) {
+    request.post({url:'http://localhost:5050/v1/blob/patch',
+      json:{
+        blob_id:testPerson.id
+      }
+    },
+    function(err,resp,body) {
+      assert.equal(body.foo,'bar','reflector should be passed through');
+      done();
+    });
+  });
+
+});

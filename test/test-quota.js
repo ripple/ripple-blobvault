@@ -5,7 +5,6 @@ var express = require('express');
 var store = require('../lib/store')(config.dbtype);
 var hmac = require('../lib/hmac');
 var api = require('../api');
-var testutils = require('./utils');
 var libutils = require('../lib/utils');
 var request = require('request');
 var assert = require('chai').assert;
@@ -13,13 +12,11 @@ api.setStore(store);
 hmac.setStore(store);
 
 var util = require('util');
-var log = function(obj) {
-    console.log(util.inspect(obj, { showHidden: true, depth: null }));
-}
 
 var server = null;
 var app = express();
 var testutils = require('./utils');
+var testPerson = JSON.parse(JSON.stringify(testutils.person));
 
 suite('Test Quota', function() {
 
@@ -52,7 +49,7 @@ suite('Test Quota', function() {
     })
     .then(function() {
       server.listen(5050,function() {
-          done();
+        done();
       });
     });
 
@@ -69,9 +66,9 @@ suite('Test Quota', function() {
   test('create user', function(done) {
     request.post({
       url:'http://localhost:5050/v1/user?' +
-        'signature_account='  + testutils.person.address +
-        '&signature_blob_id=' + testutils.person.blob_id,
-      json: testutils.person
+        'signature_account='  + testPerson.address +
+        '&signature_blob_id=' + testPerson.blob_id,
+      json: testPerson
       },
       function(err, resp, body) {
         assert.equal(resp.statusCode,201,'after proper create request, status code should be 201');
@@ -86,16 +83,16 @@ suite('Test Quota', function() {
     var count = 0;
     var converted = libutils.btoa('foo');
     var doPatch = function() {
-      var body = { patch : converted, blob_id:testutils.person.blob_id };
-      var sig = testutils.createSignature({method:'POST',url:'/v1/blob/patch',secret:testutils.person.auth_secret,date:testutils.person.date,body:body});
-      var url = 'http://localhost:5050/v1/blob/patch?signature=' + sig + '&signature_date='+testutils.person.date + '&signature_blob_id='+ testutils.person.blob_id;
+      var body = { patch : converted, blob_id:testPerson.blob_id };
+      var sig = testutils.createSignature({method:'POST',url:'/v1/blob/patch',secret:testPerson.auth_secret,date:testPerson.date,body:body});
+      var url = 'http://localhost:5050/v1/blob/patch?signature=' + sig + '&signature_date='+testPerson.date + '&signature_blob_id='+ testPerson.blob_id;
       request.post({url:url,json:body},function(err, resp, body) {
         count++;
         assert.deepEqual(body,{result:'success',revision:count});
         if (count < 500) {
           doPatch();
         } else {
-          store.read_where({key:'id',value:testutils.person.blob_id},function(resp) {
+          store.read_where({key:'id',value:testPerson.blob_id},function(resp) {
             var row = resp[0];
             assert.equal(500*3+3,row.quota,'quota should be equal to 500*3+3');
             done();
@@ -116,9 +113,9 @@ suite('Test Quota', function() {
     var largestring = libutils.rs((config.patchsize*1024));
     var converted = libutils.btoa(largestring)
     var doPatch = function() {
-      var body = { patch : converted, blob_id:testutils.person.blob_id };
-      var sig = testutils.createSignature({method:'POST',url:'/v1/blob/patch',secret:testutils.person.auth_secret,date:testutils.person.date,body:body});
-      var url = 'http://localhost:5050/v1/blob/patch?signature=' + sig + '&signature_date='+testutils.person.date + '&signature_blob_id='+ testutils.person.blob_id;
+      var body = { patch : converted, blob_id:testPerson.blob_id };
+      var sig = testutils.createSignature({method:'POST',url:'/v1/blob/patch',secret:testPerson.auth_secret,date:testPerson.date,body:body});
+      var url = 'http://localhost:5050/v1/blob/patch?signature=' + sig + '&signature_date='+testPerson.date + '&signature_blob_id='+ testPerson.blob_id;
       request.post({url:url,json:body},function(err, resp, body) {
         count++;
 
@@ -139,8 +136,8 @@ suite('Test Quota', function() {
   });
 
   test('Delete user', function(done) {
-    var sig = testutils.createSignature({method:'DELETE',url:'/v1/user',secret:testutils.person.auth_secret,date:testutils.person.date});
-    var url = 'http://localhost:5050/v1/user?signature=' + sig + '&signature_date='+testutils.person.date + '&signature_blob_id='+ testutils.person.blob_id;
+    var sig = testutils.createSignature({method:'DELETE',url:'/v1/user',secret:testPerson.auth_secret,date:testPerson.date});
+    var url = 'http://localhost:5050/v1/user?signature=' + sig + '&signature_date='+testPerson.date + '&signature_blob_id='+ testPerson.blob_id;
     request.del({
       url:url,
       json:true

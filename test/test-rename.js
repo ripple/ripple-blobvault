@@ -21,6 +21,7 @@ var log = function(obj) {
 var server = null;
 var app = express();
 var testutils = require('./utils');
+var testPerson = JSON.parse(JSON.stringify(testutils.person));
 
 suite('Test User Rename', function() {
 
@@ -38,14 +39,14 @@ suite('Test User Rename', function() {
     store.db('blob')
     .truncate()
     .then(function() {
-      testutils.person.id = testutils.person.blob_id;
-      delete testutils.person.blob_id;
-      delete testutils.person.date;
-      delete testutils.person.password;
-      delete testutils.person.secret;
+      testPerson.id = testPerson.blob_id;
+      delete testPerson.blob_id;
+      delete testPerson.date;
+      delete testPerson.password;
+      delete testPerson.secret;
 
       return store.db('blob')
-      .insert(testutils.person);
+      .insert(testPerson);
     })
     .then(function() {
       server.listen(5050,function() {
@@ -66,10 +67,10 @@ suite('Test User Rename', function() {
   test('Cannot rename a non-existant user', function(done) {
     request.post({
       url : 'http://localhost:5050/v1/user/foo?' +
-      '&signature_blob_id=' + testutils.person.id,
+      '&signature_blob_id=' + testPerson.id,
       json : {
-        encrypted_secret : testutils.person.encrypted_secret,
-        data:testutils.person.data,
+        encrypted_secret : testPerson.encrypted_secret,
+        data:testPerson.data,
         revision:1,
         blob_id:'35435a',
         username:'bob2'
@@ -85,11 +86,11 @@ suite('Test User Rename', function() {
 
   test('should rename existing user', function(done) {
     request.post({
-      url : 'http://localhost:5050/v1/user/'+testutils.person.username + '?' +
-        '&signature_blob_id=' + testutils.person.id,
+      url : 'http://localhost:5050/v1/user/'+testPerson.username + '?' +
+        '&signature_blob_id=' + testPerson.id,
       json:{
-        encrypted_secret : testutils.person.encrypted_secret,
-        data:testutils.person.data,
+        encrypted_secret : testPerson.encrypted_secret,
+        data:testPerson.data,
         revision:1,
         blob_id:'35435a',
         username:'bob2'

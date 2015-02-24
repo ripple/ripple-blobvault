@@ -19,6 +19,7 @@ var log = function(obj) {
 var server = null;
 var app = express();
 var testutils = require('./utils');
+var testPerson = JSON.parse(JSON.stringify(testutils.person));
 
 suite('Test Case Sensitivity', function() {
 
@@ -55,9 +56,9 @@ suite('Test Case Sensitivity', function() {
   test('Create User', function(done) {
     request.post({
       url:'http://localhost:5050/v1/user?' +
-'signature_account='  + testutils.person.address +
-'&signature_blob_id=' + testutils.person.blob_id,
-      json: testutils.person
+'signature_account='  + testPerson.address +
+'&signature_blob_id=' + testPerson.blob_id,
+      json: testPerson
       },
       function(err, resp, body) {
         assert.equal(resp.statusCode,201,'after proper create request, status code should be 201');
@@ -70,7 +71,7 @@ suite('Test Case Sensitivity', function() {
     var capitalize = function (string) {
       return string.charAt(0).toUpperCase() + string.slice(1);
     }
-    var casedUsername = capitalize(testutils.person.username);
+    var casedUsername = capitalize(testPerson.username);
     request.get({
       url:'http://localhost:5050/v1/user/'+casedUsername,
       json: true
@@ -85,11 +86,11 @@ suite('Test Case Sensitivity', function() {
     var capitalize = function (string) {
       return string.charAt(0).toUpperCase() + string.slice(1);
     }
-    var casedUsername = capitalize(testutils.person.username);
-    testutils.person.username = casedUsername;
+    var casedUsername = capitalize(testPerson.username);
+    testPerson.username = casedUsername;
     request.post({
       url:'http://localhost:5050/v1/user',
-      json: testutils.person
+      json: testPerson
     },
     function(err, resp, body) {
       assert.equal(resp.statusCode,400,' we should guarantee case-insensitive uniqueness however on user creation');
