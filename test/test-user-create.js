@@ -12,13 +12,11 @@ var cors      = require('cors')
 var assert    = require('chai').assert;
 var ripple    = require('ripple-lib');
 var RVC       = ripple.VaultClient;
-var queuelib  = require('queuelib');
 var express   = require('express');
 var testutils = require('./utils');
 var client    = new RVC('localhost:'+config.port);
 
 var app = express();
-var q   = new queuelib;
 var log = function(obj) {
     console.log(util.inspect(obj, { showHidden: true, depth: null }));
 };
