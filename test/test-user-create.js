@@ -12,22 +12,21 @@ var cors      = require('cors')
 var assert    = require('chai').assert;
 var ripple    = require('ripple-lib');
 var RVC       = ripple.VaultClient;
-var queuelib  = require('queuelib');
 var express   = require('express');
 var testutils = require('./utils');
 var client    = new RVC('localhost:'+config.port);
 
 var app = express();
-var q   = new queuelib;
 var log = function(obj) {
     console.log(util.inspect(obj, { showHidden: true, depth: null }));
 };
 
 var server = null;
+var testPerson = JSON.parse(JSON.stringify(testutils.person));
 
 var validUrl = 'http://localhost:'+config.port+'/v1/user?' +
-  'signature_account='  + testutils.person.address +
-  '&signature_blob_id=' + testutils.person.blob_id;
+  'signature_account='  + testPerson.address +
+  '&signature_blob_id=' + testPerson.blob_id;
 
 suite('User Create', function() {
 
@@ -78,12 +77,12 @@ suite('User Create', function() {
   test('invalid ecdsa signature', function(done) {
     request.post({
       url  : 'http://localhost:'+config.port+'/v1/user/ecdsa?' +
-        'signature_account='  + testutils.person.address +
+        'signature_account='  + testPerson.address +
         '&signature_type='    + 'ECDSA' +
         '&signature='         + 'zzzz' +
         '&signature_date='    + 'zzzz' +
         '&signature_blob_id=' + 'zzzz',
-      json : testutils.person
+      json : testPerson
     }, function(err, resp, body) {
       assert.equal(resp.statusCode, 401);
       assert.strictEqual(body.result,  'error');
@@ -94,7 +93,7 @@ suite('User Create', function() {
   });
 
   test('missing necessary keys', function(done) {
-    var mod_person = Hash(testutils.person).clone.end;
+    var mod_person = Hash(testPerson).clone.end;
     delete mod_person.encrypted_secret;
     request.post({
       url  : validUrl,
@@ -112,7 +111,7 @@ suite('User Create', function() {
   test('valid user', function(done) {
     request.post({
       url : validUrl,
-      json: testutils.person
+      json: testPerson
     }, function(err, resp, body) {
       console.log("Successful Create", resp.body);
       assert.equal(resp.statusCode,201,'after proper create request, status code should be 201');
@@ -123,7 +122,7 @@ suite('User Create', function() {
   test('duplicate user', function(done) {
     request.post({
       url  : validUrl,
-      json : testutils.person
+      json : testPerson
     }, function(err, resp, body) {
       assert.equal(resp.statusCode,400,'we should not be able to duplicate a user that already exists');
       done();
@@ -131,7 +130,7 @@ suite('User Create', function() {
   });
 
   test('unique ripple address/secret key', function(done) {
-    var mod_person = Hash(testutils.person).clone.end;
+    var mod_person = Hash(testPerson).clone.end;
     mod_person.username = 'zed';
     request.post({
       url  : validUrl,
@@ -147,14 +146,14 @@ suite('User Create', function() {
     var sig = testutils.createSignature({
       method : 'DELETE',
       url    : '/v1/user',
-      secret : testutils.person.auth_secret,
-      date   : testutils.person.date
+      secret : testPerson.auth_secret,
+      date   : testPerson.date
     });
 
     var url = 'http://localhost:' + config.port + '/v1/user?' +
       'signature=' + sig +
-      '&signature_date='+testutils.person.date +
-      '&signature_blob_id='+ testutils.person.blob_id;
+      '&signature_date='+testPerson.date +
+      '&signature_blob_id='+ testPerson.blob_id;
 
     console.log(url);
     request.del({

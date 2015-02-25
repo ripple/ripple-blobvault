@@ -63,17 +63,6 @@ app.get('/v1/blob/:blob_id/2fa', hmac.middleware, api.user.get2fa)
 app.get('/v1/blob/:blob_id/2fa/requestToken', api.user.request2faToken)
 app.post('/v1/blob/:blob_id/2fa/verifyToken', api.user.verify2faToken)
 
-// attestation routes
-app.post('/v1/attestation/phone', hmac.middleware, blobIdentity.getID, api.attestation.phone.get);
-app.post('/v1/attestation/phone/update', hmac.middleware, blobIdentity.getID, api.attestation.phone.update);
-app.post('/v1/attestation/profile', hmac.middleware, blobIdentity.getID, api.attestation.profile.get);
-app.post('/v1/attestation/profile/update', hmac.middleware, blobIdentity.getID, api.attestation.profile.update);
-app.post('/v1/attestation/identity', hmac.middleware, blobIdentity.getID, api.attestation.identity.get);
-app.post('/v1/attestation/identity/update', hmac.middleware, blobIdentity.getID, api.attestation.identity.update);
-//app.post('/v1/attestation/email', hmac.middleware, blobIdentity.getID, api.attestation.email.get);
-//app.get('/v1/attestation/email/verify', api.attestation.email.verify);
-app.get('/v1/attestation/summary', hmac.middleware, blobIdentity.getID, api.attestation.summary.get);
-
 //signing certificate endpoints
 app.get('/v1/oauth2/cert', api.keys.public);
 app.get('/v1/oauth2/jwks', api.keys.jwks);
