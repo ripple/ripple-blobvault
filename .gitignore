@@ -2,6 +2,7 @@ config.js
 testing.js
 *.pem
 jwks.json
-node_modules
+node_modules/
 .DS_Store
-
+/newrelic_agent.log
+/npm-debug.log
