@@ -200,7 +200,7 @@ var emailResend = function(req,res) {
           value : req.query.signature_blob_id
         }
       },function(resp) {
-        if ((resp.result) && (resp.result == 'success')) {
+          if ((resp.result) && (resp.result == 'success')) {
           email.send({
             email    : req.body.email,
             hostlink : req.body.hostlink,
@@ -208,7 +208,11 @@ var emailResend = function(req,res) {
             name     : blobs[0].username
           });
 
-          response.json({result:'success'}).pipe(res)
+          // Because email.send may take some time for DNS MX lookup,
+          // wait for short period of time before proceeding.
+          setTimeout(function() {
+            response.json({result: 'success'}).pipe(res);
+          }, 500);
         } else {
           response.json({result:'error',message:'unspecified error'}).status(400).pipe(res)
         }
