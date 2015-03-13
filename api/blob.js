@@ -171,8 +171,12 @@ var create = function (req, res) {
                 return;
             }
             email.send({email:params.email,hostlink:params.hostlink,token:params.emailToken,name:username});
-            lib.set({id:resp.identity_id})
-            response.json(resp).status(201).pipe(res)
+
+            // Because email.send may take some time for DNS MX lookup,
+            // wait for short period of time before proceeding.
+            setTimeout(function() {
+                lib.set({id:resp.identity_id})
+                response.json(resp).status(201).pipe(res)
 // if account is not funded we set add towards the daily limit
 /*
             if (!lib.get('isFunded'))
@@ -180,9 +184,10 @@ var create = function (req, res) {
             else
                 count.markdb(); // for funded user migration
 */
-            // RT-2048 we treat all users as funded for purpose of counting
-            count.markdb(); // for funded user migration
-            lib.done();
+                // RT-2048 we treat all users as funded for purpose of counting
+                count.markdb(); // for funded user migration
+                lib.done();
+            }, 500);
         });
     }
 /*
