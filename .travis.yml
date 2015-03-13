@@ -1,24 +1,29 @@
- language: node_js
- node_js:
-   - "0.10"
- before_script:
-   - "echo start of before script"
-   - "echo We use the config example as the config this must happen before migration"
-   - cp ./config-example.js ./config.js
-   - "echo For travis testing we turn on testmode"
-   - sed -e 's/exports.testmode = false/exports.testmode = true/g' config.js > foo
-   - mv foo config.js
-   - cat config.js
-   - sudo service postgresql stop
-   - sudo service postgresql start 9.3
-   - psql --version
-   - "echo create database blobvault as user postgres"
-   - psql -c 'create database blobvault;' -U postgres
-   - psql -d blobvault -c "\conninfo" -U postgres
-   - node migration.js
-   - ./node_modules/knex/lib/bin/cli.js migrate:latest
-   - "echo make test script executable"
-   - chmod +x test.sh
-   - "echo End of before script"
+language: node_js
+node_js:
+  - "0.10"
+before_script:
+  - "echo start of before script"
+  - "echo checking code style for recently changed files"
+  - npm install -g eslint
+  - curl 'https://raw.githubusercontent.com/ripple/javascript-style-guide/master/eslintrc' > ./eslintrc
+# Disabled for now
+#  - eslint --reset -c ./eslintrc $(git --no-pager diff --name-only --diff-filter=AM --relative FETCH_HEAD $(git merge-base FETCH_HEAD origin/HEAD) | grep "\.js$")
+  - "echo We use the config example as the config this must happen before migration"
+  - cp ./config-example.js ./config.js
+  - "echo For travis testing we turn on testmode"
+  - sed -e 's/exports.testmode = false/exports.testmode = true/g' config.js > foo
+  - mv foo config.js
+  - cat config.js
+  - sudo service postgresql stop
+  - sudo service postgresql start 9.3
+  - psql --version
+  - "echo create database blobvault as user postgres"
+  - psql -c 'create database blobvault;' -U postgres
+  - psql -d blobvault -c "\conninfo" -U postgres
+  - node migration.js
+  - ./node_modules/knex/lib/bin/cli.js migrate:latest
+  - "echo make test script executable"
+  - chmod +x test.sh
+  - "echo End of before script"
 addons:
-   postgresql: 9.3
+  postgresql: 9.3
