@@ -12,6 +12,7 @@
     "cors": "^2.4.1",
     "csv-write-stream": "^0.1.2",
     "ddos": "",
+    "dns": "^0.2.2",
     "emailjs": "^0.3.8",
     "express": "~3.4.0",
     "hashish": "0.0.4",
