@@ -13,74 +13,56 @@ exports.setStore = function(s) {
     reporter.store = s;
 }
 var getUserInfo = function(username, res) {
-    if ("string" !== typeof username) {
-        response.json({result:'error',message:'Username is required'}).status(400).pipe(res)
+  if ("string" !== typeof username) {
+    res.status(400).send({result:'error',message:'Username is required'});
+    return;
+  }
+  if (username.indexOf('~') === 0) {
+      username = username.slice(1);
+  }
+  var normalized_username = libutils.normalizeUsername(username);
+
+  if (username.length <= config.username_length) {
+    exports.store.read({username:username,res:res},function(resp) {
+      var obj = {}
+      obj.version = config.AUTHINFO_VERSION;
+      obj.blobvault = config.url;
+      obj.pakdf = config.defaultPakdfSetting;
+
+      obj.exists = resp.exists;
+      obj.username = resp.username;
+      obj.address = resp.address;
+      obj.emailVerified = resp.emailVerified;
+      obj.reserved = config.reserved[normalized_username] || false;
+
+      response.json(obj).pipe(res);
+    });
+
+  } else {
+    exports.store.read_where({key:"address",value:username,res:res}, function(resp) {
+      if (resp.error) {
+        response.json({code:7498,result:'error',message:resp.error.message}).status(400).pipe(res)
         return;
-    }
-    if (username.indexOf('~') === 0) {
-        username = username.slice(1);
-    }
-    var normalized_username = libutils.normalizeUsername(username);
-
-    var q = new Queue;
-    q.series([
-        function (lib) {
-            if (username.length <= config.username_length) {
-                exports.store.read({username:username,res:res},function(resp) {
-                    var obj = {}
-                    obj.version = config.AUTHINFO_VERSION;
-                    obj.blobvault = config.url;
-                    obj.pakdf = config.defaultPakdfSetting;
-
-                    obj.exists = resp.exists;
-                    obj.username = resp.username;
-                    obj.address = resp.address;
-                    obj.emailVerified = resp.emailVerified;
-                    obj.reserved = config.reserved[normalized_username] || false;
-
-                    lib.set({user:obj, identity_id:resp.identity_id});
-                    lib.done();
-                });
-
-            } else {
-                exports.store.read_where({key:"address",value:username,res:res},
-                    function(resp) {
-                        if (resp.error) {
-                            response.json({code:7498,result:'error',message:resp.error.message}).status(400).pipe(res)
-                            return;
-                        }
-                        var obj = {}
-                        obj.version = config.AUTHINFO_VERSION,
-                        obj.blobvault = config.url,
-                        obj.pakdf = config.defaultPakdfSetting
-                        if (resp.length) {
-                            var row = resp[0];
-                            obj.exists = true;
-                            obj.username = row.username;
-                            obj.address = row.address;
-                            obj.emailVerified = row.email_verified;
-                            obj.recoverable = row.encrypted_blobdecrypt_key ? true : false;
-                            lib.set({user:obj, identity_id:row.identity_id});
-                            lib.done();
-                        } else {
-                            obj.exists = false;
-                            obj.reserved = false;
-                            response.json(obj).pipe(res);
-                            lib.terminate();
-                        }
-                    }
-                )
-            }
-        },
-
-        function (lib) {
-          var id   = lib.get('identity_id');
-          var user = lib.get('user');
-
-          response.json(user).pipe(res);
-          lib.done();
-        }
-    ]);
+      }
+      var obj = {}
+      obj.version = config.AUTHINFO_VERSION,
+      obj.blobvault = config.url,
+      obj.pakdf = config.defaultPakdfSetting
+      if (resp.length) {
+        var row = resp[0];
+        obj.exists = true;
+        obj.username = row.username;
+        obj.address = row.address;
+        obj.emailVerified = row.email_verified;
+        obj.recoverable = row.encrypted_blobdecrypt_key ? true : false;
+        response.json(obj).pipe(res);
+      } else {
+        obj.exists = false;
+        obj.reserved = false;
+        response.json(obj).pipe(res);
+      }
+    });
+  }
 }
 var authinfo = function (req, res) {
     getUserInfo(req.query.username, res);
