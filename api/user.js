@@ -25,7 +25,51 @@ var getUserInfo = function(username, res) {
     var q = new Queue;
     q.series([
         function (lib) {
-            if (username.length <= config.username_length) {
+
+            // Function to create user object out of what's found in DB
+            var storeUserInfoInObj = function(resp) {
+                reporter.log('storeUserInfoInObj() called');
+                if (resp.error) {
+                    response.json({code: 7498,result: 'error', message: resp.error.message}).status(400).pipe(res)
+                    return;
+                }
+
+                var obj = {}
+                obj.version = config.AUTHINFO_VERSION,
+                obj.blobvault = config.url,
+                obj.pakdf = config.defaultPakdfSetting;
+
+                // For this lookup to succeed, exactly one user should be found.
+                // If no user's found, this will return without user info.
+                // If more than one user's found, that means duplicate e-mail address or Ripple address,
+                //   so this will return without user info.
+                if (resp.length === 1) {
+                    var row = resp[0];
+                    obj.exists = true;
+                    obj.username = row.username;
+                    obj.address = row.address;
+                    obj.emailVerified = row.email_verified;
+                    obj.recoverable = row.encrypted_blobdecrypt_key ? true : false;
+                    lib.set({user:obj, identity_id:row.identity_id});
+                    lib.done();
+                } else {
+                    // No user found, or duplicate users found.
+                    obj.exists = false;
+                    obj.reserved = false;
+                    response.json(obj).pipe(res);
+                    lib.terminate();
+                }
+            };
+
+            if (username.indexOf('@') > 0) {
+                // Entered username is e-mail.  Look up by 'email' column.
+                reporter.log('email address as username');
+                exports.store.read_where_obj(
+                    {obj: {'email': username, 'email_verified': 'true'}},
+                    storeUserInfoInObj);
+
+            } else if (username.length <= config.username_length) {
+                // Entered username is Ripple name.  Look up by username.
                 exports.store.read({username:username,res:res},function(resp) {
                     var obj = {}
                     obj.version = config.AUTHINFO_VERSION;
@@ -43,33 +87,9 @@ var getUserInfo = function(username, res) {
                 });
 
             } else {
-                exports.store.read_where({key:"address",value:username,res:res},
-                    function(resp) {
-                        if (resp.error) {
-                            response.json({code:7498,result:'error',message:resp.error.message}).status(400).pipe(res)
-                            return;
-                        }
-                        var obj = {}
-                        obj.version = config.AUTHINFO_VERSION,
-                        obj.blobvault = config.url,
-                        obj.pakdf = config.defaultPakdfSetting
-                        if (resp.length) {
-                            var row = resp[0];
-                            obj.exists = true;
-                            obj.username = row.username;
-                            obj.address = row.address;
-                            obj.emailVerified = row.email_verified;
-                            obj.recoverable = row.encrypted_blobdecrypt_key ? true : false;
-                            lib.set({user:obj, identity_id:row.identity_id});
-                            lib.done();
-                        } else {
-                            obj.exists = false;
-                            obj.reserved = false;
-                            response.json(obj).pipe(res);
-                            lib.terminate();
-                        }
-                    }
-                )
+                // Entered username is Ripple address.
+                // Look up by 'address' column.
+                exports.store.read_where({key:"address",value:username}, storeUserInfoInObj);
             }
         },
 
