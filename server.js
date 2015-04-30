@@ -40,7 +40,7 @@ app.post('/v1/user/:username/updatekeys', ecdsa.middleware, api.user.updatekeys)
 app.get('/v1/user/recov/:username', ecdsa.recover, api.user.recover);//DEPRECIATE THIS
 app.get('/v1/user/recover/:username', ecdsa.recover, api.user.recover);
 app.post('/v1/user/:username/profile', hmac.middleware, api.user.profile);
-app.post('/v1/user/notify_2fa_change', api.user.notify_2fa_change);
+app.post('/v1/user/:username/notify_2fa_change', api.user.notify_2fa_change);
 
 app.post('/v1/lookup', api.user.batchlookup)
 
