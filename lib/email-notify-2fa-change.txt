@@ -1,0 +1,9 @@
+Hi ~_USERNAME_,
+
+Your RippleID 2FA number was changed.
+
+If you did this, you can safely disregard this email.
+
+Thanks,
+
+The RippleID Team

@@ -902,6 +902,27 @@ var batchlookup = function(req,res,next) {
     })
 }
 
+var notify_2fa_change = function(req, res, next) {
+    var keyresp = libutils.hasKeys(req.params, ['username']);
+    if (!keyresp.hasAllKeys) {
+        response.json({result:'error', message:'Missing keys',missing:keyresp.missing}).status(400).pipe(res);
+        return;
+    }
+    var username = req.params.username;
+    exports.store.read_where({
+        key:  'normalized_username',
+        value: libutils.normalizeUsername(username),
+    }, function(resp) {
+        if (!resp.length) {
+            response.json({result:'error', message:"invalid user"}).status(400).pipe(res);
+            return;
+        }
+        var blob = resp[0];
+        email.notify2FAChange({email: blob.email, username: blob.username});
+        response.json({result: 'success'}).pipe(res)
+    });
+};
+
 exports.batchlookup = batchlookup;
 exports.request2faToken = request2faToken;
 exports.verify2faToken = verify2faToken;
@@ -917,3 +938,4 @@ exports.verify = verify;
 exports.authinfo = authinfo;
 exports.rename = rename
 exports.updatekeys = updatekeys;
+exports.notify_2fa_change = notify_2fa_change;
