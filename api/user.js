@@ -906,7 +906,7 @@ var notify_2fa_change  = function(req, res, next) { notify("notify2FAChange",  r
 var notify_verify_ok   = function(req, res, next) { notify("notifyVerifyOk",   req, res); };
 var notify_verify_fail = function(req, res, next) { notify("notifyVerifyFail", req, res); };
 
-function notify(req, res, fn) {
+function notify(fn, req, res) {
     var keyresp = libutils.hasKeys(req.params, ['username']);
     if (!keyresp.hasAllKeys) {
         response.json({result:'error', message:'Missing keys',missing:keyresp.missing}).status(400).pipe(res);
