@@ -1,0 +1,9 @@
+Hi ~_USERNAME_,
+
+Your RippleID account has been verified.
+
+You can now log in and use Ripple Trade.
+
+Thanks,
+
+The RippleID Team

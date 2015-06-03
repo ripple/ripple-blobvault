@@ -9,3 +9,5 @@ If you did not sign up for a RippleID account, please disregard this email.
 Thanks,
 
 The RippleID team
+
+You are receiving this email because you created a RippleID account.

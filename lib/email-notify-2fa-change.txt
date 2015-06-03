@@ -2,7 +2,7 @@ Hi ~_USERNAME_,
 
 Your RippleID 2FA number was changed.
 
-If you did this, you can safely disregard this email.
+If you did not change your 2fa number, please log-in to your account and secure your password.
 
 Thanks,
 

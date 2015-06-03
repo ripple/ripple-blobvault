@@ -902,7 +902,11 @@ var batchlookup = function(req,res,next) {
     })
 }
 
-var notify_2fa_change = function(req, res, next) {
+var notify_2fa_change  = function(req, res, next) { notify("notify2FAChange",  req, res); };
+var notify_verify_ok   = function(req, res, next) { notify("notifyVerifyOk",   req, res); };
+var notify_verify_fail = function(req, res, next) { notify("notifyVerifyFail", req, res); };
+
+function notify(req, res, fn) {
     var keyresp = libutils.hasKeys(req.params, ['username']);
     if (!keyresp.hasAllKeys) {
         response.json({result:'error', message:'Missing keys',missing:keyresp.missing}).status(400).pipe(res);
@@ -918,10 +922,10 @@ var notify_2fa_change = function(req, res, next) {
             return;
         }
         var blob = resp[0];
-        email.notify2FAChange({email: blob.email, username: blob.username});
+        email[fn]({email: blob.email, username: blob.username});
         response.json({result: 'success'}).pipe(res)
     });
-};
+}
 
 exports.batchlookup = batchlookup;
 exports.request2faToken = request2faToken;
@@ -938,4 +942,6 @@ exports.verify = verify;
 exports.authinfo = authinfo;
 exports.rename = rename
 exports.updatekeys = updatekeys;
-exports.notify_2fa_change = notify_2fa_change;
+exports.notify_2fa_change  = notify_2fa_change;
+exports.notify_verify_ok   = notify_verify_ok;
+exports.notify_verify_fail = notify_verify_fail;
