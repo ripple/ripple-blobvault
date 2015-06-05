@@ -1,0 +1,9 @@
+Hi ~_USERNAME_,
+
+We were unable to verify your identity information.
+
+If this is for an account existing prior to June 3, 2015, you will still be able to access your account until August 30, 2015. Please read account verification guidelines for further information.
+
+Thanks,
+
+The RippleID Team
