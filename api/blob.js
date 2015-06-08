@@ -434,7 +434,9 @@ exports.get = function (req, res) {
             function(lib) {
                 var _blob = lib.get('_blob');
                 var twofactor = {};
-                if (_blob["2fa_enabled"] === true) {
+                // Ignore 2fa flag in Blobvault because Identity Service will take care of it. 
+                /*
+		if (_blob["2fa_enabled"] === true) {
                     if (device_id !== undefined) {
                         store.read_where({table:'twofactor',key:'device_id',value:device_id},
                         function(resp2) {
@@ -464,6 +466,7 @@ exports.get = function (req, res) {
                                 lib.terminate()
                                 return
                             }
+
                             lib.done()
                         })
                     } else {
@@ -472,10 +475,10 @@ exports.get = function (req, res) {
                         lib.terminate()
                         return
                     }
-                } else {
-                    console.log("2FA not enabled")
+                } else { */
+                    // console.log("2FA not enabled")
                     lib.done()
-                }
+                // }
             },
             function(lib) {
                 store.identifyMissingFields({blob_id:blob_id},function(resp) {
