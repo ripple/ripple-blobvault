@@ -434,7 +434,8 @@ exports.get = function (req, res) {
             function(lib) {
                 var _blob = lib.get('_blob');
                 var twofactor = {};
-                if (_blob["2fa_enabled"] === true) {
+                // Ignore 2fa flag in Blobvault because Identity Service will take care of it. 
+                if (!config.skip_2fa && _blob["2fa_enabled"] === true) {
                     if (device_id !== undefined) {
                         store.read_where({table:'twofactor',key:'device_id',value:device_id},
                         function(resp2) {
@@ -464,6 +465,7 @@ exports.get = function (req, res) {
                                 lib.terminate()
                                 return
                             }
+
                             lib.done()
                         })
                     } else {
@@ -473,7 +475,7 @@ exports.get = function (req, res) {
                         return
                     }
                 } else {
-                    console.log("2FA not enabled")
+                    // console.log("2FA not enabled")
                     lib.done()
                 }
             },
@@ -505,16 +507,18 @@ exports.get = function (req, res) {
 
             function(lib) {
                 var _blob = lib.get('_blob');
-                var obj = lib.get('blobget')
+                var obj = lib.get('blobget');
                 obj.missing_fields = lib.get('missingfields');
-                var tf = lib.get('twofactor')
-                if (tf && obj["2fa_enabled"]) {
+                if (!config.skip_2fa) {
+                  var tf = lib.get('twofactor')
+                  if (tf && obj["2fa_enabled"]) {
                     obj.twofactor = tf;
                     // if two factor is enabled but phone is not verified we include
                     // a message stating the phne needs to be verified in order for 2fa
                     // to work
                     if (!_blob.phone_verified)
-                        obj.message = 'Two factor auth is enabled but the phone needs to be verified in order for two factor to work.'
+                      obj.message = 'Two factor auth is enabled but the phone needs to be verified in order for two factor to work.'
+                  }
                 }
                 response.json(obj).pipe(res)
                 lib.done()

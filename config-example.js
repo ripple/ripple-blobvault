@@ -140,3 +140,7 @@ exports.reserved = {};
 exports.urlPrefix = '';
 
 exports.newrelic = 'YOUR KEY';
+
+// Skip 2FA check.
+// exports.skip_2fa = true
+
