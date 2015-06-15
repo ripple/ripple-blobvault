@@ -902,9 +902,10 @@ var batchlookup = function(req,res,next) {
     })
 }
 
-var notify_2fa_change  = function(req, res, next) { notify("notify2FAChange",  req, res); };
-var notify_verify_ok   = function(req, res, next) { notify("notifyVerifyOk",   req, res); };
-var notify_verify_fail = function(req, res, next) { notify("notifyVerifyFail", req, res); };
+var notify_2fa_change     = function(req, res, next) { notify("notify2FAChange",  req, res); };
+var notify_verify_ok      = function(req, res, next) { notify("notifyVerifyOk",   req, res); };
+var notify_verify_fail    = function(req, res, next) { notify("notifyVerifyFail", req, res); };
+var notify_verify_pending = function(req, res, next) { notify("notifyVerifyPending", req, res); };
 
 function notify(fn, req, res) {
     var keyresp = libutils.hasKeys(req.params, ['username']);
@@ -942,6 +943,7 @@ exports.verify = verify;
 exports.authinfo = authinfo;
 exports.rename = rename
 exports.updatekeys = updatekeys;
-exports.notify_2fa_change  = notify_2fa_change;
-exports.notify_verify_ok   = notify_verify_ok;
-exports.notify_verify_fail = notify_verify_fail;
+exports.notify_2fa_change     = notify_2fa_change;
+exports.notify_verify_ok      = notify_verify_ok;
+exports.notify_verify_fail    = notify_verify_fail;
+exports.notify_verify_pending = notify_verify_pending;
