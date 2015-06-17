@@ -1,9 +1,0 @@
-Hi ~_USERNAME_,
-
-Your RippleID 2FA number was changed.
-
-If you did not change your 2fa number, please log-in to your account and secure your password.
-
-Thanks,
-
-The RippleID Team

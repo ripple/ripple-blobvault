@@ -43,6 +43,7 @@ app.post('/v1/user/:username/profile', hmac.middleware, api.user.profile);
 app.post('/v1/user/:username/notify_2fa_change', api.user.notify_2fa_change);
 app.post('/v1/user/:username/notify_verify_ok', api.user.notify_verify_ok);
 app.post('/v1/user/:username/notify_verify_fail', api.user.notify_verify_fail);
+app.post('/v1/user/:username/notify_verify_pending', api.user.notify_verify_pending);
 
 app.post('/v1/lookup', api.user.batchlookup)
 

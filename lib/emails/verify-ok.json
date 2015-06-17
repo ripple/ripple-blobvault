@@ -1,0 +1,10 @@
+[
+  "Hi ~_USERNAME_,",
+  "Your Ripple Trade account has been verified.",
+  "You can now log in and use Ripple Trade.",
+  {
+    "type": "button",
+    "text": "Log in",
+    "href": "https://www.rippletrade.com/"
+  }
+]
