@@ -1,0 +1,30 @@
+[
+  "Hi ~_USERNAME_,",
+  "You are receiving this email because we could not verify some or all the address\tinformation you entered in Ripple Trade.",
+  "Please re-upload a document from the list below that clearly displays the address\tthat you entered on Ripple Trade. If the address that you entered on Ripple Trade\tis not your current residence and you are unable to provide a document for address\tproof, please contact support@ripple.com.",
+  "We accept the following documents for address verification:",
+  {
+    "type": "list",
+    "items": [
+      "Bank statement",
+      "Utility bill",
+      "Cash advance application",
+      "Credit card statement",
+      "Lease agreement",
+      "Loan application",
+      "Mortgage application",
+      "Tax return",
+      "Vehicle title",
+      "Voided check",
+      "Council bill",
+      "School enrollment letter",
+      "Phone bill"
+    ]
+  },
+  "To proceed with document upload, follow the link below.",
+  {
+    "type": "button",
+    "text": "Continue verification",
+    "href": "https://id.ripple.com/identity/country"
+  }
+]

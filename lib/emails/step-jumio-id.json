@@ -1,0 +1,20 @@
+[
+  "Hi ~_USERNAME_,",
+  "We were unable to verify your photo ID. Please re-upload your ID upload\tby following the link below. Ensure that you upload a clear photo of your\tgovernment-issued ID.",
+  "We do not accept:",
+  {
+    "type": "list",
+    "items": [
+      "Digital copies or photocopies of your ID (this includes scanned IDs).",
+      "Image captures of ID with fingers or face in the background. Make sure that the ID is the only object in the photo.",
+      "Images with a glare.",
+      "Passports with a missing signature page.",
+      "Images that do not capture your ID. Make sure you are uploading a valid ID."
+    ]
+  },
+  {
+    "type": "button",
+    "text": "Continue verification",
+    "href": "https://id.ripple.com/identity/country"
+  }
+]

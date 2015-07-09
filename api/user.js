@@ -906,6 +906,9 @@ var notify_2fa_change     = function(req, res, next) { notify("notify2FAChange",
 var notify_verify_ok      = function(req, res, next) { notify("notifyVerifyOk",   req, res); };
 var notify_verify_fail    = function(req, res, next) { notify("notifyVerifyFail", req, res); };
 var notify_verify_pending = function(req, res, next) { notify("notifyVerifyPending", req, res); };
+var notify_step_null      = function(req, res, next) { notify("notifyStepNull",      req, res); };
+var notify_step_jumio_id  = function(req, res, next) { notify("notifyStepJumioID",   req, res); };
+var notify_step_jumio_doc = function(req, res, next) { notify("notifyStepJumioDoc",  req, res); };
 
 function notify(fn, req, res) {
     var keyresp = libutils.hasKeys(req.params, ['username']);
@@ -947,3 +950,6 @@ exports.notify_2fa_change     = notify_2fa_change;
 exports.notify_verify_ok      = notify_verify_ok;
 exports.notify_verify_fail    = notify_verify_fail;
 exports.notify_verify_pending = notify_verify_pending;
+exports.notify_step_null      = notify_step_null;
+exports.notify_step_jumio_id  = notify_step_jumio_id;
+exports.notify_step_jumio_doc = notify_step_jumio_doc;
