@@ -1,6 +1,6 @@
 [
   "Hi ~_USERNAME_,",
-  "We were unable to verify your photo ID. Please re-upload your ID upload\tby following the link below. Ensure that you upload a clear photo of your\tgovernment-issued ID.",
+  "We were unable to verify your photo ID. Please re-upload your ID by\tfollowing the link below. Ensure that you upload a clear photo of your\tgovernment-issued ID.",
   "We do not accept:",
   {
     "type": "list",
