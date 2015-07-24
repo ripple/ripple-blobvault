@@ -902,13 +902,14 @@ var batchlookup = function(req,res,next) {
     })
 }
 
-var notify_2fa_change     = function(req, res, next) { notify("notify2FAChange",  req, res); };
-var notify_verify_ok      = function(req, res, next) { notify("notifyVerifyOk",   req, res); };
-var notify_verify_fail    = function(req, res, next) { notify("notifyVerifyFail", req, res); };
-var notify_verify_pending = function(req, res, next) { notify("notifyVerifyPending", req, res); };
-var notify_step_null      = function(req, res, next) { notify("notifyStepNull",      req, res); };
-var notify_step_jumio_id  = function(req, res, next) { notify("notifyStepJumioID",   req, res); };
-var notify_step_jumio_doc = function(req, res, next) { notify("notifyStepJumioDoc",  req, res); };
+var notify_2fa_change         = function(req, res, next) { notify("notify2FAChange",        req, res); };
+var notify_verify_ok          = function(req, res, next) { notify("notifyVerifyOk",         req, res); };
+var notify_verify_fail        = function(req, res, next) { notify("notifyVerifyFail",       req, res); };
+var notify_verify_pending     = function(req, res, next) { notify("notifyVerifyPending",    req, res); };
+var notify_step_null          = function(req, res, next) { notify("notifyStepNull",         req, res); };
+var notify_step_jumio_id      = function(req, res, next) { notify("notifyStepJumioID",      req, res); };
+var notify_step_jumio_doc     = function(req, res, next) { notify("notifyStepJumioDoc",     req, res); };
+var notify_step_jumio_company = function(req, res, next) { notify("notifyStepJumioCompany", req, res); };
 
 function notify(fn, req, res) {
     var keyresp = libutils.hasKeys(req.params, ['username']);
@@ -926,7 +927,10 @@ function notify(fn, req, res) {
             return;
         }
         var blob = resp[0];
-        email[fn]({email: blob.email, username: blob.username});
+        email[fn]({
+          email:    blob.email,
+          username: blob.username,
+        }, req.query.country);
         response.json({result: 'success'}).pipe(res)
     });
 }
@@ -946,10 +950,11 @@ exports.verify = verify;
 exports.authinfo = authinfo;
 exports.rename = rename
 exports.updatekeys = updatekeys;
-exports.notify_2fa_change     = notify_2fa_change;
-exports.notify_verify_ok      = notify_verify_ok;
-exports.notify_verify_fail    = notify_verify_fail;
-exports.notify_verify_pending = notify_verify_pending;
-exports.notify_step_null      = notify_step_null;
-exports.notify_step_jumio_id  = notify_step_jumio_id;
-exports.notify_step_jumio_doc = notify_step_jumio_doc;
+exports.notify_2fa_change         = notify_2fa_change;
+exports.notify_verify_ok          = notify_verify_ok;
+exports.notify_verify_fail        = notify_verify_fail;
+exports.notify_verify_pending     = notify_verify_pending;
+exports.notify_step_null          = notify_step_null;
+exports.notify_step_jumio_id      = notify_step_jumio_id;
+exports.notify_step_jumio_doc     = notify_step_jumio_doc;
+exports.notify_step_jumio_company = notify_step_jumio_company;
