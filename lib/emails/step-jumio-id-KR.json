@@ -16,6 +16,11 @@
       "신분증만을 초함한 사본을 확인 하시고 업로드 하십시요."
     ]
   },
+  {
+    "type": "button",
+    "text": "확인을 지속적",
+    "href": "https://id.ripple.com/identity/continue"
+  },
 
   "감사합니다,",
   "Ripple Trade 팀"

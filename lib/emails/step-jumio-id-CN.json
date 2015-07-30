@@ -14,6 +14,11 @@
       "无法完整清晰显示您身份信息的照片。请确保上传的照片上显示的是政府颁发的有效身份证件"
     ]
   },
+  {
+    "type": "button",
+    "text": "请点击这里继续完成验证",
+    "href": "https://id.ripple.com/identity/continue"
+  },
 
   "非常感谢您的配合，",
   "Ripple Trade团队"

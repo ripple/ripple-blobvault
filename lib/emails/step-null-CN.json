@@ -15,6 +15,11 @@
       "您所上传的住址证明上清晰的显示您所输入的住址及您的姓名"
     ]
   },
+  {
+    "type": "button",
+    "text": "请点击这里继续完成验证",
+    "href": "https://id.ripple.com/identity/continue"
+  },
 
   "非常感谢您的配合，",
   "Ripple Trade团队"

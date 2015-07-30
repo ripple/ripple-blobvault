@@ -14,6 +14,11 @@
       "입력 한 주소와 명확하게 일치하는 주소 증명서 사본 업로드."
     ]
   },
+  {
+    "type": "button",
+    "text": "확인을 지속적",
+    "href": "https://id.ripple.com/identity/continue"
+  },
 
   "감사합니다,",
   "Ripple Trade 팀"

@@ -27,6 +27,11 @@
   },
 
   "문서 업로드하려면 아래의 링크를 따르십시오.",
+  {
+    "type": "button",
+    "text": "확인을 지속적",
+    "href": "https://id.ripple.com/identity/continue"
+  },
 
   "감사합니다,",
   "Ripple Trade 팀"
