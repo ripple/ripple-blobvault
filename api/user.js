@@ -910,6 +910,7 @@ var notify_step_null          = function(req, res, next) { notify("notifyStepNul
 var notify_step_jumio_id      = function(req, res, next) { notify("notifyStepJumioID",      req, res); };
 var notify_step_jumio_doc     = function(req, res, next) { notify("notifyStepJumioDoc",     req, res); };
 var notify_step_jumio_company = function(req, res, next) { notify("notifyStepJumioCompany", req, res); };
+var notify_step_jumio_id2     = function(req, res, next) { notify("notifyStepJumioID2",     req, res); };
 
 function notify(fn, req, res) {
     var keyresp = libutils.hasKeys(req.params, ['username']);
@@ -958,3 +959,4 @@ exports.notify_step_null          = notify_step_null;
 exports.notify_step_jumio_id      = notify_step_jumio_id;
 exports.notify_step_jumio_doc     = notify_step_jumio_doc;
 exports.notify_step_jumio_company = notify_step_jumio_company;
+exports.notify_step_jumio_id2     = notify_step_jumio_id2;

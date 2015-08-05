@@ -1,0 +1,31 @@
+[
+  { "type": "include", "include": "step-jumio-id2" },
+  { "type": "hr" },
+
+  "尊敬的Ripple Trade用户，",
+  "感谢提交身份认证所需的相关证件。为了遵守美国联邦银行保密法及反洗钱的要求，Ripple Trade对所有用户都进行身份认证。",
+  "目前我们无法验证您之前所提交的身份信息，在此，需要您通过以下链接提交另一份身份证件。",
+  "请确保您再次提交的有效身份证件与您此前提交的身份证件是不同的证件，另外，此证件需包含您的姓名及出生年月日。",
+  "我们接受以下证件类型：",
+  {
+    "type": "list",
+    "items": [
+      "驾照",
+      "护照",
+      "身份证",
+      "往来港澳通行证 （Valid Exit-Entry Permit (EEP) to HK / Macau）",
+      "往来台湾通行证 （Travel Permit for Mainlanders to Enter and Exit Taiwan）",
+      "常住人口登记卡（Resident registration card）",
+      "结婚证 （Marriage certificate）"
+    ]
+  },
+
+  {
+    "type": "button",
+    "text": "点击上传证件",
+    "href": "https://id.ripple.com/identity/continue"
+  },
+
+  "感谢您的配合，",
+  "Ripple Trade团队"
+]
