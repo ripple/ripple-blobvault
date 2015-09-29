@@ -1,4 +1,3 @@
-require('newrelic');
 var config = require('./config');
 var http = require('http');
 var https = require('https');
@@ -49,6 +48,7 @@ app.post('/v1/user/:username/notify_step_jumio_id',      api.user.notify_step_ju
 app.post('/v1/user/:username/notify_step_jumio_doc',     api.user.notify_step_jumio_doc);
 app.post('/v1/user/:username/notify_step_jumio_company', api.user.notify_step_jumio_company);
 app.post('/v1/user/:username/notify_step_jumio_id2',     api.user.notify_step_jumio_id2);
+app.post('/v1/user/:username/notify_step_jumio_com_id', api.user.notify_step_jumio_com_id);
 
 app.post('/v1/lookup', api.user.batchlookup)
 
