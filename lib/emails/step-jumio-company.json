@@ -15,7 +15,7 @@
     ]
   },
 
-  "Please attach an English translation performed by a third party service for any documents that are not in English.\tWhen you are ready, upload all documents together. ",
+  "Please attach an English translation for any documents that are not in English. When you are ready, upload all documents together.",
   {
     "type": "button",
     "text": "Upload form and documents here",
