@@ -1,0 +1,21 @@
+[
+  "Hi ~_USERNAME_,",
+
+  "You are receiving this email because we need additional information to verify your\tidentity as part of Ripple Trade’s obligation to comply with U.S. Federal Bank\tSecrecy Act and Anti-Money Laundering requirements.",
+  "Please upload a government-issued ID card or document that is different from the\tinitial ID document you submitted. This ID document must show your name and birth date. ",
+  "We accept any of the following documents:",
+  {
+    "type": "list",
+    "items": [
+      "Driver’s License",
+      "Passport",
+      "National ID"
+    ]
+  },
+
+  {
+    "type": "button",
+    "text": "Upload ID",
+    "href": "https://id.ripple.com/identity/continue"
+  }
+]

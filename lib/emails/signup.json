@@ -1,0 +1,10 @@
+[
+  "Hi _RIPPLE_NAME_,",
+  "Welcome to Ripple Trade! Please verify your Ripple Trade account in the link below:",
+  {
+    "type": "button",
+    "text": "Verify email",
+    "href": "_VERIFY_URL_"
+  },
+  "If you did not sign up for a Ripple Trade account, please disregard this email."
+]

@@ -1,7 +1,0 @@
-Welcome to Ripple!
-Hello _RIPPLE_NAME_
-To get started, please verify your email address below:
-_VERIFY_URL_
-Thanks,
-The Ripple team
-If you did not sign up for a Ripple account, please disregard this email.

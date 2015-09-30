@@ -1,4 +1,3 @@
-require('newrelic');
 var config = require('./config');
 var http = require('http');
 var https = require('https');
@@ -40,6 +39,16 @@ app.post('/v1/user/:username/updatekeys', ecdsa.middleware, api.user.updatekeys)
 app.get('/v1/user/recov/:username', ecdsa.recover, api.user.recover);//DEPRECIATE THIS
 app.get('/v1/user/recover/:username', ecdsa.recover, api.user.recover);
 app.post('/v1/user/:username/profile', hmac.middleware, api.user.profile);
+app.post('/v1/user/:username/notify_2fa_change',         api.user.notify_2fa_change);
+app.post('/v1/user/:username/notify_verify_ok',          api.user.notify_verify_ok);
+app.post('/v1/user/:username/notify_verify_fail',        api.user.notify_verify_fail);
+app.post('/v1/user/:username/notify_verify_pending',     api.user.notify_verify_pending);
+app.post('/v1/user/:username/notify_step_null',          api.user.notify_step_null);
+app.post('/v1/user/:username/notify_step_jumio_id',      api.user.notify_step_jumio_id);
+app.post('/v1/user/:username/notify_step_jumio_doc',     api.user.notify_step_jumio_doc);
+app.post('/v1/user/:username/notify_step_jumio_company', api.user.notify_step_jumio_company);
+app.post('/v1/user/:username/notify_step_jumio_id2',     api.user.notify_step_jumio_id2);
+app.post('/v1/user/:username/notify_step_jumio_com_id', api.user.notify_step_jumio_com_id);
 
 app.post('/v1/lookup', api.user.batchlookup)
 

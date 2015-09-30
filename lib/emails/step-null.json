@@ -1,0 +1,19 @@
+[
+  "Hi ~_USERNAME_,",
+  "You are receiving this email because we could not verify some or all the\tinformation you entered for the Ripple Trade identity verification process.",
+  "Please re-enter your information by following the link below. You will\talso need to upload a copy of your government-issued ID and address proof again.",
+  "Before starting the process again, ensure that:",
+  {
+    "type": "list",
+    "items": [
+      "The name and date of birth that you enter matches your government-issued ID.",
+      "You enter the address of your current residence.",
+      "The document you upload for address proof clearly displays the address you entered."
+    ]
+  },
+  {
+    "type": "button",
+    "text": "Continue verification",
+    "href": "https://id.ripple.com/identity/continue"
+  }
+]
