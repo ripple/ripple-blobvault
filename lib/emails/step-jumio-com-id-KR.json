@@ -1,4 +1,6 @@
 [
+  { "type": "include", "include": "step-jumio-com-id" },
+  { "type": "hr" },
   "~_USERNAME_ 님께,",
 
   "본사는 리플 트레이드 (Ripple Trade) 본인 확인 과정의 일부로서 귀하의 정보를 받았습니다.",

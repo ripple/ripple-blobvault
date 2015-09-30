@@ -1,4 +1,6 @@
 [
+  { "type": "include", "include": "step-jumio-com-id" },
+  { "type": "hr" },
   "尊敬的 ~_USERNAME_,",
 
   "在Ripple Trade身份审核的过程中，我们已经收到了您所提交的相关资料。",

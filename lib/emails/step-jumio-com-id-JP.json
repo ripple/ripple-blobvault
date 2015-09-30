@@ -1,4 +1,6 @@
 [
+  { "type": "include", "include": "step-jumio-com-id" },
+  { "type": "hr" },
   "~_USERNAME_ 様、",
 
   "Ripple Tradeでの企業様確認プロセスにご協力いただき、ありがとうございます。御社の企業確認書類、情報を確かに受理いたしました。",
