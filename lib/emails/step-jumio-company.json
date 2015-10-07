@@ -2,20 +2,20 @@
   "Hi ~_USERNAME_",
 
   "We have received your information as part of the Ripple Trade identity verification process.",
-  "Ripple Trade needs additional information to verify your corporate account. Please complete\tand upload the attached form, along with ALL of the following items:",
+  "Ripple Trade needs additional information to verify your corporate account. Please complete and upload the KYC form, along with ALL of the following items:",
   {
     "type": "list",
     "items": [
-      "Copy of document evidencing legal existence of entity (e.g., articles of incorporation)",
-      "Any and all relevant documentation as it pertains to your licensing or registration within\tyour institution’s respective jurisdiction, if applicable (e.g., Copy of Money Services Businesses Registration in the U.S.)",
-      "Documentation of proof of physical business address (e.g., utility bill, lease agreement)",
-      "Documentation of source of funds (e.g., bank statement)",
-      "Documentation of proof of beneficial owners (e.g., articles of incorporation)",
-      "Two government issued IDs for <u>each</u> beneficial owner with a share of 25% or higher <u>and</u> proof of personal address (e.g., utility bill, bank statement)"
+      "Copy of document evidencing legal existence of entity (e.g., articles of incorporation or articles of association).",
+      "Any and all relevant documentation as it pertains to your entity’s activity within your respective jurisdiction where applicable (e.g., government licensing for trading or money transmission).",
+      "Documentation of proof of physical business address (e.g., utility bill or lease agreement issued within the last year).",
+      "Documentation of source of funds (e.g., bank statement issued within the last year).",
+      "Documentation of proof of beneficial owners (e.g., articles of incorporation or term sheet).",
+      "Two different government issued IDs for <u>each</u> beneficial owner with a share of 25% or higher <u>and</u> proof of personal address (e.g., utility bill or bank statement issued within the last year)."
     ]
   },
 
-  "Please attach an English translation for any documents that are not in English. When you are ready, upload all documents together.",
+  "Please attach an English translation by a third party service that is notarized for any documents that are not in English along with the original language documents also notarized. When you are ready, upload all documents together.",
   {
     "type": "button",
     "text": "Upload form and documents here",
