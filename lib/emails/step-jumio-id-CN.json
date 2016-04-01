@@ -2,8 +2,8 @@
   { "type": "include", "include": "step-jumio-id" },
   { "type": "hr" },
 
-  "尊敬的Ripple Trade用户 ~_USERNAME_，",
-  "很抱歉，在Ripple Trade身份验证的过程中，我们无法识别您所提供的有效身份证件。请通过以下链接， 重新上传一张清晰的有效身份证件。",
+  "尊敬的Ripple用户 ~_USERNAME_，",
+  "很抱歉，在Ripple身份验证的过程中，我们无法识别您所提供的有效身份证件。请通过以下链接， 重新上传一张清晰的有效身份证件。",
   "请注意，我们无法认证以下几种文件：",
   {
     "type": "list",
@@ -21,5 +21,5 @@
   },
 
   "非常感谢您的配合，",
-  "Ripple Trade团队"
+  "Ripple团队"
 ]

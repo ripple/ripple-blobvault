@@ -1,7 +1,7 @@
 [
   "Hi ~_USERNAME_,",
-  "You are receiving this email because we could not verify some or all the address\tinformation you entered in Ripple Trade.",
-  "Please re-upload a document from the list below that clearly displays the address\tthat you entered on Ripple Trade. If the address that you entered on Ripple Trade\tis not your current residence and you are unable to provide a document for address\tproof, please contact support@ripple.com.",
+  "You are receiving this email because we could not verify some or all the address\tinformation you entered in Ripple.",
+  "Please re-upload a document from the list below that clearly displays the address\tthat you entered on Ripple. If the address that you entered on Ripple\tis not your current residence and you are unable to provide a document for address\tproof, please contact support@ripple.com.",
   "We accept the following documents for address verification:",
   {
     "type": "list",

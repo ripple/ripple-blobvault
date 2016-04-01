@@ -1,8 +1,8 @@
 [
   "Hi ~_USERNAME_",
 
-  "We have received your information as part of the Ripple Trade identity verification process.",
-  "Ripple Trade needs additional information to verify your corporate account. Please return to RippleTrade.com and upload the following:",
+  "We have received your information as part of the Ripple identity verification process.",
+  "Ripple needs additional information to verify your corporate account. Please return to RippleTrade.com and upload the following:",
   {
     "type": "list",
     "items": [
